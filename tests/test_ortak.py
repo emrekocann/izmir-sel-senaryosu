@@ -115,7 +115,7 @@ def test_ara_deger_bilinear_ve_yayin():
 def test_raster_ornekle_ve_yakinlik():
     shapely = pytest.importorskip("shapely")          # çevrimdışı hesap bağımlılıkları
     Affine = pytest.importorskip("affine").Affine
-    from dem_hidroloji import raster_ornekle, yakin_mi
+    from hesap.dem_hidroloji import raster_ornekle, yakin_mi
 
     tr = Affine(0.1, 0, 27.0, 0, -0.1, 39.0)                  # batı 27, kuzey 39
     s = np.arange(6, dtype=np.float32).reshape(2, 3)

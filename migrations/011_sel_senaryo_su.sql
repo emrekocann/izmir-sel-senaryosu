@@ -1,5 +1,5 @@
 -- Yağış senaryosunda yollardaki ve toplanma alanlarındaki su
--- (sel_senaryo_yollar.py doldurur; sel_senaryo_hazirla.py sonunda kendisi çağırır).
+-- (hesap/sel_senaryo_yollar.py doldurur; hesap/sel_senaryo_hazirla.py sonunda kendisi çağırır).
 -- katman: 'drive' (izmir_roads_noded.id), 'walk' (izmir_yaya_noded.id),
 --         'toplanma' (toplanma_alanlari.id)
 -- senaryo: '<yağış mm>_<süre sa>', ör. '50_1'

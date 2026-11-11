@@ -25,7 +25,7 @@ Akış:
 
 Sınır değişince yol ağı ve sel hesapları yeniden üretilmelidir
 (README → Sınır verisi).
-Çalıştırma: venv/bin/python sinir_hazirla.py
+Çalıştırma: venv/bin/python -m hesap.sinir_hazirla
 """
 import json
 import logging
@@ -41,7 +41,7 @@ import ag
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("sinir")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
 VERI_DIR = os.path.join(BASE_DIR, "sinir_veri")
 ILCE_FILE = os.path.join(BASE_DIR, "static", "izmir_ilce.geojson")
 SINIR_FILE = os.path.join(BASE_DIR, "static", "izmir_sinir.geojson")

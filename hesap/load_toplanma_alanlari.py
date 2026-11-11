@@ -11,7 +11,7 @@ Akış:
      (drive_vid / walk_vid) önceden hesaplanır — rota sorgusu bunları
      hedef olarak kullanır.
 
-Çalıştırma: venv/bin/python load_toplanma_alanlari.py
+Çalıştırma: venv/bin/python -m hesap.load_toplanma_alanlari
 Önkoşul: migrations/005_toplanma_alanlari.sql uygulanmış olmalı.
 Başka ile taşırken CSV_URL o ilin toplanma alanı verisiyle değiştirilir.
 """
@@ -73,7 +73,7 @@ async def main():
             for mode, (edge_table, _, _) in AfetRepository.ROUTE_MODES.items():
                 col = f"{mode}_vid"
                 if not await conn.fetchval("SELECT to_regclass($1)", edge_table):
-                    log.warning("%s yok — %s boş kalır (build_road_network.py)", edge_table, col)
+                    log.warning("%s yok — %s boş kalır (hesap/build_road_network.py)", edge_table, col)
                     continue
                 await conn.execute(f"""
                     UPDATE toplanma_alanlari t

@@ -1,5 +1,5 @@
 """Yayın sayfası verisi: 'yakalandı' ölçütü."""
-from vitrin_hazirla import MAHALLE_YUZDELIK, OLAY_SENARYOLARI, yakalandi
+from hesap.vitrin_hazirla import MAHALLE_YUZDELIK, OLAY_SENARYOLARI, yakalandi
 
 
 def _sonuc(**alanlar):

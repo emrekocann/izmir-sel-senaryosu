@@ -40,9 +40,9 @@ site hazır sonuçları sunar. Varsayımlar aşağıda sabit olarak yazılıdır
 
 Çıktılar: sel_model/senaryo.npz (her senaryo için derinlik, desimetre),
 sel_model/senaryo_ozet.json (alan, yol, alt geçit, toplanma alanı, mahalle)
-ve tahliye rotası için sel_senaryo_su tablosu (sel_senaryo_yollar.py).
+ve tahliye rotası için sel_senaryo_su tablosu (hesap/sel_senaryo_yollar.py).
 
-Çalıştırma: venv/bin/python sel_senaryo_hazirla.py  (sel_duyarlilik_hesapla.py'nin
+Çalıştırma: venv/bin/python -m hesap.sel_senaryo_hazirla  (hesap/sel_duyarlilik_hesapla.py'nin
 DEM'ini ve köprü/alt geçit önbelleğini kullanır; ~20–30 dk)
 """
 import asyncio
@@ -60,10 +60,10 @@ from rasterio.windows import from_bounds
 from scipy import ndimage
 
 import ag
-import sel_senaryo_yollar
-from build_road_network import load_boundary
+from hesap import sel_senaryo_yollar
+from hesap.build_road_network import load_boundary
 from database import db
-from dem_hidroloji import (DIRMAP, VERI_DIR, akis_agi, cukurlar, dem_mozaik, hand_hesapla,
+from hesap.dem_hidroloji import (DIRMAP, VERI_DIR, akis_agi, cukurlar, dem_mozaik, hand_hesapla,
                            kopru_tunel, raster_ornekle, yakin_mi, yol_noktalari)
 from harita_yardim import hucre_merkezleri, sinira_degen
 from sel_riski import MODEL_DIR
@@ -71,7 +71,7 @@ from sel_riski import MODEL_DIR
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("senaryo")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
 SENARYO_FILE = os.path.join(MODEL_DIR, "senaryo.npz")
 OZET_FILE = os.path.join(MODEL_DIR, "senaryo_ozet.json")
 CN_FILE = os.path.join(VERI_DIR, "cn_60m_v2.npz")
@@ -463,7 +463,7 @@ def main():
         asyncio.run(sel_senaryo_yollar.yaz())
     except Exception as e:
         log.warning("Senaryo suyu yollara yazılamadı (migrations/011 uygulandı mı?): %s — "
-                    "sonra 'venv/bin/python sel_senaryo_yollar.py' çalıştırın", e)
+                    "sonra 'venv/bin/python -m hesap.sel_senaryo_yollar' çalıştırın", e)
 
 
 if __name__ == "__main__":

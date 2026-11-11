@@ -23,7 +23,7 @@ Adımlar (SRTM, ~60 m'ye ortalanarak — 8 GB bellekte il geneli 30 m sığmıyo
 izmir_roads_noded / izmir_yaya_noded tablolarında sel_duyarlilik,
 sel_riskli_oran, alt_gecit.
 
-Çalıştırma: venv/bin/python sel_duyarlilik_hesapla.py
+Çalıştırma: venv/bin/python -m hesap.sel_duyarlilik_hesapla
 Önkoşul: migrations/006_sel_duyarlilik.sql, yol ağı tabloları, DB açık.
 """
 import asyncio
@@ -34,9 +34,9 @@ import time
 import numpy as np
 import shapely
 
-from build_road_network import load_boundary
+from hesap.build_road_network import load_boundary
 from database import db
-from dem_hidroloji import (akis_agi, cukurlar, dem_mozaik, hand_hesapla, kopru_tunel,
+from hesap.dem_hidroloji import (akis_agi, cukurlar, dem_mozaik, hand_hesapla, kopru_tunel,
                            raster_ornekle, yakin_mi, yol_noktalari)
 from harita_yardim import hucre_merkezleri, sinira_degen
 from sel_riski import DUYARLILIK_FILE, MODEL_DIR

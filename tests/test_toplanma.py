@@ -1,5 +1,5 @@
 def test_parse_row_gecerli_satir():
-    from load_toplanma_alanlari import parse_row
+    from hesap.load_toplanma_alanlari import parse_row
 
     row = {"ILCE": "ÇEŞME", "KAPINO": "", "ENLEM": "38.3597", "ACIKLAMA": "3509-024-01",
            "MAHALLE": "ÜNİVERSİTE", "ADI": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
@@ -11,7 +11,7 @@ def test_parse_row_gecerli_satir():
 
 
 def test_parse_row_gecersiz_koordinat_atlanir():
-    from load_toplanma_alanlari import parse_row
+    from hesap.load_toplanma_alanlari import parse_row
 
     assert parse_row({"ENLEM": "", "BOYLAM": "27.1"}) is None
     assert parse_row({"ENLEM": "abc", "BOYLAM": "27.1"}) is None

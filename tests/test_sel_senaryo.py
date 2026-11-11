@@ -1,6 +1,6 @@
 import numpy as np
 
-from sel_senaryo_hazirla import (DRENAJ_MM_SA, SEVIYE_M, havuz_doldur, kesit_debisi, scs_akis,
+from hesap.sel_senaryo_hazirla import (DRENAJ_MM_SA, SEVIYE_M, havuz_doldur, kesit_debisi, scs_akis,
                                  senaryo_akisi, seviye_bul)
 
 
@@ -56,7 +56,7 @@ def test_anahtar_egrisi_genis_ovada_sig_kalir():
 
 
 def test_alan_azaltma():
-    from sel_senaryo_hazirla import alan_azaltma
+    from hesap.sel_senaryo_hazirla import alan_azaltma
     # nokta ≈ 1; büyüdükçe azalır; uzun yağışta azalma daha az (TP-29 eğilimi)
     assert alan_azaltma(1, 1) > 0.99
     a = alan_azaltma(np.array([10, 100, 1000, 10000]), 1)

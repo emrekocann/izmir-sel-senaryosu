@@ -13,7 +13,7 @@ Akış:
   3. Kenarlar <tablo>, düğümler <tablo>_vertices_pgr tablolarına yazılır —
      repository.get_smart_routes'un beklediği şema.
 
-Çalıştırma: venv/bin/python build_road_network.py [drive|walk|all] [--pbf dosya]
+Çalıştırma: venv/bin/python -m hesap.build_road_network [drive|walk|all] [--pbf dosya]
   --pbf: Overpass yoğunken Geofabrik il/ülke dosyasından (ör. turkey-latest.osm.pbf)
          aynı filtre ve osmnx adımlarıyla kurar.
 Varsayılan: all. Yeniden çalıştırmak tabloları baştan kurar (idempotent).
@@ -37,7 +37,7 @@ from database import db  # asyncpg havuzu .env'den bağlanır
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("yol_agi")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
 BOUNDARY_FILE = os.path.join(BASE_DIR, "static", "izmir_sinir.geojson")
 DEM_DIR = os.path.join(BASE_DIR, "dem_cache")
 OVERPASS_URLS = [u.rsplit("/", 1)[0] for u in ag.OVERPASS_URLS]   # osmnx kök adresi ister
@@ -332,5 +332,5 @@ if __name__ == "__main__":
         del args[i:i + 2]
     arg = args[0] if args else "all"
     if arg not in ("all", *NETWORKS):
-        raise SystemExit(f"Kullanım: build_road_network.py [{'|'.join(NETWORKS)}|all] [--pbf dosya.osm.pbf]")
+        raise SystemExit(f"Kullanım: hesap/build_road_network.py [{'|'.join(NETWORKS)}|all] [--pbf dosya.osm.pbf]")
     asyncio.run(main(list(NETWORKS) if arg == "all" else [arg], pbf))

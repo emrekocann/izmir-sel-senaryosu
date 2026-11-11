@@ -1,5 +1,5 @@
 -- İzmir Büyükşehir Belediyesi açık verisi: Afet ve Acil Durum Toplanma Alanları
--- (acikveri.bizizmir.com, İBB Açık Veri Lisansı). load_toplanma_alanlari.py
+-- (acikveri.bizizmir.com, İBB Açık Veri Lisansı). hesap/load_toplanma_alanlari.py
 -- tabloyu kaynaktan baştan doldurur — kaynakta tekil anahtar yok (kod boş /
 -- tekrarlı olabiliyor), bu yüzden id yükleme sırasından gelir.
 -- drive_vid / walk_vid: alanın en yakın yol ağı düğümü (rota hedefi olarak

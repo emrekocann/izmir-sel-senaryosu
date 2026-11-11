@@ -635,7 +635,7 @@ function senaryoSatiri(sn, mode) {
   const kutu = (renk, ic) => `<div style="margin-top:5px;padding:6px 8px;border-radius:7px;background:${renk};font-size:11px;line-height:1.5">${ic}</div>`;
   if (!sn.veri_var) {
     return kutu('rgba(217,119,6,.1)', `🌧️ <b>${p} mm / ${sure} saat</b> senaryosunun yol verisi hazır değil
-      (sel_senaryo_yollar.py) — rota senaryodaki suyu hesaba katmadı.`);
+      (hesap/sel_senaryo_yollar.py) — rota senaryodaki suyu hesaba katmadı.`);
   }
   const m = v => v >= 1000 ? (v / 1000).toFixed(1) + ' km' : v + ' m';
   const satir = [];

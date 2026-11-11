@@ -30,7 +30,7 @@ def test_katsayi_noktada_bilinear():
 
 
 def test_duyarlilik_formulu():
-    from sel_duyarlilik_hesapla import DERE_BUYUK_KM2, DERE_KUCUK_KM2, duyarlilik
+    from hesap.sel_duyarlilik_hesapla import DERE_BUYUK_KM2, DERE_KUCUK_KM2, duyarlilik
 
     hand = {DERE_KUCUK_KM2: np.array([0.0, 3.0, 10.0, np.nan, 10.0]),
             DERE_BUYUK_KM2: np.array([20.0, 20.0, 0.0, np.nan, 20.0])}

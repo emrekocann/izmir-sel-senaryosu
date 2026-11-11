@@ -84,7 +84,7 @@ class AfetRepository:
 
     @staticmethod
     async def get_toplanma_alanlari():
-        """İBB afet ve acil durum toplanma alanları (load_toplanma_alanlari.py)."""
+        """İBB afet ve acil durum toplanma alanları (hesap/load_toplanma_alanlari.py)."""
         return await _oku("toplanma alanı", f"""
             SELECT id, adi, ilce, mahalle, yol, {LONLAT} FROM toplanma_alanlari ORDER BY id""")
 
@@ -134,7 +134,7 @@ class AfetRepository:
     SEL_K = 4.0
     _sel_kolon = {}
 
-    # Yağış senaryosu (migrations/011, sel_senaryo_yollar.py): kenarın en
+    # Yağış senaryosu (migrations/011, hesap/sel_senaryo_yollar.py): kenarın en
     # derin noktası ≥ SENARYO_KAPALI_M ise yol kapalı sayılır — maliyetine
     # SENARYO_KAPALI_EK metre eklenir (her geçiş ~100 km dolambaç kadar
     # pahalı; başka yol yoksa yine de geçilir ve yanıtta raporlanır). Sığ su
@@ -180,7 +180,7 @@ class AfetRepository:
     @staticmethod
     def snap_sql(edge_table: str, point_sql: str) -> str:
         """point_sql noktasına en yakın, SNAP_HARIC dışı yol düğümünün id'sini
-        veren skaler alt sorgu (load_toplanma_alanlari.py de kullanır)."""
+        veren skaler alt sorgu (hesap/load_toplanma_alanlari.py de kullanır)."""
         haric = ", ".join(f"'{h}'" for h in AfetRepository.SNAP_HARIC)
         return f"""(SELECT v.id FROM (
                         SELECT source, target FROM {edge_table}

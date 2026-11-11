@@ -5,15 +5,15 @@ toplanma alanını hedef seçmesin diye her senaryonun derinlik ızgarası
 (sel_model/senaryo.npz) araç ve yaya yol ağının kenarlarında ve toplanma
 alanlarının konumunda örneklenir:
 
-  • Kenar ~25 m'de bir örneklenir (sel_duyarlilik_hesapla.py ile aynı
+  • Kenar ~25 m'de bir örneklenir (hesap/sel_duyarlilik_hesapla.py ile aynı
     noktalar); kenarın derinliği örneklerin EN BÜYÜĞÜDÜR — yolun tek bir
     noktası suyun altındaysa o yoldan geçilemez.
   • Köprü ve uzun tünel üstündeki noktalar sayılmaz (su altından geçer).
   • Düz ovada "derinlik belirsiz" (gri) hücreye değen kenar belirsiz işaretlenir.
   • Yalnız derinlik ≥ 0.1 m ya da belirsiz olanlar yazılır (migrations/011).
 
-Çalıştırma: venv/bin/python sel_senaryo_yollar.py
-(sel_senaryo_hazirla.py sonunda kendisi çağırır; yol ağı ya da toplanma
+Çalıştırma: venv/bin/python -m hesap.sel_senaryo_yollar
+(hesap/sel_senaryo_hazirla.py sonunda kendisi çağırır; yol ağı ya da toplanma
 alanları yeniden yüklenirse bu betik tek başına çalıştırılır, ~2 dk.)
 Önkoşul: migrations/011_sel_senaryo_su.sql, sel_model/senaryo.npz, DB açık.
 """
@@ -25,15 +25,15 @@ import time
 import numpy as np
 from affine import Affine
 
-from build_road_network import load_boundary
+from hesap.build_road_network import load_boundary
 from database import db
-from dem_hidroloji import kopru_tunel, raster_ornekle, yakin_mi, yol_noktalari
+from hesap.dem_hidroloji import kopru_tunel, raster_ornekle, yakin_mi, yol_noktalari
 from sel_senaryo import BELIRSIZ, OZET_FILE, SENARYO_FILE
 
 log = logging.getLogger("sel")
 
 YAZ_ESIK_M = 0.1                 # bunun altı "kuru" sayılır, yazılmaz
-KOPRU_TAMPON = 0.00012           # ~12 m (sel_duyarlilik_hesapla.py ile aynı)
+KOPRU_TAMPON = 0.00012           # ~12 m (hesap/sel_duyarlilik_hesapla.py ile aynı)
 YOL_TABLOLARI = {"drive": "izmir_roads_noded", "walk": "izmir_yaya_noded"}
 
 

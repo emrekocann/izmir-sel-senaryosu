@@ -20,7 +20,7 @@ import ag
 
 log = logging.getLogger("dem")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
 VERI_DIR = os.path.join(BASE_DIR, "sel_veri")
 DEM_TIF = os.path.join(VERI_DIR, "dem_60m.tif")
 KOPRU_FILE = os.path.join(VERI_DIR, "kopru_tunel.json")
@@ -40,7 +40,7 @@ def dem_mozaik(sinir):
     import rasterio
     from rasterio.enums import Resampling
     from rasterio.merge import merge
-    from build_road_network import fetch_dem_tiles
+    from hesap.build_road_network import fetch_dem_tiles
     os.makedirs(VERI_DIR, exist_ok=True)
     minx, miny, maxx, maxy = sinir.bounds
     b = (minx - TAMPON, miny - TAMPON, maxx + TAMPON, maxy + TAMPON)

@@ -165,7 +165,7 @@ async def get_smart_routes(
 async def get_sel_riski():
     """Sel/su baskını: arazi duyarlılığı + 24 saatlik yağış tahminine göre günlük risk."""
     if not sel_riski.hazir():
-        return _hazir_degil("Duyarlılık hesaplanmadı (sel_duyarlilik_hesapla.py)")
+        return _hazir_degil("Duyarlılık hesaplanmadı (hesap/sel_duyarlilik_hesapla.py)")
     try:
         veri = await sel_riski.ozet(ag.istemci())
         veri["alt_gecitler"] = await AfetRepository.get_alt_gecitler()
@@ -191,7 +191,7 @@ async def get_sel_harita(request: Request, tur: str = Query("gunluk", pattern="^
 async def get_sel_senaryo():
     """Kademeli yağış senaryosu: 'X mm yağış Y saatte düşerse' su derinliği özetleri."""
     if not sel_senaryo.hazir():
-        return _hazir_degil("Senaryolar hesaplanmadı (sel_senaryo_hazirla.py)")
+        return _hazir_degil("Senaryolar hesaplanmadı (hesap/sel_senaryo_hazirla.py)")
     return sel_senaryo.yanit()
 
 

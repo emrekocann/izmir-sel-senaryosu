@@ -21,7 +21,7 @@ yazmaz); bu, AUC'yi düşürür, yani sonuç temkinlidir. Örnek küçüktür:
 istatistiksel kanıt değil, modelin neyi yakalayıp neyi kaçırdığını gösteren
 ilk kontroldür.
 
-Çalıştırma: venv/bin/python sel_dogrulama.py [dogrulama/olay_2021_02_02.json]
+Çalıştırma: venv/bin/python -m hesap.sel_dogrulama [dogrulama/olay_2021_02_02.json]
 (ilk çalıştırmada OSM dosyasından adlı yollar/dereler çıkarılır, ~1.5 dk)
 Çıktı: dogrulama/sonuc_<tarih>.json ve ekrana tablo.
 """
@@ -37,12 +37,12 @@ import shapely
 from affine import Affine
 from rasterio.features import rasterize
 
-from build_road_network import load_boundary
-from dem_hidroloji import kopru_tunel, raster_ornekle, yakin_mi, yol_noktalari
+from hesap.build_road_network import load_boundary
+from hesap.dem_hidroloji import kopru_tunel, raster_ornekle, yakin_mi, yol_noktalari
 from sel_senaryo import BELIRSIZ, OZET_FILE, SENARYO_FILE
 
 log = logging.getLogger("dogrulama")
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
 TKGM_DIR = os.path.join(BASE_DIR, "sinir_veri", "tkgm")
 PBF = os.path.join(BASE_DIR, "osm_indirme", "turkey-latest.osm.pbf")
 OSM_ONBELLEK = os.path.join(BASE_DIR, "sel_veri", "osm_adli_yollar.geojson")

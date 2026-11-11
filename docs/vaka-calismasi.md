@@ -2,7 +2,7 @@
 
 **Açık veriyle bir sel senaryosu modeli, tahliye rotası ve gerçek olayla karşılaştırma**
 
-> Taslak — yayın sayfasının (GitHub Pages) Türkçe metni. Sayılar `sel_dogrulama.py`,
+> Taslak — yayın sayfasının (GitHub Pages) Türkçe metni. Sayılar `hesap/sel_dogrulama.py`,
 > `sel_model/senaryo_ozet.json` ve veritabanından üretilmiştir (11 Kasım 2026).
 
 ## Özet

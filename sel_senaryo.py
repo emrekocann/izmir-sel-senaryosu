@@ -1,4 +1,4 @@
-"""Kademeli yağış senaryosu (çalışma zamanı): sel_senaryo_hazirla.py'nin
+"""Kademeli yağış senaryosu (çalışma zamanı): hesap/sel_senaryo_hazirla.py'nin
 çevrimdışı hesapladığı su derinliklerini harita görüntüsü ve özet olarak sunar."""
 import json
 import os

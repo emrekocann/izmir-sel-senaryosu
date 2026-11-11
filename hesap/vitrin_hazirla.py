@@ -9,9 +9,9 @@ hesaplanıp dosyaya yazılır:
                                       modelin sonucu), örnek tahliye rotaları
   docs/veri/izmir_sinir.geojson       il sınırı
 
-Çalıştırma: venv/bin/python vitrin_hazirla.py
+Çalıştırma: venv/bin/python -m hesap.vitrin_hazirla
 Önkoşul: sel_model/senaryo.npz, dogrulama/sonuc_2021_02_02.json
-(sel_dogrulama.py), yol ağı ve sel_senaryo_su tablosu, DB açık.
+(hesap/sel_dogrulama.py), yol ağı ve sel_senaryo_su tablosu, DB açık.
 """
 import asyncio
 import io
@@ -29,10 +29,10 @@ from rasterio.features import rasterize
 import sel_senaryo
 from database import db
 from repository import AfetRepository
-from sel_dogrulama import adli_caddeler, ilceler_ve_mahalleler, osm_adli_cizgiler
+from hesap.sel_dogrulama import adli_caddeler, ilceler_ve_mahalleler, osm_adli_cizgiler
 
 log = logging.getLogger("vitrin")
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
 CIKTI = os.path.join(BASE_DIR, "docs", "veri")
 OLAY = os.path.join(BASE_DIR, "dogrulama", "olay_2021_02_02.json")
 SONUC = os.path.join(BASE_DIR, "dogrulama", "sonuc_2021_02_02.json")

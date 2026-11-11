@@ -1,6 +1,6 @@
 """Sel / su baskını — günlük risk (çalışma zamanı).
 
-Arazi duyarlılığı S (sel_duyarlilik_hesapla.py, 0–1) × yağış katsayısı f
+Arazi duyarlılığı S (hesap/sel_duyarlilik_hesapla.py, 0–1) × yağış katsayısı f
 (Open-Meteo saatlik yağış tahmini, 0–1) = günlük risk. Hiçbiri eğitilmiş
 model değildir; eşikler aşağıda açıkça yazılıdır.
 

@@ -2,7 +2,7 @@
 import json
 import os
 
-from sel_dogrulama import auc, yuzdelik
+from hesap.sel_dogrulama import auc, yuzdelik
 
 
 def test_auc():
@@ -18,7 +18,7 @@ def test_yuzdelik():
 
 
 def test_olay_dosyasi_kaynakli():
-    yol = os.path.join(os.path.dirname(__file__), "dogrulama", "olay_2021_02_02.json")
+    yol = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dogrulama", "olay_2021_02_02.json")
     olay = json.load(open(yol, encoding="utf-8"))
     for y in olay["yerler"]:
         assert y["tur"] in ("mahalle", "cadde", "dere", "alt_gecit")

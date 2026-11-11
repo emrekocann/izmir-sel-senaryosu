@@ -4,7 +4,7 @@ import pytest
 
 from repository import AfetRepository as R
 from sel_senaryo import BELIRSIZ
-from sel_senaryo_yollar import kenar_derinligi, satirlar
+from hesap.sel_senaryo_yollar import kenar_derinligi, satirlar
 
 
 def test_kenar_derinligi_en_derin_nokta_ve_kopru():

@@ -1,4 +1,4 @@
--- Sel / su baskını arazi duyarlılığı (sel_duyarlilik_hesapla.py doldurur).
+-- Sel / su baskını arazi duyarlılığı (hesap/sel_duyarlilik_hesapla.py doldurur).
 -- sel_duyarlilik: 0–1, kenar boyunca ~25 m'de bir örneklenen SRTM tabanlı
 --   duyarlılığın ORTALAMASI (rota cezası maruz kalınan uzunlukla orantılı olsun;
 --   dere yatağına göre yükseklik + çukur derinliği; köprüler hariç).
