@@ -74,7 +74,7 @@ log = logging.getLogger("senaryo")
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
 SENARYO_FILE = os.path.join(MODEL_DIR, "senaryo.npz")
 OZET_FILE = os.path.join(MODEL_DIR, "senaryo_ozet.json")
-CN_FILE = os.path.join(VERI_DIR, "cn_60m_v2.npz")
+CN_FILE = os.path.join(VERI_DIR, "cn_60m_v3.npz")
 MAHALLE_DIR = os.path.join(BASE_DIR, "sinir_veri", "tkgm", "mahalle")
 
 YAGIS_MM = [10, 25, 50, 75, 100, 150, 200, 250]
@@ -188,11 +188,14 @@ def worldcover_cn(tr, shape):
         lut[k] = v
     for karo, ds in ag.worldcover_karolari(*b):
         kb = ds.bounds
-        # karo ile ızgaranın kesiştiği satır/sütun aralığı (60 m hücre sınırlarına hizalı)
-        c0 = max(0, math.ceil((kb.left - tr.c) / tr.a))
-        c1 = min(w, math.floor((kb.right - tr.c) / tr.a))
-        r0 = max(0, math.ceil((kb.top - tr.f) / tr.e))
-        r1 = min(h, math.floor((kb.bottom - tr.f) / tr.e))
+        # karoya değen satır/sütun aralığı. Karo sınırının (3°'nin katları)
+        # üstüne düşen hücre iki karodan da okunur: karo dışı kısım 0 (geçersiz)
+        # gelir, geçerli pikseller iki okumada toplanır. Yalnız tam içerdeki
+        # hücreler okunsaydı sınırdaki tek hücrelik şerit kapsanmaz, "su" sayılırdı.
+        c0 = max(0, math.floor((kb.left - tr.c) / tr.a))
+        c1 = min(w, math.ceil((kb.right - tr.c) / tr.a))
+        r0 = max(0, math.floor((kb.top - tr.f) / tr.e))
+        r1 = min(h, math.ceil((kb.bottom - tr.f) / tr.e))
         if c0 >= c1 or r0 >= r1:
             continue
         log.info("WorldCover %s: satır %d–%d, sütun %d–%d", karo, r0, r1, c0, c1)
@@ -200,7 +203,8 @@ def worldcover_cn(tr, shape):
             s1 = min(s0 + 400, r1)
             win = from_bounds(tr.c + c0 * tr.a, tr.f + s1 * tr.e, tr.c + c1 * tr.a,
                               tr.f + s0 * tr.e, transform=ds.transform)
-            arr = ds.read(1, window=win, out_shape=((s1 - s0) * WC_KAT, (c1 - c0) * WC_KAT))
+            arr = ds.read(1, window=win, out_shape=((s1 - s0) * WC_KAT, (c1 - c0) * WC_KAT),
+                          boundless=True, fill_value=0)
             blok = lambda x: x.reshape(s1 - s0, WC_KAT, c1 - c0, WC_KAT).sum(axis=(1, 3))
             gecerli = arr > 0
             kent = arr == 50

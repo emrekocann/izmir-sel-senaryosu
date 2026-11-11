@@ -90,7 +90,7 @@ O günün yağışını kuşatan iki senaryo için, su basan 6 merkez ilçede (B
 | 30 cm'den derin su | 7.9 km² | 5.9 km² |
 | 10 cm'den derin su | 18.6 km² | 14.6 km² |
 | Su altında kalan toplanma alanı (30 cm+) | 15 | 11 |
-| En az bir noktası 30 cm+ suda kalan yol parçası | 4.184 | 3.324 |
+| En az bir noktası 30 cm+ suda kalan yol parçası | 4.182 | 3.324 |
 
 Kısa ve yoğun senaryoda (6 saat) ayrıca 34 km²'lik düz kıyı kesimi ve içindeki 147 toplanma alanı "su gelebilir, derinlik bilinmiyor" olarak işaretleniyor. Yükseklik verisi bu düzlüklerde suyun yönünü çözemiyor; model burada tahmin yürütmek yerine bilmediğini söylüyor.
 

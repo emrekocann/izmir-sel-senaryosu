@@ -235,7 +235,7 @@ footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid var(--cizgi)
   <tr><td><span class="tr">30 cm'den derin su</span><span class="en">Water deeper than 30 cm</span></td><td class="s">7.9 km²</td><td class="s">5.9 km²</td></tr>
   <tr><td><span class="tr">10 cm'den derin su</span><span class="en">Water deeper than 10 cm</span></td><td class="s">18.6 km²</td><td class="s">14.6 km²</td></tr>
   <tr><td><span class="tr">Su altında kalan toplanma alanı</span><span class="en">Assembly areas under water</span></td><td class="s">15</td><td class="s">11</td></tr>
-  <tr><td><span class="tr">En az bir noktası 30 cm+ suda kalan yol parçası</span><span class="en">Road segments with a point under 30 cm+</span></td><td class="s">4.184</td><td class="s">3.324</td></tr>
+  <tr><td><span class="tr">En az bir noktası 30 cm+ suda kalan yol parçası</span><span class="en">Road segments with a point under 30 cm+</span></td><td class="s">4.182</td><td class="s">3.324</td></tr>
 </table></div>
 <p class="tr">Kısa ve yoğun senaryoda ayrıca 34 km²'lik düz kıyı kesimi ve içindeki 147 toplanma alanı "su gelebilir, derinlik bilinmiyor" (gri) olarak işaretleniyor. Yükseklik verisi bu düzlüklerde suyun yönünü çözemiyor; model burada tahmin yürütmek yerine bilmediğini söylüyor.</p>
 <p class="en">In the short, intense scenario a further 34 km² of flat coastal land, with 147 assembly areas, is flagged "water may arrive, depth unknown" (grey). The elevation data cannot resolve flow direction on these flats, so the model says so instead of guessing.</p>
@@ -330,10 +330,46 @@ function harita(id, merkez, zoom) {
   m.on('click', () => m.scrollWheelZoom.enable());      // sayfa kaydırmayı engellemesin: tıklayınca tekerlek açılır
   return m;
 }
+// Su katmanı: senaryo görüntüsü (4623×6724 piksel) tek parça olarak haritaya
+// konursa her yakınlaştırmada tarayıcı tamamını yeniden ölçekler ve harita
+// takılır. Bunun yerine görüntü bir kez çözülür, her harita karosu yalnız
+// kendi parçasını tuvale çizer. Görüntü satırları Mercator aralıklıdır:
+// karo pikseli ↔ görüntü pikseli doğrusal eşlenir.
+const SuKatmani = L.GridLayer.extend({
+  initialize(sinir, secenek) { this._sinir = L.latLngBounds(sinir); this._resim = null; L.setOptions(this, secenek); },
+  setUrl(url) {
+    if (url === this._url) return;
+    this._url = url;
+    const r = new Image();
+    r.onload = () => { if (this._url === url) { this._resim = r; this.redraw(); } };
+    r.src = url;
+  },
+  createTile(k) {
+    const boy = this.getTileSize(), tuval = document.createElement('canvas');
+    tuval.width = boy.x; tuval.height = boy.y;
+    const r = this._resim;
+    if (!r) return tuval;
+    const kb = this._map.project(this._sinir.getNorthWest(), k.z), gd = this._map.project(this._sinir.getSouthEast(), k.z);
+    const ox = r.naturalWidth / (gd.x - kb.x), oy = r.naturalHeight / (gd.y - kb.y);   // görüntü pikseli / harita pikseli
+    // karonun görüntüyle kesişen kısmı (harita pikseli)
+    // Karo, kenarından PAY piksel taşacak biçimde çizilir (tuval taşanı
+    // kırpar): kenar pikselleri komşu karoyla aynı görüntü pikselleriyle
+    // yumuşatılır, karolar arasında ince çizgi kalmaz.
+    const PAY = 2, kx = k.x * boy.x, ky = k.y * boy.y;
+    const x0 = Math.max(kx - PAY, kb.x), x1 = Math.min(kx + boy.x + PAY, gd.x);
+    const y0 = Math.max(ky - PAY, kb.y), y1 = Math.min(ky + boy.y + PAY, gd.y);
+    if (x1 <= x0 || y1 <= y0) return tuval;
+    const c = tuval.getContext('2d');
+    c.imageSmoothingEnabled = ox > 1;      // uzaklaşınca yumuşat, yakınlaşınca hücreler net kalsın
+    c.drawImage(r, (x0 - kb.x) * ox, (y0 - kb.y) * oy, (x1 - x0) * ox, (y1 - y0) * oy,
+                x0 - kx, y0 - ky, x1 - x0, y1 - y0);
+    return tuval;
+  },
+});
 function suKatmani(m, eski, sen) {
-  const url = `veri/senaryo/${sen}.png`;
-  if (eski) { eski.setUrl(url); return eski; }
-  return L.imageOverlay(url, V.bounds, { opacity: 0.85, interactive: false }).addTo(m);
+  const katman = eski || new SuKatmani(V.bounds, { opacity: 0.85, zIndex: 2, updateWhenZooming: false, keepBuffer: 1 }).addTo(m);
+  katman.setUrl(`veri/senaryo/${sen}.png`);
+  return katman;
 }
 function secim(id, secenekler, secili, sec) {
   const el = document.getElementById(id);
