@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.env
+venv/
+.vscode/.DS_Store
+logs/
+cache/
+dem_cache/
+afet_dump.sql
+izmir.geojson
+İl_İlçe_Sınır_ve_Yerleşim_Verisi/
+yangin_veri/
+sel_veri/
+yedek/
+loglar/
+osm_indirme/
+sinir_veri/

@@ -1,0 +1,4544 @@
+{
+ "yagis_mm": [
+  10,
+  25,
+  50,
+  75,
+  100,
+  150,
+  200,
+  250
+ ],
+ "sure_sa": [
+  1,
+  6,
+  24
+ ],
+ "drenaj_mm_sa": 20.0,
+ "derinlik_sinif_m": [
+  0.1,
+  0.3,
+  1.0
+ ],
+ "yol_kapali_m": 0.3,
+ "il_km2": 12170,
+ "bati": 26.08047897827797,
+ "kuzey": 39.54335149943195,
+ "dx": 0.0005555555555555556,
+ "dy": -0.0005555555555555556,
+ "senaryolar": {
+  "10_1": {
+   "yagis_mm": 10,
+   "sure_sa": 1,
+   "su_alan_km2": {
+    "0.1": 14.9,
+    "0.3": 2.2,
+    "1.0": 0.3
+   },
+   "belirsiz_km2": 0.0,
+   "yol_kapali_km": 10.6,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [],
+   "toplanma_etkilenen_sayi": 0,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Hasköy",
+     "km2": 0.17
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeniçiftlik",
+     "km2": 0.16
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Tokatbaşi",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Bülbüldere",
+     "km2": 0.08
+    },
+    {
+     "ilce": "Buca",
+     "mahalle": "Kaynaklar Köyü",
+     "km2": 0.07
+    },
+    {
+     "ilce": "Menderes",
+     "mahalle": "Çakaltepe",
+     "km2": 0.07
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Mahmutlar",
+     "km2": 0.07
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Sadikpaşa",
+     "km2": 0.06
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 0.06
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Muratbey",
+     "km2": 0.05
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 0.05
+    },
+    {
+     "ilce": "Buca",
+     "mahalle": "Zafer",
+     "km2": 0.05
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Burgaz",
+     "km2": 0.04
+    },
+    {
+     "ilce": "Ödemiş",
+     "mahalle": "Emirli",
+     "km2": 0.04
+    }
+   ]
+  },
+  "25_1": {
+   "yagis_mm": 25,
+   "sure_sa": 1,
+   "su_alan_km2": {
+    "0.1": 24.5,
+    "0.3": 7.4,
+    "1.0": 0.5
+   },
+   "belirsiz_km2": 0.0,
+   "yol_kapali_km": 27.7,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.3
+    }
+   ],
+   "toplanma_etkilenen_sayi": 1,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 0.34
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Hasköy",
+     "km2": 0.23
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Mahmutlar",
+     "km2": 0.23
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 0.22
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeniçiftlik",
+     "km2": 0.19
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Tokatbaşi",
+     "km2": 0.15
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Pamukyazi",
+     "km2": 0.14
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeni",
+     "km2": 0.13
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 0.13
+    },
+    {
+     "ilce": "Ödemiş",
+     "mahalle": "Adagide",
+     "km2": 0.13
+    },
+    {
+     "ilce": "Buca",
+     "mahalle": "Zafer",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Eskioba",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 0.11
+    }
+   ]
+  },
+  "50_1": {
+   "yagis_mm": 50,
+   "sure_sa": 1,
+   "su_alan_km2": {
+    "0.1": 560.1,
+    "0.3": 248.6,
+    "1.0": 48.5
+   },
+   "belirsiz_km2": 501.4,
+   "yol_kapali_km": 1387.0,
+   "alt_gecit_dolu": 931,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.5
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.5
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.9
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BUCA",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "DİKİLİ",
+     "derinlik_m": 0.5
+    }
+   ],
+   "toplanma_etkilenen_sayi": 59,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 2.6
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 2.57
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 2.39
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Islamsaray",
+     "km2": 2.31
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 2.25
+    },
+    {
+     "ilce": "Ödemiş",
+     "mahalle": "Seyrekli",
+     "km2": 2.25
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 2.11
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 1.94
+    },
+    {
+     "ilce": "Dikili",
+     "mahalle": "Ismetpaşa",
+     "km2": 1.92
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 1.87
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 1.86
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 1.84
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Eskioba",
+     "km2": 1.78
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 1.75
+    }
+   ]
+  },
+  "75_1": {
+   "yagis_mm": 75,
+   "sure_sa": 1,
+   "su_alan_km2": {
+    "0.1": 744.7,
+    "0.3": 479.8,
+    "1.0": 173.0
+   },
+   "belirsiz_km2": 519.6,
+   "yol_kapali_km": 2609.5,
+   "alt_gecit_dolu": 931,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 4.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 2.9
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 2.5
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 2.3
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 2.1
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 1.9
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 1.7
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.5
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "DİKİLİ",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.0
+    }
+   ],
+   "toplanma_etkilenen_sayi": 106,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 5.9
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 5.54
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 5.53
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 4.91
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 4.67
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 4.4
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 4.25
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 4.22
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 4.04
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 3.61
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 3.56
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 3.49
+    },
+    {
+     "ilce": "Ödemiş",
+     "mahalle": "Seyrekli",
+     "km2": 3.45
+    },
+    {
+     "ilce": "Dikili",
+     "mahalle": "Ismetpaşa",
+     "km2": 3.32
+    }
+   ]
+  },
+  "100_1": {
+   "yagis_mm": 100,
+   "sure_sa": 1,
+   "su_alan_km2": {
+    "0.1": 827.7,
+    "0.3": 631.4,
+    "1.0": 275.9
+   },
+   "belirsiz_km2": 521.1,
+   "yol_kapali_km": 3405.6,
+   "alt_gecit_dolu": 931,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 5.1
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 4.2
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 3.1
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 2.7
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 2.6
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 2.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 2.4
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.2
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 2.1
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "DİKİLİ",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 1.9
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.9
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.8
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 1.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 1.8
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 1.7
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 1.7
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 1.6
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 1.6
+    },
+    {
+     "adi": "20 NO?LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BUCA",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 1.3
+    }
+   ],
+   "toplanma_etkilenen_sayi": 134,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 7.85
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 7.35
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 6.61
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 6.4
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 6.07
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 5.9
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 5.69
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 5.45
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 5.26
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 5.18
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 4.75
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 4.36
+    },
+    {
+     "ilce": "Dikili",
+     "mahalle": "Ismetpaşa",
+     "km2": 4.35
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 4.32
+    }
+   ]
+  },
+  "150_1": {
+   "yagis_mm": 150,
+   "sure_sa": 1,
+   "su_alan_km2": {
+    "0.1": 941.4,
+    "0.3": 813.2,
+    "1.0": 433.9
+   },
+   "belirsiz_km2": 521.1,
+   "yol_kapali_km": 4289.5,
+   "alt_gecit_dolu": 931,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 7.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 5.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 4.1
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 3.5
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 3.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 3.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "DİKİLİ",
+     "derinlik_m": 3.3
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 3.2
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 3.2
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 2.9
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 2.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 2.8
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.8
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.7
+    },
+    {
+     "adi": "20 NO?LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.7
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 2.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 2.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 2.6
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 2.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BUCA",
+     "derinlik_m": 2.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 2.3
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 2.2
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 2.2
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 2.2
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BUCA",
+     "derinlik_m": 2.1
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 2.1
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 1.9
+    }
+   ],
+   "toplanma_etkilenen_sayi": 166,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 9.87
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 8.99
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 8.66
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 8.55
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 7.65
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 7.62
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 7.22
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 6.62
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 6.59
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 6.4
+    },
+    {
+     "ilce": "Dikili",
+     "mahalle": "Ismetpaşa",
+     "km2": 5.55
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 5.47
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 5.39
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 5.39
+    }
+   ]
+  },
+  "200_1": {
+   "yagis_mm": 200,
+   "sure_sa": 1,
+   "su_alan_km2": {
+    "0.1": 1022.8,
+    "0.3": 914.9,
+    "1.0": 551.6
+   },
+   "belirsiz_km2": 521.1,
+   "yol_kapali_km": 4844.5,
+   "alt_gecit_dolu": 931,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 8.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 7.1
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 4.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 4.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "DİKİLİ",
+     "derinlik_m": 4.4
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 4.3
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 4.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 4.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 4.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 3.8
+    },
+    {
+     "adi": "20 NO?LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 3.7
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 3.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 3.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 3.3
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 3.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 3.3
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 3.3
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 3.2
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 3.2
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BUCA",
+     "derinlik_m": 2.9
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 2.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 2.8
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 2.7
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 2.6
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 2.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BUCA",
+     "derinlik_m": 2.3
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 2.2
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BALÇOVA",
+     "derinlik_m": 2.2
+    }
+   ],
+   "toplanma_etkilenen_sayi": 183,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 10.7
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 9.84
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 9.51
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 9.5
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 8.38
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 8.13
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 7.97
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 7.27
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 7.25
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 7.2
+    },
+    {
+     "ilce": "Dikili",
+     "mahalle": "Ismetpaşa",
+     "km2": 6.41
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 6.25
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 6.08
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 5.88
+    }
+   ]
+  },
+  "250_1": {
+   "yagis_mm": 250,
+   "sure_sa": 1,
+   "su_alan_km2": {
+    "0.1": 1084.9,
+    "0.3": 984.0,
+    "1.0": 648.0
+   },
+   "belirsiz_km2": 521.3,
+   "yol_kapali_km": 5258.1,
+   "alt_gecit_dolu": 931,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 10.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 8.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "DİKİLİ",
+     "derinlik_m": 5.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 5.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 5.2
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 5.1
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 5.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 5.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 4.8
+    },
+    {
+     "adi": "20 NO?LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 4.7
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 4.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 4.6
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 4.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 3.9
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 3.9
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 3.8
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 3.8
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 3.7
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 3.7
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 3.5
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 3.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BUCA",
+     "derinlik_m": 3.2
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 3.2
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 3.1
+    },
+    {
+     "adi": "2 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 2.8
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 2.7
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 2.7
+    }
+   ],
+   "toplanma_etkilenen_sayi": 197,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 11.47
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 10.45
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 10.43
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 10.08
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 9.11
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 8.62
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 8.44
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 7.67
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 7.65
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 7.61
+    },
+    {
+     "ilce": "Dikili",
+     "mahalle": "Ismetpaşa",
+     "km2": 7.52
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 6.86
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 6.46
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 6.06
+    }
+   ]
+  },
+  "10_6": {
+   "yagis_mm": 10,
+   "sure_sa": 6,
+   "su_alan_km2": {
+    "0.1": 14.9,
+    "0.3": 2.2,
+    "1.0": 0.3
+   },
+   "belirsiz_km2": 0.0,
+   "yol_kapali_km": 10.6,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [],
+   "toplanma_etkilenen_sayi": 0,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Hasköy",
+     "km2": 0.17
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeniçiftlik",
+     "km2": 0.16
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Tokatbaşi",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Bülbüldere",
+     "km2": 0.08
+    },
+    {
+     "ilce": "Buca",
+     "mahalle": "Kaynaklar Köyü",
+     "km2": 0.07
+    },
+    {
+     "ilce": "Menderes",
+     "mahalle": "Çakaltepe",
+     "km2": 0.07
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Mahmutlar",
+     "km2": 0.07
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Sadikpaşa",
+     "km2": 0.06
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 0.06
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Muratbey",
+     "km2": 0.05
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 0.05
+    },
+    {
+     "ilce": "Buca",
+     "mahalle": "Zafer",
+     "km2": 0.05
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Burgaz",
+     "km2": 0.04
+    },
+    {
+     "ilce": "Ödemiş",
+     "mahalle": "Emirli",
+     "km2": 0.04
+    }
+   ]
+  },
+  "25_6": {
+   "yagis_mm": 25,
+   "sure_sa": 6,
+   "su_alan_km2": {
+    "0.1": 24.5,
+    "0.3": 7.4,
+    "1.0": 0.5
+   },
+   "belirsiz_km2": 0.0,
+   "yol_kapali_km": 27.7,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.3
+    }
+   ],
+   "toplanma_etkilenen_sayi": 1,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 0.34
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Hasköy",
+     "km2": 0.23
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Mahmutlar",
+     "km2": 0.23
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 0.22
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeniçiftlik",
+     "km2": 0.19
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Tokatbaşi",
+     "km2": 0.15
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Pamukyazi",
+     "km2": 0.14
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeni",
+     "km2": 0.13
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 0.13
+    },
+    {
+     "ilce": "Ödemiş",
+     "mahalle": "Adagide",
+     "km2": 0.13
+    },
+    {
+     "ilce": "Buca",
+     "mahalle": "Zafer",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Eskioba",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 0.11
+    }
+   ]
+  },
+  "50_6": {
+   "yagis_mm": 50,
+   "sure_sa": 6,
+   "su_alan_km2": {
+    "0.1": 250.8,
+    "0.3": 91.7,
+    "1.0": 17.4
+   },
+   "belirsiz_km2": 68.7,
+   "yol_kapali_km": 355.8,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.3
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.3
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 0.3
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 0.3
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.3
+    }
+   ],
+   "toplanma_etkilenen_sayi": 13,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 2.2
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 1.44
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 1.43
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 1.38
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 1.37
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 1.37
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 1.35
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 1.34
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 1.15
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Islamsaray",
+     "km2": 1.13
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 1.09
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 1.08
+    },
+    {
+     "ilce": "Ödemiş",
+     "mahalle": "Seyrekli",
+     "km2": 1.06
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Çaybaşi",
+     "km2": 0.98
+    }
+   ]
+  },
+  "75_6": {
+   "yagis_mm": 75,
+   "sure_sa": 6,
+   "su_alan_km2": {
+    "0.1": 489.8,
+    "0.3": 237.9,
+    "1.0": 84.8
+   },
+   "belirsiz_km2": 128.1,
+   "yol_kapali_km": 1060.6,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 1.9
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.8
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.7
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENDERES",
+     "derinlik_m": 0.3
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 0.3
+    }
+   ],
+   "toplanma_etkilenen_sayi": 32,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 4.68
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 3.75
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 3.57
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 3.31
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 3.18
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 3.04
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 2.99
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 2.97
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 2.92
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 2.81
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 2.64
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 2.54
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Islamsaray",
+     "km2": 2.44
+    },
+    {
+     "ilce": "Ödemiş",
+     "mahalle": "Seyrekli",
+     "km2": 2.22
+    }
+   ]
+  },
+  "100_6": {
+   "yagis_mm": 100,
+   "sure_sa": 6,
+   "su_alan_km2": {
+    "0.1": 627.1,
+    "0.3": 339.4,
+    "1.0": 142.0
+   },
+   "belirsiz_km2": 516.0,
+   "yol_kapali_km": 1582.1,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 3.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 2.5
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 2.4
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 1.6
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.9
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "DİKİLİ",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.5
+    }
+   ],
+   "toplanma_etkilenen_sayi": 57,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 6.55
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 5.15
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 4.5
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 4.45
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 4.32
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 4.16
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 3.92
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 3.73
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 3.6
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 3.46
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 3.46
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 3.41
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 3.14
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 2.99
+    }
+   ]
+  },
+  "150_6": {
+   "yagis_mm": 150,
+   "sure_sa": 6,
+   "su_alan_km2": {
+    "0.1": 771.0,
+    "0.3": 487.7,
+    "1.0": 230.3
+   },
+   "belirsiz_km2": 519.6,
+   "yol_kapali_km": 2391.3,
+   "alt_gecit_dolu": 931,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 4.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 3.9
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 2.2
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 2.2
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 2.2
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 2.1
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 1.5
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 1.5
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.5
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 1.5
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "DİKİLİ",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 1.0
+    }
+   ],
+   "toplanma_etkilenen_sayi": 92,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 7.74
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 6.98
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 6.29
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 5.54
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 5.5
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 5.18
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 5.04
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 4.98
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 4.72
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 4.67
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 4.61
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 4.39
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 4.38
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 3.9
+    }
+   ]
+  },
+  "200_6": {
+   "yagis_mm": 200,
+   "sure_sa": 6,
+   "su_alan_km2": {
+    "0.1": 837.7,
+    "0.3": 599.8,
+    "1.0": 301.1
+   },
+   "belirsiz_km2": 519.6,
+   "yol_kapali_km": 3038.0,
+   "alt_gecit_dolu": 931,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 5.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 4.5
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 2.8
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 2.8
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 2.6
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 2.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 2.2
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.9
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.8
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "DİKİLİ",
+     "derinlik_m": 1.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 1.8
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 1.7
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 1.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 1.5
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.5
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.1
+    }
+   ],
+   "toplanma_etkilenen_sayi": 111,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 8.31
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 7.94
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 7.37
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 6.76
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 6.57
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 6.47
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 5.84
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 5.74
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 5.64
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 5.52
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 5.1
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 5.09
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 4.97
+    },
+    {
+     "ilce": "Ödemiş",
+     "mahalle": "Seyrekli",
+     "km2": 4.23
+    }
+   ]
+  },
+  "250_6": {
+   "yagis_mm": 250,
+   "sure_sa": 6,
+   "su_alan_km2": {
+    "0.1": 882.2,
+    "0.3": 682.4,
+    "1.0": 361.8
+   },
+   "belirsiz_km2": 519.6,
+   "yol_kapali_km": 3533.7,
+   "alt_gecit_dolu": 931,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 6.1
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 5.2
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 3.5
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 3.4
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 3.1
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 3.1
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 2.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 2.7
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 2.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "DİKİLİ",
+     "derinlik_m": 2.3
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 2.3
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 2.2
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 2.2
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.1
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 2.1
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 2.1
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 2.1
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.1
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 1.9
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 1.9
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 1.8
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.7
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 1.5
+    },
+    {
+     "adi": "20 NO?LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.5
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ALİAĞA",
+     "derinlik_m": 1.4
+    }
+   ],
+   "toplanma_etkilenen_sayi": 129,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 8.67
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 8.64
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 7.9
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 7.65
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 7.16
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 6.94
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 6.42
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 6.15
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 6.1
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 5.95
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 5.64
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 5.44
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 5.36
+    },
+    {
+     "ilce": "Dikili",
+     "mahalle": "Ismetpaşa",
+     "km2": 4.87
+    }
+   ]
+  },
+  "10_24": {
+   "yagis_mm": 10,
+   "sure_sa": 24,
+   "su_alan_km2": {
+    "0.1": 14.9,
+    "0.3": 2.2,
+    "1.0": 0.3
+   },
+   "belirsiz_km2": 0.0,
+   "yol_kapali_km": 10.6,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [],
+   "toplanma_etkilenen_sayi": 0,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Hasköy",
+     "km2": 0.17
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeniçiftlik",
+     "km2": 0.16
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Tokatbaşi",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Bülbüldere",
+     "km2": 0.08
+    },
+    {
+     "ilce": "Buca",
+     "mahalle": "Kaynaklar Köyü",
+     "km2": 0.07
+    },
+    {
+     "ilce": "Menderes",
+     "mahalle": "Çakaltepe",
+     "km2": 0.07
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Mahmutlar",
+     "km2": 0.07
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Sadikpaşa",
+     "km2": 0.06
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 0.06
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Muratbey",
+     "km2": 0.05
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 0.05
+    },
+    {
+     "ilce": "Buca",
+     "mahalle": "Zafer",
+     "km2": 0.05
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Burgaz",
+     "km2": 0.04
+    },
+    {
+     "ilce": "Ödemiş",
+     "mahalle": "Emirli",
+     "km2": 0.04
+    }
+   ]
+  },
+  "25_24": {
+   "yagis_mm": 25,
+   "sure_sa": 24,
+   "su_alan_km2": {
+    "0.1": 24.5,
+    "0.3": 7.4,
+    "1.0": 0.5
+   },
+   "belirsiz_km2": 0.0,
+   "yol_kapali_km": 27.7,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.3
+    }
+   ],
+   "toplanma_etkilenen_sayi": 1,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 0.34
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Hasköy",
+     "km2": 0.23
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Mahmutlar",
+     "km2": 0.23
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 0.22
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeniçiftlik",
+     "km2": 0.19
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Tokatbaşi",
+     "km2": 0.15
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Pamukyazi",
+     "km2": 0.14
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeni",
+     "km2": 0.13
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 0.13
+    },
+    {
+     "ilce": "Ödemiş",
+     "mahalle": "Adagide",
+     "km2": 0.13
+    },
+    {
+     "ilce": "Buca",
+     "mahalle": "Zafer",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Eskioba",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 0.12
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 0.11
+    }
+   ]
+  },
+  "50_24": {
+   "yagis_mm": 50,
+   "sure_sa": 24,
+   "su_alan_km2": {
+    "0.1": 44.6,
+    "0.3": 23.2,
+    "1.0": 5.5
+   },
+   "belirsiz_km2": 0.0,
+   "yol_kapali_km": 94.7,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.3
+    }
+   ],
+   "toplanma_etkilenen_sayi": 6,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 0.5
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 0.48
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 0.43
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 0.39
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Hasköy",
+     "km2": 0.39
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Mahmutlar",
+     "km2": 0.39
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Eskioba",
+     "km2": 0.35
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 0.33
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 0.3
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 0.27
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Torbali",
+     "km2": 0.27
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 0.26
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeniçiftlik",
+     "km2": 0.25
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeni",
+     "km2": 0.24
+    }
+   ]
+  },
+  "75_24": {
+   "yagis_mm": 75,
+   "sure_sa": 24,
+   "su_alan_km2": {
+    "0.1": 201.3,
+    "0.3": 93.5,
+    "1.0": 31.1
+   },
+   "belirsiz_km2": 57.0,
+   "yol_kapali_km": 314.1,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.8
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 1.7
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 0.4
+    }
+   ],
+   "toplanma_etkilenen_sayi": 10,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 3.35
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 2.55
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 2.19
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 2.18
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 1.79
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 1.76
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Göllüce",
+     "km2": 1.55
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 1.53
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 1.5
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 1.37
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 1.36
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 1.27
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Yeni",
+     "km2": 1.16
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Tokatbaşi",
+     "km2": 1.1
+    }
+   ]
+  },
+  "100_24": {
+   "yagis_mm": 100,
+   "sure_sa": 24,
+   "su_alan_km2": {
+    "0.1": 326.2,
+    "0.3": 166.9,
+    "1.0": 66.2
+   },
+   "belirsiz_km2": 101.5,
+   "yol_kapali_km": 655.4,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 2.4
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.3
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 0.3
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.3
+    }
+   ],
+   "toplanma_etkilenen_sayi": 24,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 4.23
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 3.2
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 3.17
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 3.04
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 2.99
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 2.53
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 2.47
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 2.27
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 2.19
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 2.17
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 2.14
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 2.05
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 1.93
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Göllüce",
+     "km2": 1.82
+    }
+   ]
+  },
+  "150_24": {
+   "yagis_mm": 150,
+   "sure_sa": 24,
+   "su_alan_km2": {
+    "0.1": 494.7,
+    "0.3": 269.5,
+    "1.0": 124.0
+   },
+   "belirsiz_km2": 127.8,
+   "yol_kapali_km": 1167.2,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 2.1
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 1.3
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.9
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.9
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 0.9
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.5
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.4
+    },
+    {
+     "adi": "7 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARŞIYAKA",
+     "derinlik_m": 0.4
+    }
+   ],
+   "toplanma_etkilenen_sayi": 37,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 6.09
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 4.45
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 4.32
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 4.27
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 4.12
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 3.96
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 3.58
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 3.41
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 3.35
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 3.14
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 3.08
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 2.99
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 2.97
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Islamsaray",
+     "km2": 2.73
+    }
+   ]
+  },
+  "200_24": {
+   "yagis_mm": 200,
+   "sure_sa": 24,
+   "su_alan_km2": {
+    "0.1": 604.6,
+    "0.3": 341.9,
+    "1.0": 167.2
+   },
+   "belirsiz_km2": 131.0,
+   "yol_kapali_km": 1553.3,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 3.2
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 2.5
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 1.6
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 0.9
+    },
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.9
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 0.9
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 0.6
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.6
+    }
+   ],
+   "toplanma_etkilenen_sayi": 51,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 6.72
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 5.25
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 5.21
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 4.73
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 4.65
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 4.46
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 4.18
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 4.01
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 3.98
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 3.82
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 3.8
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 3.76
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 3.75
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 3.32
+    }
+   ]
+  },
+  "250_24": {
+   "yagis_mm": 250,
+   "sure_sa": 24,
+   "su_alan_km2": {
+    "0.1": 680.2,
+    "0.3": 400.3,
+    "1.0": 202.1
+   },
+   "belirsiz_km2": 516.0,
+   "yol_kapali_km": 1878.5,
+   "alt_gecit_dolu": 0,
+   "alt_gecit_toplam": 931,
+   "toplanma_etkilenen": [
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 3.6
+    },
+    {
+     "adi": "4 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 3.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BERGAMA",
+     "derinlik_m": 2.9
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 2.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KARABAĞLAR",
+     "derinlik_m": 1.8
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM  TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.6
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "2 NOLU TOPLAMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 1.4
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÖDEMİŞ",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SEFERİHİSAR",
+     "derinlik_m": 1.2
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KİRAZ",
+     "derinlik_m": 1.1
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "SELÇUK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KEMALPAŞA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "ÇEŞME",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BORNOVA",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "4 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TORBALI",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "3 NO'LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 1.0
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.9
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "MENEMEN",
+     "derinlik_m": 0.9
+    },
+    {
+     "adi": "2 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "TİRE",
+     "derinlik_m": 0.9
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "DİKİLİ",
+     "derinlik_m": 0.8
+    },
+    {
+     "adi": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "KONAK",
+     "derinlik_m": 0.7
+    },
+    {
+     "adi": "5 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
+     "ilce": "BAYRAKLI",
+     "derinlik_m": 0.7
+    }
+   ],
+   "toplanma_etkilenen_sayi": 65,
+   "toplanma_toplam": 2380,
+   "mahalleler": [
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Çirpi",
+     "km2": 7.64
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Isabey",
+     "km2": 5.87
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Aşağikiriklar",
+     "km2": 5.78
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Tulum",
+     "km2": 5.16
+    },
+    {
+     "ilce": "Bergama",
+     "mahalle": "Ertuğrul",
+     "km2": 5.12
+    },
+    {
+     "ilce": "Selçuk",
+     "mahalle": "Belevi",
+     "km2": 4.76
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Poyracik",
+     "km2": 4.55
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Turan",
+     "km2": 4.47
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Fatih",
+     "km2": 4.36
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Furunlu",
+     "km2": 4.35
+    },
+    {
+     "ilce": "Bayindir",
+     "mahalle": "Yeşilova",
+     "km2": 4.27
+    },
+    {
+     "ilce": "Tire",
+     "mahalle": "Kahrat",
+     "km2": 4.24
+    },
+    {
+     "ilce": "Kinik",
+     "mahalle": "Yayakent",
+     "km2": 4.18
+    },
+    {
+     "ilce": "Torbali",
+     "mahalle": "Atalan",
+     "km2": 3.58
+    }
+   ]
+  }
+ }
+}

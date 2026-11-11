@@ -1,0 +1,55 @@
+{
+  "olay": "2 Şubat 2021 İzmir seli",
+  "tarih": "2021-02-02",
+  "derleme": "Haberlerde adı geçen, su basan / suyla kapanan yerler elle derlendi (2026-11-06). Yalnız konumu mahalle ya da cadde düzeyinde belli olanlar alındı; 'bazı sokaklar' gibi yeri belirsiz anlatımlar ve OSM'de bulunamayan adlar dışarıda kaldı.",
+  "yagis": {
+    "not": "Meteoroloji 2. Bölge Müdürlüğü / MGM ölçümleri, kg/m² = mm. Süre kaynağa göre 8–14 saat.",
+    "olcumler": [
+      {"istasyon": "İzmir merkez", "mm": 128, "saat": 11, "kaynak": "aa"},
+      {"istasyon": "Bayraklı", "mm": 115, "saat": 11, "kaynak": "aa"},
+      {"istasyon": "Balçova", "mm": 99, "saat": 11, "kaynak": "aa"},
+      {"istasyon": "Bornova", "mm": 71, "saat": 11, "kaynak": "aa"},
+      {"istasyon": "İzmir merkez", "mm": 142, "saat": 14, "kaynak": "insaport"},
+      {"istasyon": "Bayraklı", "mm": 129, "saat": 14, "kaynak": "insaport"},
+      {"istasyon": "Balçova", "mm": 109, "saat": 14, "kaynak": "insaport"},
+      {"istasyon": "Güzelyalı", "mm": 125.6, "saat": null, "kaynak": "ibb"},
+      {"istasyon": "Karabağlar", "mm": 119, "saat": null, "kaynak": "ibb"}
+    ]
+  },
+  "kaynaklar": {
+    "aa": "https://www.aa.com.tr/tr/turkiye/izmirde-saganak-sel-ve-su-baskinlarina-neden-oldu-/2130674",
+    "cumhuriyet": "https://www.cumhuriyet.com.tr/haber/tunc-soyerden-evden-cikmayin-uyarisi-1810674",
+    "insaport": "https://www.insaport.com/haberler/izmirde-sel-felaketi-can-kaybi-2ye-yukseldi/",
+    "ibb": "https://www.izmir.bel.tr/tr/Haberler/bir-yillik-yagmurun-yuzde-18-i-bir-gecede-yagdi/44620/156"
+  },
+  "yerler": [
+    {"tur": "mahalle", "ilce": "Balçova", "ad": "Çetin Emeç", "neden": "dere",
+     "anlatim": "Hacı Ahmet (ya da Yahya) Deresi taştı; sokak ve araçlar su altında", "kaynak": ["aa", "cumhuriyet", "insaport"]},
+    {"tur": "mahalle", "ilce": "Karabağlar", "ad": "Fahrettin Altay", "neden": "belirsiz",
+     "anlatim": "65/11 Sokak'ta çok sayıda araç su altında", "kaynak": ["aa", "cumhuriyet"]},
+    {"tur": "mahalle", "ilce": "Konak", "ad": "Alsancak", "neden": "kiyi_drenaj",
+     "anlatim": "Alsancak ve 1. Kordon'da ev ve iş yerlerini su bastı", "kaynak": ["aa"]},
+    {"tur": "mahalle", "ilce": "Konak", "ad": "Güzelyali", "neden": "kiyi_drenaj",
+     "anlatim": "Güzelyalı ve Mithatpaşa caddelerinde ev ve iş yerlerini su bastı", "kaynak": ["aa", "cumhuriyet"]},
+    {"tur": "mahalle", "ilce": "Karşiyaka", "ad": "Örnekköy", "neden": "dere",
+     "anlatim": "10 Nisan Köprüsü altında su birikti, araçlar mahsur kaldı", "kaynak": ["aa"]},
+    {"tur": "mahalle", "ilce": "Karşiyaka", "ad": "Soğukkuyu", "neden": "dere",
+     "anlatim": "Soğukkuyu Deresi taştı", "kaynak": ["aa"]},
+    {"tur": "mahalle", "ilce": "Bayrakli", "ad": "Yamanlar", "neden": "belirsiz",
+     "anlatim": "Bazı evleri su bastı", "kaynak": ["aa", "cumhuriyet"]},
+    {"tur": "cadde", "ilce": "Balçova", "ad": "Ziya Gökalp Caddesi", "osm_ad": "Ziya Gökalp Sokak", "neden": "belirsiz",
+     "anlatim": "Su baskını, trafik güçlükle ilerledi", "kaynak": ["aa", "cumhuriyet"]},
+    {"tur": "cadde", "ilce": "Karabağlar", "ad": "İnönü Caddesi", "neden": "belirsiz",
+     "anlatim": "Yolda su birikti, ulaşım güçleşti", "kaynak": ["aa", "cumhuriyet"]},
+    {"tur": "cadde", "ilce": "Konak", "ad": "Mithatpaşa Caddesi", "neden": "kiyi_drenaj",
+     "anlatim": "Ev ve iş yerlerini su bastı", "kaynak": ["aa", "cumhuriyet"]},
+    {"tur": "cadde", "ilce": "Karşiyaka", "ad": "Anadolu Caddesi", "neden": "belirsiz",
+     "anlatim": "Yolu su bastı, trafik durdu", "kaynak": ["aa", "cumhuriyet", "insaport"]},
+    {"tur": "cadde", "ilce": "Karşiyaka", "ad": "Cemal Gürsel Caddesi", "neden": "kiyi_drenaj",
+     "anlatim": "Yoğun su birikintisi", "kaynak": ["aa", "cumhuriyet"]},
+    {"tur": "dere", "ilce": "Karabağlar", "ad": "Poligon Deresi", "neden": "dere",
+     "anlatim": "Dere taştı, istinat duvarı yıkıldı, bazı evleri su bastı", "kaynak": ["aa", "cumhuriyet"]},
+    {"tur": "alt_gecit", "ilce": "Konak", "ad": "Konak Alt Geçidi", "neden": "kiyi_drenaj",
+     "anlatim": "Alt geçidi su bastı, itfaiye pompayla boşalttı", "kaynak": ["aa", "cumhuriyet"]}
+  ]
+}

@@ -1,0 +1,813 @@
+{
+ "olay": "2 Şubat 2021 İzmir seli",
+ "ilceler": [
+  "Balçova",
+  "Bayrakli",
+  "Bornova",
+  "Karabağlar",
+  "Karşiyaka",
+  "Konak"
+ ],
+ "senaryolar": {
+  "50_1": {
+   "yerler": [
+    {
+     "tur": "mahalle",
+     "ilce": "Balçova",
+     "ad": "Çetin Emeç",
+     "neden": "dere",
+     "islak_pay": 0.02,
+     "yuzdelik": 35,
+     "derin_pay": 0.02,
+     "derin_yuzdelik": 58
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karabağlar",
+     "ad": "Fahrettin Altay",
+     "neden": "belirsiz",
+     "islak_pay": 0.07,
+     "yuzdelik": 58,
+     "derin_pay": 0.025,
+     "derin_yuzdelik": 61
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Konak",
+     "ad": "Alsancak",
+     "neden": "kiyi_drenaj",
+     "islak_pay": 0.903,
+     "yuzdelik": 93,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 25
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Konak",
+     "ad": "Güzelyali",
+     "neden": "kiyi_drenaj",
+     "islak_pay": 0.492,
+     "yuzdelik": 80,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 25
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karşiyaka",
+     "ad": "Örnekköy",
+     "neden": "dere",
+     "islak_pay": 0.067,
+     "yuzdelik": 56,
+     "derin_pay": 0.067,
+     "derin_yuzdelik": 81
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karşiyaka",
+     "ad": "Soğukkuyu",
+     "neden": "dere",
+     "islak_pay": 0.0,
+     "yuzdelik": 14,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 25
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Bayrakli",
+     "ad": "Yamanlar",
+     "neden": "belirsiz",
+     "islak_pay": 0.066,
+     "yuzdelik": 55,
+     "derin_pay": 0.066,
+     "derin_yuzdelik": 80
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Balçova",
+     "ad": "Ziya Gökalp Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.3,
+     "kapali": true,
+     "islak_pay": 0.117,
+     "belirsiz": false
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karabağlar",
+     "ad": "İnönü Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.4,
+     "kapali": true,
+     "islak_pay": 0.213,
+     "belirsiz": true
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Konak",
+     "ad": "Mithatpaşa Caddesi",
+     "neden": "kiyi_drenaj",
+     "en_derin_m": 0.0,
+     "kapali": false,
+     "islak_pay": 0.327,
+     "belirsiz": true
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karşiyaka",
+     "ad": "Anadolu Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 1.3,
+     "kapali": true,
+     "islak_pay": 0.785,
+     "belirsiz": true
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karşiyaka",
+     "ad": "Cemal Gürsel Caddesi",
+     "neden": "kiyi_drenaj",
+     "en_derin_m": 0.0,
+     "kapali": false,
+     "islak_pay": 0.815,
+     "belirsiz": true
+    },
+    {
+     "tur": "dere",
+     "ilce": "Karabağlar",
+     "ad": "Poligon Deresi",
+     "neden": "dere",
+     "en_derin_m": 0.7,
+     "kapali": true,
+     "islak_pay": 0.375,
+     "belirsiz": true
+    },
+    {
+     "tur": "alt_gecit",
+     "ilce": "Konak",
+     "ad": "Konak Alt Geçidi",
+     "neden": "kiyi_drenaj",
+     "alt_gecit_dolu": true
+    }
+   ],
+   "mahalle_auc": 0.56,
+   "mahalle_auc_yalniz_derinlik": 0.5,
+   "mahalle_sayisi": {
+    "haber": 7,
+    "oteki": 167
+   },
+   "mahalle_islak_pay_medyan": {
+    "haber": 0.067,
+    "oteki": 0.048
+   },
+   "cadde_kapali_oran": {
+    "haber": 0.6,
+    "oteki": 0.28
+   },
+   "cadde_sayisi": {
+    "haber": 5,
+    "oteki": 207
+   },
+   "cadde_auc": 0.62
+  },
+  "100_6": {
+   "yerler": [
+    {
+     "tur": "mahalle",
+     "ilce": "Balçova",
+     "ad": "Çetin Emeç",
+     "neden": "dere",
+     "islak_pay": 0.019,
+     "yuzdelik": 37,
+     "derin_pay": 0.019,
+     "derin_yuzdelik": 61
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karabağlar",
+     "ad": "Fahrettin Altay",
+     "neden": "belirsiz",
+     "islak_pay": 0.066,
+     "yuzdelik": 59,
+     "derin_pay": 0.021,
+     "derin_yuzdelik": 62
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Konak",
+     "ad": "Alsancak",
+     "neden": "kiyi_drenaj",
+     "islak_pay": 0.903,
+     "yuzdelik": 93,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 27
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Konak",
+     "ad": "Güzelyali",
+     "neden": "kiyi_drenaj",
+     "islak_pay": 0.492,
+     "yuzdelik": 80,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 27
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karşiyaka",
+     "ad": "Örnekköy",
+     "neden": "dere",
+     "islak_pay": 0.067,
+     "yuzdelik": 59,
+     "derin_pay": 0.067,
+     "derin_yuzdelik": 84
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karşiyaka",
+     "ad": "Soğukkuyu",
+     "neden": "dere",
+     "islak_pay": 0.0,
+     "yuzdelik": 16,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 27
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Bayrakli",
+     "ad": "Yamanlar",
+     "neden": "belirsiz",
+     "islak_pay": 0.052,
+     "yuzdelik": 55,
+     "derin_pay": 0.052,
+     "derin_yuzdelik": 82
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Balçova",
+     "ad": "Ziya Gökalp Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.3,
+     "kapali": true,
+     "islak_pay": 0.117,
+     "belirsiz": false
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karabağlar",
+     "ad": "İnönü Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.3,
+     "kapali": true,
+     "islak_pay": 0.178,
+     "belirsiz": true
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Konak",
+     "ad": "Mithatpaşa Caddesi",
+     "neden": "kiyi_drenaj",
+     "en_derin_m": 0.0,
+     "kapali": false,
+     "islak_pay": 0.327,
+     "belirsiz": true
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karşiyaka",
+     "ad": "Anadolu Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 1.2,
+     "kapali": true,
+     "islak_pay": 0.732,
+     "belirsiz": true
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karşiyaka",
+     "ad": "Cemal Gürsel Caddesi",
+     "neden": "kiyi_drenaj",
+     "en_derin_m": 0.0,
+     "kapali": false,
+     "islak_pay": 0.815,
+     "belirsiz": true
+    },
+    {
+     "tur": "dere",
+     "ilce": "Karabağlar",
+     "ad": "Poligon Deresi",
+     "neden": "dere",
+     "en_derin_m": 0.5,
+     "kapali": true,
+     "islak_pay": 0.375,
+     "belirsiz": true
+    },
+    {
+     "tur": "alt_gecit",
+     "ilce": "Konak",
+     "ad": "Konak Alt Geçidi",
+     "neden": "kiyi_drenaj",
+     "alt_gecit_dolu": false
+    }
+   ],
+   "mahalle_auc": 0.57,
+   "mahalle_auc_yalniz_derinlik": 0.53,
+   "mahalle_sayisi": {
+    "haber": 7,
+    "oteki": 167
+   },
+   "mahalle_islak_pay_medyan": {
+    "haber": 0.066,
+    "oteki": 0.037
+   },
+   "cadde_kapali_oran": {
+    "haber": 0.6,
+    "oteki": 0.24
+   },
+   "cadde_sayisi": {
+    "haber": 5,
+    "oteki": 207
+   },
+   "cadde_auc": 0.64
+  },
+  "150_6": {
+   "yerler": [
+    {
+     "tur": "mahalle",
+     "ilce": "Balçova",
+     "ad": "Çetin Emeç",
+     "neden": "dere",
+     "islak_pay": 0.02,
+     "yuzdelik": 35,
+     "derin_pay": 0.02,
+     "derin_yuzdelik": 59
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karabağlar",
+     "ad": "Fahrettin Altay",
+     "neden": "belirsiz",
+     "islak_pay": 0.07,
+     "yuzdelik": 58,
+     "derin_pay": 0.025,
+     "derin_yuzdelik": 61
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Konak",
+     "ad": "Alsancak",
+     "neden": "kiyi_drenaj",
+     "islak_pay": 0.903,
+     "yuzdelik": 93,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 24
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Konak",
+     "ad": "Güzelyali",
+     "neden": "kiyi_drenaj",
+     "islak_pay": 0.492,
+     "yuzdelik": 80,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 24
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karşiyaka",
+     "ad": "Örnekköy",
+     "neden": "dere",
+     "islak_pay": 0.067,
+     "yuzdelik": 56,
+     "derin_pay": 0.067,
+     "derin_yuzdelik": 82
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karşiyaka",
+     "ad": "Soğukkuyu",
+     "neden": "dere",
+     "islak_pay": 0.0,
+     "yuzdelik": 14,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 24
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Bayrakli",
+     "ad": "Yamanlar",
+     "neden": "belirsiz",
+     "islak_pay": 0.068,
+     "yuzdelik": 57,
+     "derin_pay": 0.068,
+     "derin_yuzdelik": 82
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Balçova",
+     "ad": "Ziya Gökalp Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.4,
+     "kapali": true,
+     "islak_pay": 0.117,
+     "belirsiz": false
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karabağlar",
+     "ad": "İnönü Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.4,
+     "kapali": true,
+     "islak_pay": 0.213,
+     "belirsiz": true
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Konak",
+     "ad": "Mithatpaşa Caddesi",
+     "neden": "kiyi_drenaj",
+     "en_derin_m": 0.0,
+     "kapali": false,
+     "islak_pay": 0.327,
+     "belirsiz": true
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karşiyaka",
+     "ad": "Anadolu Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 1.8,
+     "kapali": true,
+     "islak_pay": 0.734,
+     "belirsiz": true
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karşiyaka",
+     "ad": "Cemal Gürsel Caddesi",
+     "neden": "kiyi_drenaj",
+     "en_derin_m": 0.0,
+     "kapali": false,
+     "islak_pay": 0.815,
+     "belirsiz": true
+    },
+    {
+     "tur": "dere",
+     "ilce": "Karabağlar",
+     "ad": "Poligon Deresi",
+     "neden": "dere",
+     "en_derin_m": 0.8,
+     "kapali": true,
+     "islak_pay": 0.375,
+     "belirsiz": true
+    },
+    {
+     "tur": "alt_gecit",
+     "ilce": "Konak",
+     "ad": "Konak Alt Geçidi",
+     "neden": "kiyi_drenaj",
+     "alt_gecit_dolu": true
+    }
+   ],
+   "mahalle_auc": 0.57,
+   "mahalle_auc_yalniz_derinlik": 0.51,
+   "mahalle_sayisi": {
+    "haber": 7,
+    "oteki": 167
+   },
+   "mahalle_islak_pay_medyan": {
+    "haber": 0.068,
+    "oteki": 0.047
+   },
+   "cadde_kapali_oran": {
+    "haber": 0.6,
+    "oteki": 0.29
+   },
+   "cadde_sayisi": {
+    "haber": 5,
+    "oteki": 207
+   },
+   "cadde_auc": 0.61
+  },
+  "100_24": {
+   "yerler": [
+    {
+     "tur": "mahalle",
+     "ilce": "Balçova",
+     "ad": "Çetin Emeç",
+     "neden": "dere",
+     "islak_pay": 0.005,
+     "yuzdelik": 59,
+     "derin_pay": 0.005,
+     "derin_yuzdelik": 59
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karabağlar",
+     "ad": "Fahrettin Altay",
+     "neden": "belirsiz",
+     "islak_pay": 0.017,
+     "yuzdelik": 71,
+     "derin_pay": 0.017,
+     "derin_yuzdelik": 71
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Konak",
+     "ad": "Alsancak",
+     "neden": "kiyi_drenaj",
+     "islak_pay": 0.0,
+     "yuzdelik": 28,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 28
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Konak",
+     "ad": "Güzelyali",
+     "neden": "kiyi_drenaj",
+     "islak_pay": 0.0,
+     "yuzdelik": 28,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 28
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karşiyaka",
+     "ad": "Örnekköy",
+     "neden": "dere",
+     "islak_pay": 0.045,
+     "yuzdelik": 86,
+     "derin_pay": 0.045,
+     "derin_yuzdelik": 86
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karşiyaka",
+     "ad": "Soğukkuyu",
+     "neden": "dere",
+     "islak_pay": 0.0,
+     "yuzdelik": 28,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 28
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Bayrakli",
+     "ad": "Yamanlar",
+     "neden": "belirsiz",
+     "islak_pay": 0.048,
+     "yuzdelik": 88,
+     "derin_pay": 0.048,
+     "derin_yuzdelik": 88
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Balçova",
+     "ad": "Ziya Gökalp Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.1,
+     "kapali": false,
+     "islak_pay": 0.117,
+     "belirsiz": false
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karabağlar",
+     "ad": "İnönü Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.3,
+     "kapali": true,
+     "islak_pay": 0.027,
+     "belirsiz": false
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Konak",
+     "ad": "Mithatpaşa Caddesi",
+     "neden": "kiyi_drenaj",
+     "en_derin_m": 0.0,
+     "kapali": false,
+     "islak_pay": 0.0,
+     "belirsiz": false
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karşiyaka",
+     "ad": "Anadolu Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.4,
+     "kapali": true,
+     "islak_pay": 0.075,
+     "belirsiz": false
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karşiyaka",
+     "ad": "Cemal Gürsel Caddesi",
+     "neden": "kiyi_drenaj",
+     "en_derin_m": 0.0,
+     "kapali": false,
+     "islak_pay": 0.0,
+     "belirsiz": false
+    },
+    {
+     "tur": "dere",
+     "ilce": "Karabağlar",
+     "ad": "Poligon Deresi",
+     "neden": "dere",
+     "en_derin_m": 0.2,
+     "kapali": false,
+     "islak_pay": 0.124,
+     "belirsiz": false
+    },
+    {
+     "tur": "alt_gecit",
+     "ilce": "Konak",
+     "ad": "Konak Alt Geçidi",
+     "neden": "kiyi_drenaj",
+     "alt_gecit_dolu": false
+    }
+   ],
+   "mahalle_auc": 0.56,
+   "mahalle_auc_yalniz_derinlik": 0.56,
+   "mahalle_sayisi": {
+    "haber": 7,
+    "oteki": 167
+   },
+   "mahalle_islak_pay_medyan": {
+    "haber": 0.005,
+    "oteki": 0.0
+   },
+   "cadde_kapali_oran": {
+    "haber": 0.4,
+    "oteki": 0.17
+   },
+   "cadde_sayisi": {
+    "haber": 5,
+    "oteki": 207
+   },
+   "cadde_auc": 0.65
+  },
+  "150_24": {
+   "yerler": [
+    {
+     "tur": "mahalle",
+     "ilce": "Balçova",
+     "ad": "Çetin Emeç",
+     "neden": "dere",
+     "islak_pay": 0.012,
+     "yuzdelik": 61,
+     "derin_pay": 0.012,
+     "derin_yuzdelik": 61
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karabağlar",
+     "ad": "Fahrettin Altay",
+     "neden": "belirsiz",
+     "islak_pay": 0.017,
+     "yuzdelik": 64,
+     "derin_pay": 0.017,
+     "derin_yuzdelik": 64
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Konak",
+     "ad": "Alsancak",
+     "neden": "kiyi_drenaj",
+     "islak_pay": 0.0,
+     "yuzdelik": 26,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 26
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Konak",
+     "ad": "Güzelyali",
+     "neden": "kiyi_drenaj",
+     "islak_pay": 0.0,
+     "yuzdelik": 26,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 26
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karşiyaka",
+     "ad": "Örnekköy",
+     "neden": "dere",
+     "islak_pay": 0.06,
+     "yuzdelik": 85,
+     "derin_pay": 0.06,
+     "derin_yuzdelik": 85
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Karşiyaka",
+     "ad": "Soğukkuyu",
+     "neden": "dere",
+     "islak_pay": 0.0,
+     "yuzdelik": 26,
+     "derin_pay": 0.0,
+     "derin_yuzdelik": 26
+    },
+    {
+     "tur": "mahalle",
+     "ilce": "Bayrakli",
+     "ad": "Yamanlar",
+     "neden": "belirsiz",
+     "islak_pay": 0.048,
+     "yuzdelik": 83,
+     "derin_pay": 0.048,
+     "derin_yuzdelik": 83
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Balçova",
+     "ad": "Ziya Gökalp Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.2,
+     "kapali": false,
+     "islak_pay": 0.117,
+     "belirsiz": false
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karabağlar",
+     "ad": "İnönü Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.3,
+     "kapali": true,
+     "islak_pay": 0.027,
+     "belirsiz": false
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Konak",
+     "ad": "Mithatpaşa Caddesi",
+     "neden": "kiyi_drenaj",
+     "en_derin_m": 0.0,
+     "kapali": false,
+     "islak_pay": 0.0,
+     "belirsiz": false
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karşiyaka",
+     "ad": "Anadolu Caddesi",
+     "neden": "belirsiz",
+     "en_derin_m": 0.7,
+     "kapali": true,
+     "islak_pay": 0.105,
+     "belirsiz": false
+    },
+    {
+     "tur": "cadde",
+     "ilce": "Karşiyaka",
+     "ad": "Cemal Gürsel Caddesi",
+     "neden": "kiyi_drenaj",
+     "en_derin_m": 0.0,
+     "kapali": false,
+     "islak_pay": 0.0,
+     "belirsiz": false
+    },
+    {
+     "tur": "dere",
+     "ilce": "Karabağlar",
+     "ad": "Poligon Deresi",
+     "neden": "dere",
+     "en_derin_m": 0.3,
+     "kapali": true,
+     "islak_pay": 0.216,
+     "belirsiz": false
+    },
+    {
+     "tur": "alt_gecit",
+     "ilce": "Konak",
+     "ad": "Konak Alt Geçidi",
+     "neden": "kiyi_drenaj",
+     "alt_gecit_dolu": false
+    }
+   ],
+   "mahalle_auc": 0.53,
+   "mahalle_auc_yalniz_derinlik": 0.53,
+   "mahalle_sayisi": {
+    "haber": 7,
+    "oteki": 167
+   },
+   "mahalle_islak_pay_medyan": {
+    "haber": 0.012,
+    "oteki": 0.0
+   },
+   "cadde_kapali_oran": {
+    "haber": 0.4,
+    "oteki": 0.22
+   },
+   "cadde_sayisi": {
+    "haber": 5,
+    "oteki": 207
+   },
+   "cadde_auc": 0.63
+  }
+ }
+}

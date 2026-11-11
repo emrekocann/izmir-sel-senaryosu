@@ -1,0 +1,9 @@
+# Çevrimdışı hesap betikleri (yol ağı, sınır, sel hesapları).
+# Sunucu bunlara ihtiyaç duymaz; yalnız hesapları yeniden üretirken kurulur.
+-r requirements.txt
+osmnx==2.1.0
+osmium==4.3.2
+pysheds==0.5
+rasterio==1.5.0
+scipy==1.18.1
+shapely==2.1.2

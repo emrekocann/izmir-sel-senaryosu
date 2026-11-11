@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>İzmir Afet Radar — Sel ve Tahliye</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/css/app.css?v=__CSS_SURUM__" />
+  </head>
+  <body>
+
+    <!-- Sol: kontrol butonları (dikey) -->
+    <div class="top-controls">
+      <button class="control-btn active" id="btn-sel" onclick="toggleSelPanel()" title="Sel paneli">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7" stroke-linecap="round"/></svg>
+      </button>
+      <button class="control-btn" onclick="togglePanel('layer-panel')" title="Harita altlığı">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="control-btn" id="btn-route" onclick="toggleRoutePanel()" title="Tahliye rotası">
+        <svg viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a4 4 0 0 0 0-8H10a4 4 0 0 1 0-8h6" fill="none" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <!-- Üst orta: başlık -->
+    <div id="baslik">
+      <span class="baslik-ad">🌊 İzmir Afet Radar</span>
+      <span class="baslik-alt">Sel senaryosu · Tahliye rotası</span>
+    </div>
+
+    <!-- Harita altlığı -->
+    <div id="layer-panel" class="float-panel">
+      <div class="panel-header">
+        <h4>Harita Altlığı</h4>
+        <button class="panel-close-btn" onclick="togglePanel('layer-panel')">✕</button>
+      </div>
+      <div class="basemap-grid">
+        <div class="basemap-opt" onclick="changeBasemap('light')">Soft Light</div>
+        <div class="basemap-opt" onclick="changeBasemap('dark')">Dark Grey</div>
+        <div class="basemap-opt" onclick="changeBasemap('sat')">Uydu</div>
+        <div class="basemap-opt" onclick="changeBasemap('topo')">Topografik</div>
+      </div>
+    </div>
+
+    <!-- Tahliye Rotası Paneli -->
+    <div id="route-panel" class="float-panel">
+      <div class="panel-header" style="margin-bottom:10px;padding-bottom:8px">
+        <h4>🧭 Tahliye Rotası</h4>
+        <button class="panel-close-btn" onclick="toggleRoutePanel()">✕</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button id="route-mode-drive" class="layer-tab active" style="flex:1;justify-content:center"
+                onclick="setRouteMode('drive')">🚗 Araç</button>
+        <button id="route-mode-walk" class="layer-tab" style="flex:1;justify-content:center"
+                onclick="setRouteMode('walk')">🚶 Yaya</button>
+      </div>
+      <div id="route-hint" style="font-size:11.5px;line-height:1.5;color:rgba(0,0,0,.55);margin-bottom:10px">
+        Bulunduğun yere tıkla ya da <b>Konumum</b>'a bas — sistem en güvenli
+        <b style="color:#059669">toplanma alanını</b> bulup rotayı çizer.
+        <span style="opacity:.8">İstersen bir <b style="color:#059669">yeşil noktaya</b> tıklayarak başka alanı seçebilirsin.</span>
+      </div>
+      <div id="route-senaryo-not" style="display:none;font-size:11px;line-height:1.5;margin:-2px 0 10px;
+           padding:6px 8px;border-radius:7px;background:rgba(29,78,216,.07)"></div>
+      <div style="display:flex;gap:6px">
+        <button class="layer-tab" style="flex:1;justify-content:center" onclick="routeUseMyLocation()">📍 Konumum</button>
+        <button class="layer-tab" style="flex:1;justify-content:center" onclick="clearRoute()">🗑️ Temizle</button>
+      </div>
+      <div id="route-summary" style="display:none;margin-top:10px;padding:9px 11px;border-radius:9px;
+           background:rgba(99,102,241,.08);font-size:12px;line-height:1.6"></div>
+    </div>
+
+    <!-- Sel / Su Baskını Paneli -->
+    <div id="sel-panel" class="float-panel">
+      <div style="font-size:12px;font-weight:800;margin-bottom:8px">🌊 Sel / Su Baskını</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+        <button id="sel-tur-senaryo" class="layer-tab active" style="flex:1 1 100%;justify-content:center" onclick="selTurSec('senaryo')">🌧️ Yağış senaryosu</button>
+        <button id="sel-tur-gunluk" class="layer-tab" style="flex:1;justify-content:center" onclick="selTurSec('gunluk')">Önümüzdeki 24 sa</button>
+        <button id="sel-tur-duyarlilik" class="layer-tab" style="flex:1;justify-content:center" onclick="selTurSec('duyarlilik')">Arazi duyarlılığı</button>
+      </div>
+      <div id="sel-yagis" style="display:none;font-size:11px;line-height:1.5;margin-bottom:8px;padding:7px 9px;border-radius:7px;background:rgba(29,78,216,.07)">Yağış tahmini alınıyor…</div>
+      <div id="sel-senaryo">
+        <div style="font-size:10.5px;color:var(--secondary);line-height:1.5;margin-bottom:8px">
+          Bu kadar yağış düşerse nereyi su basar, hangi yollar kapanır? Yağışı ve süreyi seç;
+          güvenli rota için soldaki 🧭 düğmesine bas.
+        </div>
+        <div style="font-size:11px;font-weight:700;margin-bottom:3px">Yağış: <span id="sen-p-yazi">50 mm</span>
+          <span style="font-weight:500;color:var(--secondary)">(kg/m²)</span></div>
+        <input id="sen-p" type="range" min="0" max="7" step="1" value="2" style="width:100%" oninput="senaryoYagisSec(this.value)">
+        <div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--secondary);margin:-2px 0 7px">
+          <span>10</span><span>50</span><span>100</span><span>250 mm</span></div>
+        <div style="font-size:11px;font-weight:700;margin-bottom:4px">Kaç saatte düşüyor?</div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button id="sen-sure-1" class="layer-tab active" style="flex:1;justify-content:center" onclick="senaryoSureSec(1)">1 saat</button>
+          <button id="sen-sure-6" class="layer-tab" style="flex:1;justify-content:center" onclick="senaryoSureSec(6)">6 saat</button>
+          <button id="sen-sure-24" class="layer-tab" style="flex:1;justify-content:center" onclick="senaryoSureSec(24)">24 saat</button>
+        </div>
+        <div id="sen-ozet" style="font-size:11px;line-height:1.5;margin-bottom:8px;padding:7px 9px;border-radius:7px;background:rgba(29,78,216,.07)">Senaryolar yükleniyor…</div>
+        <div id="sen-siniflar"></div>
+        <div id="sen-mahalle" style="font-size:10.5px;line-height:1.5;margin-top:6px"></div>
+        <div style="font-size:10px;color:var(--secondary);margin-top:7px;line-height:1.5">
+          Fizik tabanlı basitleştirilmiş simülasyon: yüzey akışı SCS eğri numarası yöntemiyle, arazi örtüsü
+          <b>ESA WorldCover</b> (uydu görüntülerinden yapay zekâ ile üretilmiş) verisinden; su SRTM (~60 m) akış
+          yönünde derelere toplanır; dereler 2 yılda bir görülen yağışı taşmadan taşır, fazlası HAND yöntemiyle
+          (arazinin dereye göre yüksekliği) yatak dışına yayılır; kapalı çukurlar alttan dolar.
+          Varsayımlar: kent drenajı <span id="sen-drenaj">20</span> mm/saat taşır, toprak grubu C.
+          Yağış yalnız il sınırı içine düşer; geniş havzalarda alan azaltma katsayısı uygulanır.
+          Gediz taşkını DSİ baraj işletmesine ve seddelere bağlıdır, bu senaryoda yoktur.
+          Gediz deltası ve Menemen ovası gibi düz ovalarda uydu yükseklik verisi (±birkaç m) akış yönünü çözemez:
+          buralarda yalnız "su gelir" denir, derinlik verilmez (gri).
+          Kıyıdaki düz kent alanlarında kanalizasyonun geri tepmesi, deniz kabarması ve bina içleri hesapta yoktur.
+          Tahmin değil, "olursa ne olur" senaryosudur.
+        </div>
+      </div>
+      <div id="sel-gunluk-kutu" style="display:none">
+        <div id="sel-aciklama" style="font-size:10.5px;color:var(--secondary);line-height:1.5;margin-bottom:7px"></div>
+        <div id="sel-bantlar"></div>
+        <div style="font-size:10px;color:var(--secondary);margin-top:7px;line-height:1.5">
+          🚇 Alt geçit (OSM) — yükseklik verisinde görünmez, yağışta su biriktirir; yakınlaşınca görünür.<br>
+          Hesap: SRTM (~60 m) ile dere yatağına göre yükseklik ve çukur alanlar; yağış Open-Meteo.
+          Eğitilmiş model değil, hidrolojik hesaptır. Kıyı taşkını ve kanalizasyon kapasitesi hesaba katılmaz.
+        </div>
+      </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>window.IZMIR_SINIR = __SINIR_KUTUSU__;</script>
+    <script src="/static/js/app.js?v=__JS_SURUM__"></script>
+  </body>
+</html>
