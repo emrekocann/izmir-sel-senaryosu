@@ -91,6 +91,7 @@ footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid var(--cizgi)
     <a href="#model">Model</a>
     <a href="#karsilastirma"><span class="tr">Karşılaştırma</span><span class="en">Validation</span></a>
     <a href="#etki"><span class="tr">Etki</span><span class="en">Impact</span></a>
+    <a href="#denetim"><span class="tr">Denetim</span><span class="en">Audit</span></a>
     <a href="#senaryolar"><span class="tr">Senaryolar</span><span class="en">Scenarios</span></a>
     <a href="#veri"><span class="tr">Eksik veri</span><span class="en">Data gaps</span></a>
     <a href="#yetkinlik"><span class="tr">Yöntem</span><span class="en">Stack</span></a>
@@ -257,7 +258,52 @@ footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid var(--cizgi)
   <p class="en">During a flood the official advice is usually to stay put on high ground. This route is not advice on what to do; it is a planning aid that shows which roads and areas become unusable.</p>
 </div>
 
-<h2 id="senaryolar"><span class="no">5</span><span class="tr">Başka yağışlarda ne olur?</span><span class="en">Other rainfalls</span></h2>
+<h2 id="denetim"><span class="no">5</span><span class="tr">Toplanma alanı denetimi: önce hangilerine bakılmalı?</span><span class="en">Assembly-area audit: which ones to check first?</span></h2>
+<p class="tr">İzmir Büyükşehir Belediyesi'nin 2.380 afet ve acil durum toplanma alanını, modelin su derinliğiyle tek tek karşılaştırdım. Çıktı bir hüküm değil, bir <b>ön eleme listesi</b>: "şu alanlar güvensiz" demiyor, "yerinde ilk önce şunlara bakın" diyor.</p>
+<p class="en">I compared each of the municipality's 2,380 emergency assembly areas with the modelled water depth. The output is a <b>screening list</b>, not a verdict: it does not say "these areas are unsafe", it says "check these on site first".</p>
+
+<div class="rakamlar" id="d-rakam"></div>
+
+<div class="harita-kart">
+  <div class="harita" id="harita-d"></div>
+  <div class="harita-alt">
+    <span class="lej"><i style="background:#b91c1c;border-radius:50%"></i><span class="tr">1. öncelik</span><span class="en">priority 1</span></span>
+    <span class="lej"><i style="background:#ea580c;border-radius:50%"></i><span class="tr">2. öncelik</span><span class="en">priority 2</span></span>
+    <span class="lej"><i style="background:#eab308;border-radius:50%"></i><span class="tr">3. öncelik</span><span class="en">priority 3</span></span>
+    <span class="lej"><i style="background:#94a3b8;border-radius:50%"></i><span class="tr">düz ova: derinlik bilinmiyor</span><span class="en">flat plain: depth unknown</span></span>
+    <span class="lej"><i style="background:#10b981;border-radius:50%;opacity:.6"></i><span class="tr">işaretlenmedi</span><span class="en">not flagged</span></span>
+  </div>
+</div>
+
+<div class="tablo-sar"><table>
+  <tr><th><span class="tr">Öncelik</span><span class="en">Priority</span></th><th><span class="tr">Kural: alanın bulunduğu yerde 30 cm'den derin su</span><span class="en">Rule: more than 30 cm of water at the area</span></th></tr>
+  <tr><td><span class="rozet kotu">1</span></td><td><span class="tr">Yağış 24 saate yayılsa bile 100 mm ya da daha azında. Şiddetli sağanak gerekmeden su alıyor.</span><span class="en">At 100 mm or less even when spread over 24 hours. Floods without an intense downpour.</span></td></tr>
+  <tr><td><span class="rozet" style="background:#ffedd5;color:#c2410c">2</span></td><td><span class="tr">2 Şubat 2021'e yakın yağışta (100 mm / 6 saat ya da 150 mm / 24 saat).</span><span class="en">In rain close to 2 February 2021 (100 mm / 6 h or 150 mm / 24 h).</span></td></tr>
+  <tr><td><span class="rozet" style="background:#fef9c3;color:#854d0e">3</span></td><td><span class="tr">Yalnız daha şiddetli senaryolarda.</span><span class="en">Only in more severe scenarios.</span></td></tr>
+</table></div>
+
+<h3><span class="tr">1. ve 2. öncelikli alanlar</span><span class="en">Priority 1 and 2 areas</span></h3>
+<p class="kunye"><span class="tr">Satıra tıklayınca haritada o alana gider.</span><span class="en">Click a row to go to that area on the map.</span>
+  <a href="veri/toplanma_denetimi.csv" download><span class="tr">İşaretli bütün alanları indir (CSV)</span><span class="en">Download all flagged areas (CSV)</span></a></p>
+<div class="tablo-sar" style="max-height:420px;overflow-y:auto;border:1px solid var(--cizgi);border-radius:12px"><table id="d-tablo"></table></div>
+
+<div class="kutu not">
+  <p><b><span class="tr">Bu liste nasıl okunmalı?</span><span class="en">How to read this list</span></b></p>
+  <ul class="tr">
+    <li><b>Model burada kanıt değil, işaret.</b> Aynı model 2021 selinde su basan mahalleleri ayırt edemedi (3. bölüm). Liste, sahada kontrol edilecek yerleri daraltmak içindir.</li>
+    <li><b>Alan tek bir noktayla temsil ediliyor</b> ve su derinliği 60 m'lik hücrelerden geliyor. Büyük bir parkın yalnız bir köşesi dere kenarında olabilir.</li>
+    <li><b>Bağımsız bir sağlama:</b> model dereleri yükseklik verisinden türetir, OpenStreetMap'i kullanmaz. <span id="d-osm-tr"></span></li>
+    <li><b>Kıyıdaki kanalizasyon taşkını listede yok.</b> Model onu göremiyor; Alsancak ya da Güzelyalı gibi yerlerdeki alanlar işaretlenmemiş olabilir.</li>
+  </ul>
+  <ul class="en">
+    <li><b>The model is a pointer here, not evidence.</b> The same model could not single out the neighbourhoods flooded in 2021 (section 3). The list narrows down where to look on site.</li>
+    <li><b>Each area is a single point</b> and depth comes from 60 m cells. Only one corner of a large park may lie next to a stream.</li>
+    <li><b>An independent check:</b> the model derives streams from elevation and does not use OpenStreetMap. <span id="d-osm-en"></span></li>
+    <li><b>Coastal sewer flooding is not in the list.</b> The model cannot see it; areas in places like Alsancak or Güzelyalı may be unflagged.</li>
+  </ul>
+</div>
+
+<h2 id="senaryolar"><span class="no">6</span><span class="tr">Başka yağışlarda ne olur?</span><span class="en">Other rainfalls</span></h2>
 <p class="tr">24 senaryonun tamamı. Sayılar il geneli içindir; senaryo yağışı ilin tamamına aynı anda düşer.</p>
 <p class="en">All 24 scenarios. Figures are province-wide; scenario rain falls on the whole province at once.</p>
 <div class="harita-kart">
@@ -271,7 +317,7 @@ footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid var(--cizgi)
   <div class="harita-alt" id="s-lejant"></div>
 </div>
 
-<h2 id="veri"><span class="no">6</span><span class="tr">Kurum verisiyle ne değişir?</span><span class="en">What institutional data would change</span></h2>
+<h2 id="veri"><span class="no">7</span><span class="tr">Kurum verisiyle ne değişir?</span><span class="en">What institutional data would change</span></h2>
 <div class="tablo-sar"><table>
   <tr><th><span class="tr">Eksik</span><span class="en">Gap</span></th><th><span class="tr">Gereken veri</span><span class="en">Data needed</span></th><th><span class="tr">Düzelteceği şey</span><span class="en">What it fixes</span></th></tr>
   <tr><td><span class="tr">Kıyıdaki şebeke taşkını</span><span class="en">Coastal sewer flooding</span></td><td><span class="tr">İZSU yağmur suyu ve kanalizasyon şebekesi</span><span class="en">Water utility (İZSU) storm and sewer network</span></td><td><span class="tr">Alsancak, Güzelyalı gibi kaçırılan yerler</span><span class="en">Missed places such as Alsancak and Güzelyalı</span></td></tr>
@@ -280,13 +326,13 @@ footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid var(--cizgi)
   <tr><td><span class="tr">Düz ovalardaki belirsizlik</span><span class="en">Uncertainty on flat plains</span></td><td><span class="tr">DSİ taşkın haritaları, sedde ve baraj işletmesi</span><span class="en">State hydraulic works flood maps, levees, dam operation</span></td><td><span class="tr">Gediz deltası ve Menemen ovası</span><span class="en">Gediz delta and Menemen plain</span></td></tr>
 </table></div>
 
-<h2 id="yetkinlik"><span class="no">7</span><span class="tr">Bu çalışmada neler var?</span><span class="en">What this project covers</span></h2>
+<h2 id="yetkinlik"><span class="no">8</span><span class="tr">Bu çalışmada neler var?</span><span class="en">What this project covers</span></h2>
 <ul class="tr">
   <li><b>Mekânsal veri hattı:</b> OSM'den yol ağı kurma, yükseklik verisinden eğim, TKGM sınırlarıyla il ve mahalle maskeleri.</li>
   <li><b>Hidrolojik modelleme:</b> yüzey akışı, akış yönü ve birikimi, dere taşkını, kapalı çukurların dolması.</li>
   <li><b>Ağ analizi:</b> pgRouting ile eğim, deprem, trafik ve sel cezalı rota; 920 bin yol parçasında yaklaşık 1 saniyede yanıt.</li>
   <li><b>Web uygulaması:</b> FastAPI ve PostGIS arka uç, Leaflet harita, mobil uyumlu arayüz.</li>
-  <li><b>Doğrulama ve test:</b> gerçek olayla karşılaştırma betiği, 45 otomatik test, tekrar üretilebilir kurulum.</li>
+  <li><b>Doğrulama ve test:</b> gerçek olayla karşılaştırma betiği, 47 otomatik test, tekrar üretilebilir kurulum.</li>
   <li><b>Açık raporlama:</b> varsayımlar, sınırlar ve işe yaramayan deneme yazılı.</li>
 </ul>
 <ul class="en">
@@ -294,7 +340,7 @@ footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid var(--cizgi)
   <li><b>Hydrological modelling:</b> runoff, flow direction and accumulation, stream overflow, depression filling.</li>
   <li><b>Network analysis:</b> pgRouting with slope, earthquake, traffic and flood costs; about 1 second on 920k edges.</li>
   <li><b>Web application:</b> FastAPI and PostGIS backend, Leaflet map, mobile-friendly interface.</li>
-  <li><b>Validation and tests:</b> comparison script against the real event, 45 automated tests, reproducible setup.</li>
+  <li><b>Validation and tests:</b> comparison script against the real event, 47 automated tests, reproducible setup.</li>
   <li><b>Plain reporting:</b> assumptions, limits and the failed experiment are all written down.</li>
 </ul>
 <div class="etiketler">
@@ -453,7 +499,52 @@ function rota() {
   document.getElementById('r-lejant').innerHTML = r.senaryo ? lejant() : '';
 }
 
-// ── 5. Senaryolar ──
+// ── 5. Toplanma alanı denetimi ──
+const D = { m: null, veri: null, isaret: null };
+const D_RENK = ['#10b981', '#b91c1c', '#ea580c', '#eab308', '#94a3b8'];   // temiz, 1, 2, 3, ova
+const baslik = s => (s || '').toLocaleLowerCase('tr').replace(/(^|[\s/.(-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase('tr'));
+const alanAdi = a => { const m = (a.adi || '').match(/^\s*(\d+)\s*NO\s*'?\s*LU/i); return m ? T(`${m[1]} No'lu Alan`, `Area No. ${m[1]}`) : baslik(a.adi); };
+function denetim() {
+  const d = D.veri;
+  if (!d) return;
+  if (!D.m) {
+    D.m = harita('harita-d', [38.42, 27.15], 10);
+    const tuval = L.canvas({ padding: 0.3 });
+    // işaretsizler altta, öncelikliler üstte çizilsin
+    [0, 4, 3, 2, 1].forEach(kod => d.noktalar.filter(n => n[2] === kod).forEach(n =>
+      L.circleMarker([n[0], n[1]], { renderer: tuval, radius: kod === 0 ? 2.5 : kod >= 3 ? 4 : 6,
+        color: '#fff', weight: kod === 0 ? 0 : 1, fillColor: D_RENK[kod], fillOpacity: kod === 0 ? 0.45 : 0.95,
+        interactive: false }).addTo(D.m)));
+  }
+  const s = d.sayim;
+  document.getElementById('d-rakam').innerHTML = [
+    [s['1'], T('1. öncelik: sağanak olmadan da su alıyor', 'priority 1: floods without a downpour')],
+    [s['2'], T('2. öncelik: 2021 benzeri yağışta su altında', 'priority 2: under water in 2021-like rain')],
+    [s['3'], T('3. öncelik: yalnız daha şiddetli yağışta', 'priority 3: only in more severe rain')],
+    [s.ova, T('düz ovada: su gelebilir, derinlik bilinmiyor', 'on flat plain: water may arrive, depth unknown')],
+  ].map(([v, e]) => `<div class="rakam"><b>${sayi(v)}</b><span style="display:block">${e}</span></div>`).join('');
+  const y = d.dere_yakin, pay = g => sayi(g.yakin / g.toplam * 100);
+  document.getElementById('d-osm-tr').textContent = `1. ve 2. öncelikli ${y.oncelikli.toplam} alanın ${y.oncelikli.yakin}'i (%${pay(y.oncelikli)}) OpenStreetMap'te çizili bir dereye ${y_m(d)} m'den yakın; öteki alanlarda bu oran %${pay(y.oteki)}. Yani öncelikli alanlar derelere belirgin biçimde daha yakın, ama çoğunun yanında haritada çizili bir dere yok.`;
+  document.getElementById('d-osm-en').textContent = `${y.oncelikli.yakin} of the ${y.oncelikli.toplam} priority 1–2 areas (${pay(y.oncelikli)}%) lie within ${y_m(d)} m of a waterway drawn in OpenStreetMap, against ${pay(y.oteki)}% of the rest. Priority areas are clearly closer to streams, but most have no mapped stream nearby.`;
+  document.getElementById('d-tablo').innerHTML =
+    `<tr><th></th><th>${T('Alan', 'Area')}</th><th>${T('En küçük yağış', 'Smallest rain')}</th><th class="s">${T('2021 benzeri yağışta su', 'Depth in 2021-like rain')}</th><th class="s genis">${T('OSM deresine', 'To OSM stream')}</th></tr>` +
+    d.liste.map((a, i) => `<tr style="cursor:pointer" onclick="alanaGit(${i})">
+      <td><span class="rozet" style="${a.oncelik === 1 ? 'background:var(--kotu-zemin);color:var(--kotu)' : 'background:#ffedd5;color:#c2410c'}">${a.oncelik}</span></td>
+      <td><b>${alanAdi(a)}</b><br><span class="kunye">${baslik(a.ilce)} / ${baslik(a.mahalle)}${a.yol ? ' · ' + a.yol : ''}</span></td>
+      <td>${a.en_kucuk_yagis_mm} mm / ${a.en_kucuk_yagis_saat} ${T('saat', 'h')}</td>
+      <td class="s">${a.su_m > 0 ? sayi(a.su_m, 1) + ' m' : '–'}</td>
+      <td class="s genis">${a.dereye_m >= 1000 ? sayi(a.dereye_m / 1000, 1) + ' km' : a.dereye_m + ' m'}</td></tr>`).join('');
+}
+const y_m = d => d.dere_yakin_m;
+function alanaGit(i) {
+  const a = D.veri.liste[i];
+  if (D.isaret) D.m.removeLayer(D.isaret);
+  D.isaret = L.circleMarker([a.lat, a.lon], { radius: 13, color: '#1d4ed8', weight: 3, fill: false }).addTo(D.m);
+  D.m.setView([a.lat, a.lon], 15);
+  document.getElementById('harita-d').scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+
+// ── 6. Senaryolar ──
 const S = { m: null, su: null, i: 4, sure: 6 };
 function senaryolar() {
   if (!S.m) {
@@ -477,7 +568,7 @@ function senaryolar() {
   document.getElementById('s-lejant').innerHTML = lejant();
 }
 
-function ciz() { karsilastirma(); rota(); senaryolar(); }
+function ciz() { karsilastirma(); rota(); denetim(); senaryolar(); }
 function dilDegistir() {
   dil = dil === 'tr' ? 'en' : 'tr';
   document.documentElement.lang = dil;
@@ -488,7 +579,8 @@ function dilDegistir() {
 }
 try { if (localStorage.getItem('dil') === 'en' || (!localStorage.getItem('dil') && !navigator.language.startsWith('tr'))) dilDegistir(); } catch (e) {}
 
-fetch('veri/vitrin.json').then(r => r.json()).then(v => { V = v; ciz(); })
+Promise.all([fetch('veri/vitrin.json').then(r => r.json()), fetch('veri/denetim.json').then(r => r.json())])
+  .then(([v, d]) => { V = v; D.veri = d; ciz(); })
   .catch(err => { console.error(err); document.querySelectorAll('.harita').forEach(h => h.textContent = 'Veri yüklenemedi / Data failed to load'); });
 </script>
 </body>

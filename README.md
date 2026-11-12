@@ -62,6 +62,7 @@ migrations/   Veritabanı göçleri (SQL)
 static/       Canlı uygulamanın ön yüzü (Leaflet): index.html, css/, js/
 sel_model/    Hesaplanmış sel sonuçları (senaryo.npz, duyarlilik.npz)
 dogrulama/    2 Şubat 2021 olay verisi ve karşılaştırma sonucu
+denetim/      Toplanma alanı denetim listesi (CSV)
 *.py (kök)    Canlı sunucu: main, repository, ingestion, database, sel_senaryo, sel_riski…
 
 Depoda olmayan, yerelde üretilen / indirilen klasörler (.gitignore):
@@ -226,6 +227,23 @@ Senaryo modeli **2 Şubat 2021 İzmir seliyle** karşılaştırıldı. O gün me
 
 ```bash
 venv/bin/python -m hesap.sel_dogrulama   # ilk çalıştırmada OSM'den adlı yollar çıkarılır (~1 dk); sonuç dogrulama/sonuc_2021_02_02.json
+```
+
+### 🏕️ Toplanma alanı denetimi (`hesap/toplanma_denetimi.py`, `denetim/`)
+
+2.380 toplanma alanı, senaryolardaki su derinliğiyle karşılaştırılır ve yerinde kontrol için önceliklendirilir. Bu bir **ön eleme listesidir**, hüküm değildir (model mahalle düzeyinde doğrulanamadı).
+
+- **1. öncelik (25 alan):** yağış 24 saate yayılsa bile ≤ 100 mm'de alanın bulunduğu yerde 30 cm+ su.
+- **2. öncelik (41 alan):** 100 mm / 6 saat ya da 150 mm / 24 saatte 30 cm+ su.
+- **3. öncelik (131 alan):** yalnız daha şiddetli senaryolarda.
+- **Düz ova (315 alan):** su gelebilir, derinlik bilinmiyor.
+- **Ek işaretler:** arazi duyarlılığı çok yüksek (S ≥ 0.85) 102 alan; kendisi kuru ama yaya ağında bağlandığı kavşağın bütün yolları 2021 senaryosunda su altında kalan 27 alan.
+- **Bağımsız sağlama:** 1.–2. öncelikli 66 alanın 13'i OSM'de çizili bir dereye 100 m'den yakın (%20); öteki alanlarda %5. Model OSM derelerini kullanmaz.
+
+Çıktı: `denetim/toplanma_denetimi.csv` (işaretli alanlar) ve yayın sayfasındaki denetim bölümü.
+
+```bash
+venv/bin/python -m hesap.toplanma_denetimi   # ilk çalıştırmada OSM dereleri çıkarılır (~1 dk)
 ```
 
 ### 🧭 Rota ve yağış senaryosu (`hesap/sel_senaryo_yollar.py`, `migrations/011`)

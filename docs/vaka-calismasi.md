@@ -103,7 +103,26 @@ Rota hesabı, 30 cm'den derin su olan yolu kapalı sayar ve su altındaki toplan
 
 Bir uyarı: sel anında resmi tavsiye çoğu zaman yola çıkmamak ve yüksekte kalmaktır. Buradaki rota bir "ne yapmalı" tavsiyesi değil; hangi yolların ve alanların kullanılamaz hale geldiğini gösteren bir planlama aracıdır.
 
-## 5. Kurum verisiyle ne değişir?
+## 5. Toplanma alanı denetimi: önce hangilerine bakılmalı?
+
+İBB'nin 2.380 toplanma alanını modelin su derinliğiyle tek tek karşılaştırdım. Çıktı bir hüküm değil, bir **ön eleme listesi**: "şu alanlar güvensiz" demiyor, "yerinde ilk önce şunlara bakın" diyor.
+
+| Öncelik | Kural (alanın bulunduğu yerde 30 cm'den derin su) | Alan |
+|---|---|---|
+| 1 | Yağış 24 saate yayılsa bile 100 mm ya da daha azında | 25 |
+| 2 | 2 Şubat 2021'e yakın yağışta (100 mm / 6 saat ya da 150 mm / 24 saat) | 41 |
+| 3 | Yalnız daha şiddetli senaryolarda | 131 |
+| Düz ova | Su gelebilir, derinlik bilinmiyor | 315 |
+
+Tam liste: `denetim/toplanma_denetimi.csv` (ilçe, mahalle, alan adı, koordinat, en küçük yağış, su derinliği).
+
+**Nasıl okunmalı**
+- Model burada kanıt değil, işaret. Aynı model 2021 selinde su basan mahalleleri ayırt edemedi.
+- Her alan tek bir noktayla temsil ediliyor ve su derinliği 60 m'lik hücrelerden geliyor.
+- Bağımsız sağlama: model dereleri yükseklik verisinden türetir, OpenStreetMap'i kullanmaz. 1. ve 2. öncelikli 66 alanın 13'i (%20) OSM'de çizili bir dereye 100 m'den yakın; öteki alanlarda bu oran %5. Öncelikli alanlar derelere belirgin biçimde daha yakın, ama çoğunun yanında haritada çizili bir dere yok.
+- Kıyıdaki kanalizasyon taşkını listede yok; model onu göremiyor.
+
+## 6. Kurum verisiyle ne değişir?
 
 | Eksik | Gereken veri | Düzelteceği şey |
 |---|---|---|
@@ -112,11 +131,11 @@ Bir uyarı: sel anında resmi tavsiye çoğu zaman yola çıkmamak ve yüksekte 
 | Zayıf doğrulama | Belediyenin ve itfaiyenin su baskını ihbar kayıtları | 14 yer yerine yüzlerce noktayla sınama |
 | Düz ovalardaki belirsizlik | DSİ taşkın haritaları, sedde ve baraj işletmesi | Gediz deltası ve Menemen ovası |
 
-## 6. Bu çalışmada neler var?
+## 7. Bu çalışmada neler var?
 
 - **Mekânsal veri hattı:** OSM'den yol ağı kurma, yükseklik verisinden eğim, TKGM sınırlarıyla il ve mahalle maskeleri.
 - **Hidrolojik modelleme:** yüzey akışı, akış yönü ve birikimi, dere taşkını, kapalı çukurların dolması.
 - **Ağ analizi:** pgRouting ile eğim, deprem, trafik ve sel cezalı tahliye rotası; 920 bin yol parçasında ~1 saniyede yanıt.
 - **Web uygulaması:** FastAPI + PostGIS arka uç, Leaflet harita, mobil uyumlu arayüz.
-- **Doğrulama ve test:** gerçek olayla karşılaştırma betiği, 45 otomatik test, tekrar üretilebilir kurulum adımları.
+- **Doğrulama ve test:** gerçek olayla karşılaştırma betiği, 47 otomatik test, tekrar üretilebilir kurulum adımları.
 - **Dürüst raporlama:** varsayımlar, sınırlar ve işe yaramayan deneme açıkça yazılı.
