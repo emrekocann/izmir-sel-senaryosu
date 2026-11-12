@@ -2,7 +2,7 @@
 
 Tek bir soruyu yanıtlayan, PostGIS + pgRouting tabanlı bir karar destek haritası: **"X mm yağış Y saatte düşerse İzmir'de nereyi su basar, hangi yollar kapanır, hangi toplanma alanları etkilenir ve insanlar en güvenli toplanma alanına hangi yoldan gider?"**
 
-**Vaka çalışması (yayın sayfası):** [docs/index.html](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Türkçe / İngilizce, sunucusuz çalışır (GitHub Pages: Settings → Pages → dal + `/docs`). Verisi `venv/bin/python -m hesap.vitrin_hazirla` ile üretilir (`docs/veri/`); yerelde `python -m http.server --directory docs` ile açılır. Metnin düz hâli: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
+**Yayın sitesi:** [docs/](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Harita merkezli, Türkçe / İngilizce, sunucusuz çalışan site (GitHub Pages: Settings → Pages → dal + `/docs`). Dört sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tahliye rotası örneği, toplanma alanı denetimi; yöntem ve doğrulama "Hakkında" penceresinde. Sitedeki bütün sayılar `docs/veri/` dosyalarından gelir; bunları `venv/bin/python -m hesap.vitrin_hazirla` ve `-m hesap.toplanma_denetimi` üretir. Yerelde: `python -m http.server --directory docs`. Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
 
 ## 🚀 Neler var
 
@@ -54,7 +54,13 @@ uvicorn main:app --reload
 ### Klasör düzeni
 
 ```
-docs/         Yayın sayfası (GitHub Pages): index.html, vaka-calismasi.md, veri/
+docs/         Yayın sitesi (GitHub Pages), derleme adımı yok:
+                index.html        sayfa iskeleti + "Hakkında" metni
+                css/app.css       düzen ve tema
+                js/main.js        giriş: veri, harita, sekme yönetimi
+                js/cekirdek/      dil, biçim, veri, harita, arayüz yardımcıları
+                js/sekmeler/      her sekme bir modül (senaryo, olay, rota, denetim)
+                veri/             önceden hesaplanmış veri (JSON, PNG, CSV)
 hesap/        Çevrimdışı hesap betikleri — kökten "python -m hesap.<betik>" ile çalışır
               (yol ağı, sınır, sel duyarlılığı, senaryolar, doğrulama, yayın verisi)
 tests/        Otomatik testler (pytest)

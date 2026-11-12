@@ -39,6 +39,9 @@ SONUC = os.path.join(BASE_DIR, "dogrulama", "sonuc_2021_02_02.json")
 
 # 2 Şubat 2021'in yağışını (merkezde 8–14 saatte 100–140 mm) kuşatan senaryolar
 OLAY_SENARYOLARI = ["100_6", "150_24"]
+# Doğrulama puanlarının aralığı bu senaryolardan verilir (olaya yakın yağışlar;
+# 50 mm / 1 saat yalnız en yoğun saati temsil eder, aralığa girmez)
+DOGRULAMA_SENARYOLARI = ["100_6", "150_6", "100_24", "150_24"]
 # Haberdeki yer "yakalandı" sayılır: mahalle modelde en ıslak çeyrekte, cadde /
 # dere hattında 30 cm+ su noktası var — olay senaryolarından herhangi birinde
 MAHALLE_YUZDELIK = 75
@@ -123,12 +126,56 @@ def olay_yerleri():
     return out, ozet
 
 
-async def ornek_rotalar():
-    """Aynı başlangıçtan senaryosuz ve olay senaryolarında araç rotası."""
+def merkez_alanlari(ilce_adlari):
+    """Olayın yaşandığı ilçelerde olay senaryolarının su alanı (km²):
+    {senaryo: {su_30, su_10, belirsiz}} ve bölgenin (alan km², geometri)."""
+    ozet = sel_senaryo.ozet()
+    ilce, _ = ilceler_ve_mahalleler(set(ilce_adlari))
+    bolge = shapely.union_all(list(ilce.values()))
+    tr = Affine(ozet["dx"], 0, ozet["bati"], 0, ozet["dy"], ozet["kuzey"])
+    npz = np.load(sel_senaryo.SENARYO_FILE)
+    shape = npz[f"d_{OLAY_SENARYOLARI[0]}"].shape
+    icinde = rasterize([(bolge, 1)], out_shape=shape, transform=tr, fill=0, dtype="uint8").astype(bool)
+    lat = tr.f + (np.arange(shape[0]) + 0.5) * tr.e
+    hucre_km2 = np.repeat((abs(tr.e) * 111.32 * tr.a * 111.32 * np.cos(np.radians(lat)))[:, None],
+                          shape[1], axis=1)
+    out = {}
+    for sen in OLAY_SENARYOLARI:
+        d = npz[f"d_{sen}"]
+        b = d == sel_senaryo.BELIRSIZ
+        out[sen] = {"su_30_km2": round(float(hucre_km2[icinde & ~b & (d >= 3)].sum()), 1),
+                    "su_10_km2": round(float(hucre_km2[icinde & ~b & (d >= 1)].sum()), 1),
+                    "belirsiz_km2": round(float(hucre_km2[icinde & b].sum()), 1)}
+    return out, round(float(hucre_km2[icinde].sum())), bolge
+
+
+async def veritabani_ozetleri(bolge):
+    """Örnek rotalar (aynı başlangıçtan senaryosuz ve olay senaryolarında araç
+    rotası) ve olay ilçelerinde su altında kalan toplanma alanı / yol parçası
+    sayıları — tek bağlantıda."""
     senaryolar = sel_senaryo.ozet()["senaryolar"]
-    out = []
+    out, etki = [], {}
+    icinde = "ST_Within({}, ST_SetSRID(ST_GeomFromWKB(decode($1, 'hex')), 4326))"
+    wkb = shapely.to_wkb(bolge, hex=True)
+    K = AfetRepository.SENARYO_KAPALI_M
     await db.connect()
     try:
+        async with db.baglan() as c:
+            toplanma = await c.fetchval(
+                f"SELECT count(*) FROM toplanma_alanlari WHERE {icinde.format('konum')}", wkb)
+            for sen in OLAY_SENARYOLARI:
+                t = await c.fetchrow(f"""
+                    SELECT count(*) FILTER (WHERE s.derinlik >= {K}) AS su,
+                           count(*) FILTER (WHERE s.derinlik < {K} AND s.belirsiz) AS belirsiz
+                    FROM sel_senaryo_su s JOIN toplanma_alanlari a ON a.id = s.kimlik
+                    WHERE s.katman = 'toplanma' AND s.senaryo = $2 AND {icinde.format('a.konum')}""",
+                    wkb, sen)
+                yol = await c.fetchval(f"""
+                    SELECT count(*) FROM sel_senaryo_su s JOIN izmir_roads_noded rn ON rn.id = s.kimlik
+                    WHERE s.katman = 'drive' AND s.senaryo = $2 AND s.derinlik >= {K}
+                      AND {icinde.format('rn.the_geom')}""", wkb, sen)
+                etki[sen] = {"toplanma_su": t["su"], "toplanma_belirsiz": t["belirsiz"],
+                             "yol_parcasi_su": yol}
         for sen in [None] + OLAY_SENARYOLARI:
             r = await AfetRepository.get_smart_routes(
                 ROTA_BASLANGIC["lon"], ROTA_BASLANGIC["lat"], mode="drive", senaryo=sen,
@@ -148,7 +195,7 @@ async def ornek_rotalar():
             })
     finally:
         await db.disconnect()
-    return out
+    return out, etki, toplanma
 
 
 def main():
@@ -163,6 +210,9 @@ def main():
     shutil.copy(os.path.join(BASE_DIR, "static", "izmir_sinir.geojson"),
                 os.path.join(CIKTI, "izmir_sinir.geojson"))
     yerler, dogrulama = olay_yerleri()
+    ilceler = json.load(open(SONUC, encoding="utf-8"))["ilceler"]
+    alan, bolge_km2, bolge = merkez_alanlari(ilceler)
+    rotalar, etki, toplanma = asyncio.run(veritabani_ozetleri(bolge))
     vitrin = {
         "yagis_mm": y["yagis_mm"], "sure_sa": y["sure_sa"], "bounds": y["bounds"],
         "siniflar": y["siniflar"], "olay_senaryolari": OLAY_SENARYOLARI,
@@ -170,8 +220,11 @@ def main():
                                               "alt_gecit_dolu", "toplanma_etkilenen_sayi",
                                               "toplanma_toplam")}
                        for k, v in y["senaryolar"].items()},
-        "yerler": yerler, "dogrulama": dogrulama,
-        "rota_baslangic": ROTA_BASLANGIC, "rotalar": asyncio.run(ornek_rotalar()),
+        "yerler": yerler, "dogrulama": dogrulama, "dogrulama_senaryolari": DOGRULAMA_SENARYOLARI,
+        # olayın yaşandığı ilçelerde olay senaryolarının etkisi
+        "merkez": {"ilceler": ilceler, "km2": bolge_km2, "toplanma": toplanma,
+                   "senaryolar": {sen: {**alan[sen], **etki[sen]} for sen in OLAY_SENARYOLARI}},
+        "rota_baslangic": ROTA_BASLANGIC, "rotalar": rotalar,
     }
     with open(os.path.join(CIKTI, "vitrin.json"), "w", encoding="utf-8") as f:
         json.dump(vitrin, f, ensure_ascii=False, separators=(",", ":"))
