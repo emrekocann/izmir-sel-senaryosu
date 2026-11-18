@@ -275,6 +275,37 @@ Gözetimli bir regresyon modelinin (OLS, sonra coğrafi ağırlıklı regresyon)
 venv/bin/python -m hesap.ilce_gun   # ilk çalıştırmada itfaiye_veri/ önbelleğine ~10 MB indirir (~1 dk)
 ```
 
+### 📈 OLS regresyonu: yağış → itfaiye çağrısı (`hesap/ols_model.py`)
+
+Gözetimli öğrenme: model, ilçe-gün veri setinden (2020–2026; 2019 kısmi yıl ve farklı kayıt pratiği yüzünden dışarıda) yağış ile itfaiye su çağrısı arasındaki ilişkiyi öğrenir.
+
+`log(1+çağrı) ~ yağış + dünkü yağış + önceki 7 gün + log(nüfus) + kent payı + yağış × kent payı` (yağışlar log(1+mm)). En yoğun saatin yağışı modelden çıkarıldı: günlük toplamla birlikte VIF ≈ 17 (iki değişken aynı bilgiyi taşıyor), katsayısı anlamsızdı (p = 0.87); çıkınca bütün VIF'ler < 2. Standart hatalar güne göre kümelenir (aynı gün bütün ilçeler aynı fırtınayı yaşar).
+
+**Bulgular:**
+- **Yağışın etkisi kentleşmeye bağlı.** En güçlü terim yağış × kent payı (p ≈ 10⁻²⁰). Aynı yağış artışı, kent payı 0.79 olan Konak'ta, 0.006 olan Kiraz'dan ~6 kat fazla çağrı artışı getirir (log ölçekte eğim 0.25'e karşı 0.04).
+- **Önceki günler önemli:** dünkü yağış ve önceki 7 günün yağışı anlamlı. Çağrılar olaydan sonra sürer.
+- **Görülmemiş yıllarda da tutuyor:** 2020–2024 ile eğitilen model 2025–2026'da R² 0.114 verir (eğitimde 0.11); yağışsız temel model 0.
+
+| Sınama | Model | R² (log) | İl geneli günlük r | Olay günleri: gerçek / tahmin |
+|---|---|---|---|---|
+| Zaman (2025–26) | OLS | 0.114 | 0.56 | 3.409 / 387 |
+| | yağışsız temel | −0.007 | 0.00 | 3.409 / 194 |
+| | Poisson | — | **0.74** | 3.409 / **2.131** |
+| Mekân (ilçe dışarıda) | OLS | 0.100 | 0.34 | 13.222 / 1.139 |
+| | Poisson | — | 0.43 | 13.222 / 3.674 |
+
+Olay günü: il genelinde ≥ 50 çağrı.
+
+**Sınırlar:**
+- **OLS fırtına günlerini çok düşük tahmin ediyor.** Günlerin %95'inde çağrı yok. log(1+y) üzerinde OLS'nin geri dönüşümü (Duan smearing) sabit bir çarpandır; çağrıları sakin günlere yayar. Aynı değişkenlerle Poisson regresyonu (sayım modeli) olay günlerini 5 kat daha iyi yakalıyor. Sayım verisi için doğru araç bu; OLS okunabilir temel model olarak kalıyor. Poisson'un R²(log) değeri anlamlı değildir (log ölçeği optimize etmez), bu yüzden tabloda yok.
+- **R² düşük (~0.1) ama bu beklenen bir sonuç.** Günlük çağrının çoğu yağıştan bağımsız (boru patlağı, tek tük bodrum), arşiv yağışı yerel sağanağı yumuşatıyor (veri seti bölümüne bakın).
+- **Mekânda olay günleri tutmuyor:** 2020–24'ün en büyük olay günleri 2021 selinin yağışsız artçı günleri (4–9 Şubat). Model bunları önceki 7 günün yağışından ancak kısmen görebilir.
+- **İlçe artıkları örüntülü:** Foça, Seferihisar, Konak ve Dikili sürekli az; Bayraklı, Gaziemir ve Balçova sürekli fazla tahmin ediliyor. Tek global denklem bütün ilçelere uymuyor; bu, GWR'nin konusu.
+
+```bash
+venv/bin/python -m hesap.ols_model   # ~5 sn; sonuç egitim/ols_sonuc.json
+```
+
 ### 🧭 Rota ve yağış senaryosu (`hesap/sel_senaryo_yollar.py`, `migrations/011`)
 
 Sel panelinde "Yağış senaryosu" açıkken tahliye rotası haritada görünen senaryoya göre çizilir; kaydırıcı ya da süre değişince rota yeniden hesaplanır.

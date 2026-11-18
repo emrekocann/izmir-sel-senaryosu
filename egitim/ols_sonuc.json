@@ -1,0 +1,388 @@
+{
+ "veri": {
+  "satir": 73920,
+  "ilce": 30,
+  "gun": 2464,
+  "yillar": [
+   2020,
+   2026
+  ],
+  "cagri": 17916,
+  "sifir_payi": 0.954
+ },
+ "denklem": "log(1+çağrı) ~ log_yagis + log_dun + log_onceki7g + log_nufus + kent_payi + log_yagis_x_kent",
+ "katsayilar": [
+  {
+   "ad": "const",
+   "aciklama": "sabit",
+   "b": -0.2314,
+   "alt": -0.269,
+   "ust": -0.1939,
+   "p": 1.5e-33
+  },
+  {
+   "ad": "log_yagis",
+   "aciklama": "o günün yağışı, log(1+mm)",
+   "b": 0.0409,
+   "alt": 0.0292,
+   "ust": 0.0525,
+   "p": 5.9e-12
+  },
+  {
+   "ad": "log_dun",
+   "aciklama": "dünkü yağış, log(1+mm)",
+   "b": 0.0227,
+   "alt": 0.0103,
+   "ust": 0.0351,
+   "p": 0.00035
+  },
+  {
+   "ad": "log_onceki7g",
+   "aciklama": "önceki 7 günün yağışı, log(1+mm)",
+   "b": 0.0164,
+   "alt": 0.0109,
+   "ust": 0.0218,
+   "p": 4.3e-09
+  },
+  {
+   "ad": "log_nufus",
+   "aciklama": "ilçe nüfusu, log(kişi)",
+   "b": 0.0189,
+   "alt": 0.0157,
+   "ust": 0.022,
+   "p": 3.1e-31
+  },
+  {
+   "ad": "kent_payi",
+   "aciklama": "yapılaşmış alan payı (0–1)",
+   "b": 0.0371,
+   "alt": 0.0126,
+   "ust": 0.0617,
+   "p": 0.0031
+  },
+  {
+   "ad": "log_yagis_x_kent",
+   "aciklama": "yağış × kent payı",
+   "b": 0.2609,
+   "alt": 0.2065,
+   "ust": 0.3154,
+   "p": 5.7e-21
+  }
+ ],
+ "r2_egitim": 0.11,
+ "r2_duzeltilmis": 0.11,
+ "aic": 26057.3,
+ "smearing": 1.1384,
+ "vif": {
+  "log_yagis": 1.8,
+  "log_dun": 1.5,
+  "log_onceki7g": 1.4,
+  "log_nufus": 1.4,
+  "kent_payi": 1.7,
+  "log_yagis_x_kent": 1.8
+ },
+ "poisson_katsayilar": [
+  {
+   "ad": "const",
+   "b": -10.9294,
+   "carpan": 0.0,
+   "p": 1.3e-21
+  },
+  {
+   "ad": "log_yagis",
+   "b": 0.6448,
+   "carpan": 1.906,
+   "p": 9e-15
+  },
+  {
+   "ad": "log_dun",
+   "b": 0.1009,
+   "carpan": 1.106,
+   "p": 0.2
+  },
+  {
+   "ad": "log_onceki7g",
+   "b": 0.7527,
+   "carpan": 2.123,
+   "p": 1e-07
+  },
+  {
+   "ad": "log_nufus",
+   "b": 0.5363,
+   "carpan": 1.71,
+   "p": 1.6e-08
+  },
+  {
+   "ad": "kent_payi",
+   "b": 2.5518,
+   "carpan": 12.83,
+   "p": 1.1e-11
+  },
+  {
+   "ad": "log_yagis_x_kent",
+   "b": -0.3194,
+   "carpan": 0.727,
+   "p": 0.072
+  }
+ ],
+ "zaman_sinamasi": {
+  "egitim_yillari": [
+   2020,
+   2021,
+   2022,
+   2023,
+   2024
+  ],
+  "test_yillari": [
+   2025,
+   2026
+  ],
+  "model": {
+   "r2_log": 0.114,
+   "rmse_log": 0.305,
+   "mae_cagri": 0.41,
+   "il_gunluk_korelasyon": 0.56,
+   "olay_gunu": 28,
+   "olay_gercek_toplam": 3409,
+   "olay_tahmin_toplam": 387,
+   "olay_korelasyon": 0.478
+  },
+  "temel": {
+   "r2_log": -0.007,
+   "rmse_log": 0.325,
+   "mae_cagri": 0.45,
+   "il_gunluk_korelasyon": 0.0,
+   "olay_gunu": 28,
+   "olay_gercek_toplam": 3409,
+   "olay_tahmin_toplam": 194,
+   "olay_korelasyon": 0.0
+  },
+  "poisson": {
+   "r2_log": -0.325,
+   "rmse_log": 0.373,
+   "mae_cagri": 0.42,
+   "il_gunluk_korelasyon": 0.737,
+   "olay_gunu": 28,
+   "olay_gercek_toplam": 3409,
+   "olay_tahmin_toplam": 2131,
+   "olay_korelasyon": 0.484
+  }
+ },
+ "mekan_sinamasi": {
+  "model": {
+   "r2_log": 0.1,
+   "rmse_log": 0.29,
+   "mae_cagri": 0.411,
+   "il_gunluk_korelasyon": 0.342,
+   "olay_gunu": 87,
+   "olay_gercek_toplam": 13222,
+   "olay_tahmin_toplam": 1139,
+   "olay_korelasyon": -0.016
+  },
+  "ilce": [
+   {
+    "ilce": "Aliağa",
+    "gercek": 248,
+    "tahmin": 507
+   },
+   {
+    "ilce": "Balçova",
+    "gercek": 241,
+    "tahmin": 573
+   },
+   {
+    "ilce": "Bayindir",
+    "gercek": 25,
+    "tahmin": 450
+   },
+   {
+    "ilce": "Bayrakli",
+    "gercek": 921,
+    "tahmin": 818
+   },
+   {
+    "ilce": "Bergama",
+    "gercek": 611,
+    "tahmin": 478
+   },
+   {
+    "ilce": "Beydağ",
+    "gercek": 6,
+    "tahmin": 352
+   },
+   {
+    "ilce": "Bornova",
+    "gercek": 1270,
+    "tahmin": 630
+   },
+   {
+    "ilce": "Buca",
+    "gercek": 1472,
+    "tahmin": 586
+   },
+   {
+    "ilce": "Dikili",
+    "gercek": 797,
+    "tahmin": 436
+   },
+   {
+    "ilce": "Foça",
+    "gercek": 965,
+    "tahmin": 392
+   },
+   {
+    "ilce": "Gaziemir",
+    "gercek": 256,
+    "tahmin": 614
+   },
+   {
+    "ilce": "Güzelbahçe",
+    "gercek": 160,
+    "tahmin": 430
+   },
+   {
+    "ilce": "Karabağlar",
+    "gercek": 1644,
+    "tahmin": 600
+   },
+   {
+    "ilce": "Karaburun",
+    "gercek": 113,
+    "tahmin": 362
+   },
+   {
+    "ilce": "Karşiyaka",
+    "gercek": 1135,
+    "tahmin": 656
+   },
+   {
+    "ilce": "Kemalpaşa",
+    "gercek": 165,
+    "tahmin": 509
+   },
+   {
+    "ilce": "Kinik",
+    "gercek": 64,
+    "tahmin": 401
+   },
+   {
+    "ilce": "Kiraz",
+    "gercek": 19,
+    "tahmin": 406
+   },
+   {
+    "ilce": "Konak",
+    "gercek": 3680,
+    "tahmin": 653
+   },
+   {
+    "ilce": "Menderes",
+    "gercek": 609,
+    "tahmin": 494
+   },
+   {
+    "ilce": "Menemen",
+    "gercek": 399,
+    "tahmin": 531
+   },
+   {
+    "ilce": "Narlidere",
+    "gercek": 109,
+    "tahmin": 497
+   },
+   {
+    "ilce": "Seferihisar",
+    "gercek": 1244,
+    "tahmin": 425
+   },
+   {
+    "ilce": "Selçuk",
+    "gercek": 103,
+    "tahmin": 440
+   },
+   {
+    "ilce": "Tire",
+    "gercek": 93,
+    "tahmin": 473
+   },
+   {
+    "ilce": "Torbali",
+    "gercek": 429,
+    "tahmin": 542
+   },
+   {
+    "ilce": "Urla",
+    "gercek": 367,
+    "tahmin": 453
+   },
+   {
+    "ilce": "Çeşme",
+    "gercek": 217,
+    "tahmin": 465
+   },
+   {
+    "ilce": "Çiğli",
+    "gercek": 338,
+    "tahmin": 577
+   },
+   {
+    "ilce": "Ödemiş",
+    "gercek": 216,
+    "tahmin": 464
+   }
+  ],
+  "temel": {
+   "r2_log": 0.009,
+   "rmse_log": 0.305,
+   "mae_cagri": 0.452,
+   "il_gunluk_korelasyon": -0.0,
+   "olay_gunu": 87,
+   "olay_gercek_toplam": 13222,
+   "olay_tahmin_toplam": 607,
+   "olay_korelasyon": 0.0
+  },
+  "poisson": {
+   "r2_log": -0.203,
+   "rmse_log": 0.336,
+   "mae_cagri": 0.38,
+   "il_gunluk_korelasyon": 0.431,
+   "olay_gunu": 87,
+   "olay_gercek_toplam": 13222,
+   "olay_tahmin_toplam": 3674,
+   "olay_korelasyon": 0.093
+  }
+ },
+ "ilce_artik": {
+  "Bayrakli": -0.051,
+  "Gaziemir": -0.044,
+  "Balçova": -0.033,
+  "Çiğli": -0.028,
+  "Narlidere": -0.026,
+  "Kemalpaşa": -0.025,
+  "Tire": -0.024,
+  "Bayindir": -0.023,
+  "Selçuk": -0.012,
+  "Kiraz": -0.012,
+  "Aliağa": -0.011,
+  "Torbali": -0.008,
+  "Ödemiş": -0.006,
+  "Kinik": -0.005,
+  "Çeşme": -0.003,
+  "Bornova": 0.001,
+  "Menemen": 0.001,
+  "Beydağ": 0.003,
+  "Güzelbahçe": 0.004,
+  "Menderes": 0.012,
+  "Karşiyaka": 0.013,
+  "Karaburun": 0.013,
+  "Urla": 0.013,
+  "Bergama": 0.015,
+  "Karabağlar": 0.026,
+  "Buca": 0.033,
+  "Foça": 0.036,
+  "Seferihisar": 0.038,
+  "Konak": 0.045,
+  "Dikili": 0.057
+ },
+ "standart_hata": "güne göre kümelenmiş (cluster-robust)"
+}
