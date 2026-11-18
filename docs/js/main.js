@@ -39,7 +39,19 @@ async function baslat() {
   const sekmeler = SEKMELER.map((kur) => kur({ ...veri, harita }));
   let aktif = null;
 
-  const lejantCiz = () => { lejant.innerHTML = aktif ? aktif.lejant() : ''; };
+  // Lejant dar ekranda kapalı başlar: açıkken haritanın çoğunu örter
+  // (rota sekmesinde işaretçi ve rota altında kalıyordu). Başlığa tıklayınca açılır.
+  let lejantAcik = !matchMedia('(max-width: 720px)').matches;
+  const lejantCiz = () => {
+    const ic = aktif ? aktif.lejant() : '';
+    lejant.classList.toggle('kapali', !lejantAcik);
+    lejant.innerHTML = ic && `<button type="button" class="lejant-dugme" aria-expanded="${lejantAcik}">${T('Lejant', 'Legend')}</button><div class="lejant-ic">${ic}</div>`;
+  };
+  lejant.addEventListener('click', (olay) => {
+    if (!olay.target.closest('.lejant-dugme')) return;
+    lejantAcik = !lejantAcik;
+    lejantCiz();
+  });
 
   function sekmeDugmeleri() {
     sekmeCubugu.innerHTML = sekmeler.map((s) =>

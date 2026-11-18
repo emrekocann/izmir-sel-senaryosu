@@ -30,7 +30,6 @@ bölünür; bu yüzden önceki günün yağışı ayrı kolondur.
 Çalıştırma: venv/bin/python -m hesap.ilce_gun
 (ilk çalıştırmada ~10 MB Excel ve yağış arşivi indirilir, itfaiye_veri/ önbelleğine)
 """
-import json
 import logging
 import os
 import re
@@ -41,17 +40,15 @@ import numpy as np
 import pandas as pd
 import shapely
 
-import ag
+from afet import ag
+from afet.sinir import tkgm_ilceler
+from afet.yollar import CN_DOSYASI, DEM_TIF, EGITIM_DIR, ITFAIYE_HAM_DIR
 
 log = logging.getLogger("ilce_gun")
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
-HAM_DIR = os.path.join(BASE_DIR, "itfaiye_veri")          # indirilen ham dosyalar (depoda değil)
-CIKTI_DIR = os.path.join(BASE_DIR, "egitim")
+HAM_DIR = ITFAIYE_HAM_DIR                                  # indirilen ham dosyalar (depoda değil)
+CIKTI_DIR = EGITIM_DIR
 ILCE_GUN_CSV = os.path.join(CIKTI_DIR, "ilce_gun.csv")
 ILCE_CSV = os.path.join(CIKTI_DIR, "ilce.csv")
-TKGM_ILCE = os.path.join(BASE_DIR, "sinir_veri", "tkgm", "izmir_ilce.json")
-CN_FILE = os.path.join(BASE_DIR, "sel_veri", "cn_60m_v3.npz")
-DEM_TIF = os.path.join(BASE_DIR, "sel_veri", "dem_60m.tif")
 
 CKAN = "https://acikveri.bizizmir.com/api/3/action/package_show?id="
 HIZMET_PAKETI = "izmir-itfaiyesi-kontrol-emniyet-tedbir-ve-vatandasa-verilen-hizmetlerin-istatistigi"
@@ -172,9 +169,7 @@ def cagrilari_oku(dosyalar, ilce_adlari):
 
 def ilceler():
     """TKGM ilçeleri: [(ad, poligon)]."""
-    with open(TKGM_ILCE, encoding="utf-8") as f:
-        return [(ft["properties"]["text"], shapely.geometry.shape(ft["geometry"]))
-                for ft in json.load(f)["features"]]
+    return [(ad, shapely.geometry.shape(geom)) for _, ad, geom in tkgm_ilceler()]
 
 
 def kent_ozellikleri(ilce_listesi):
@@ -184,7 +179,7 @@ def kent_ozellikleri(ilce_listesi):
     from rasterio.features import rasterize
     with rasterio.open(DEM_TIF) as ds:
         tr, shape = ds.transform, (ds.height, ds.width)
-    kent = np.load(CN_FILE)["kent"]
+    kent = np.load(CN_DOSYASI)["kent"]
     if kent.shape != shape:
         raise ValueError(f"CN ızgarası {kent.shape}, DEM {shape}: sel_senaryo_hazirla yeniden çalıştırılmalı")
     et = rasterize([(g, i + 1) for i, (_, g) in enumerate(ilce_listesi)], out_shape=shape,

@@ -6,6 +6,7 @@ akış altyapısı. Çevrimdışı betikler kullanır; çalışma zamanında yü
   hand_hesapla en yakın dere hücresine göre yükseklik (HAND) ve o hücrenin indisi
   cukurlar     kapalı çukurlar (derinlik, etiket)
   kopru_tunel  OSM köprü / alt geçit / uzun tünel çizgileri
+  osm_cizgileri  Geofabrik PBF dosyasından çerçevedeki seçili yollar / dereler
   yol_noktalari, raster_ornekle, yakin_mi  yol ağını ızgarayla eşleme
 """
 import logging
@@ -16,14 +17,10 @@ import numpy as np
 import shapely
 from scipy import ndimage
 
-import ag
+from afet import ag
+from afet.yollar import DEM_TIF, KOPRU_TUNEL, OSM_PBF, SEL_HAM_DIR
 
 log = logging.getLogger("dem")
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
-VERI_DIR = os.path.join(BASE_DIR, "sel_veri")
-DEM_TIF = os.path.join(VERI_DIR, "dem_60m.tif")
-KOPRU_FILE = os.path.join(VERI_DIR, "kopru_tunel.json")
 
 COZUNURLUK = 2 / 3600          # 2 açı-saniye ≈ 62 m (enlem) × 48 m (boylam)
 TAMPON = 0.15                  # il dışına taşan havzaların bir kısmı için (derece)
@@ -40,8 +37,8 @@ def dem_mozaik(sinir):
     import rasterio
     from rasterio.enums import Resampling
     from rasterio.merge import merge
-    from hesap.build_road_network import fetch_dem_tiles
-    os.makedirs(VERI_DIR, exist_ok=True)
+    from hesap.yol_agi_kur import fetch_dem_tiles
+    os.makedirs(SEL_HAM_DIR, exist_ok=True)
     minx, miny, maxx, maxy = sinir.bounds
     b = (minx - TAMPON, miny - TAMPON, maxx + TAMPON, maxy + TAMPON)
     ds = [rasterio.open(p) for p in fetch_dem_tiles(sinir.buffer(TAMPON))]
@@ -125,7 +122,7 @@ def kopru_tunel(sinir):
     minx, miny, maxx, maxy = sinir.bounds
     elems = ag.overpass(f"""[out:json][timeout:180];
         way[highway][~"^(bridge|tunnel)$"~"."]({miny},{minx},{maxy},{maxx});
-        out tags geom;""", KOPRU_FILE, timeout=240)
+        out tags geom;""", KOPRU_TUNEL, timeout=240)
     kopru, alt_gecit, uzun_tunel = [], [], []
     for e in elems:
         tg, geom = e.get("tags", {}), e.get("geometry") or []
@@ -139,6 +136,28 @@ def kopru_tunel(sinir):
             (uzun_tunel if uzun else alt_gecit).append(line)
     log.info("OSM: %d köprü, %d alt geçit, %d uzun tünel", len(kopru), len(alt_gecit), len(uzun_tunel))
     return kopru, alt_gecit, uzun_tunel
+
+
+def osm_cizgileri(cerceve, secici, pbf=OSM_PBF):
+    """PBF dosyasındaki çizgilerden (way) çerçeveye (batı, güney, doğu, kuzey)
+    değenler: (secici(etiketler), etiketler, [(lon, lat), …]). secici None
+    dönerse çizgi atlanır. Etiketler yalnız döngü adımı içinde geçerlidir."""
+    import osmium
+    x0, y0, x1, y1 = cerceve
+    fp = osmium.FileProcessor(pbf).with_locations().with_filter(
+        osmium.filter.EntityFilter(osmium.osm.WAY))
+    for o in fp:
+        tur = secici(o.tags)
+        if tur is None:
+            continue
+        try:
+            xy = [(n.lon, n.lat) for n in o.nodes]
+        except osmium.InvalidLocationError:
+            continue
+        xs, ys = [p[0] for p in xy], [p[1] for p in xy]
+        if len(xy) < 2 or max(xs) < x0 or min(xs) > x1 or max(ys) < y0 or min(ys) > y1:
+            continue
+        yield tur, o.tags, xy
 
 
 def yol_noktalari(wkb_listesi):

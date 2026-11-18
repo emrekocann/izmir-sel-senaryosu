@@ -7,8 +7,8 @@ ortalama ~0.6 km, en çok ~4 km sapar). TKGM'nin kıyısı ise kaba ve ada
 içermez; kıyı ve adalar OSM kıyı çizgisinden alınır.
 
 Çıktı (birebir örtüşen iki dosya):
-  static/izmir_ilce.geojson  — 30 ilçe, boşluksuz/örtüşmesiz, adalar dahil
-  static/izmir_sinir.geojson — ilçelerin birleşimi
+  sinir/izmir_ilce.geojson  — 30 ilçe, boşluksuz/örtüşmesiz, adalar dahil
+  sinir/izmir_sinir.geojson — ilçelerin birleşimi
 
 Akış:
   1. TKGM: il listesi (komşu iller için) ve İzmir ilçeleri; OSM: il kutusundaki
@@ -36,15 +36,13 @@ import shapely
 from shapely.geometry import LineString, Point, box, shape
 from shapely.ops import polygonize, unary_union
 
-import ag
+from afet import ag
+from afet.dosya import json_yaz
+from afet.yollar import IL_SINIRI, ILCE_SINIRLARI, SINIR_HAM_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("sinir")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
-VERI_DIR = os.path.join(BASE_DIR, "sinir_veri")
-ILCE_FILE = os.path.join(BASE_DIR, "static", "izmir_ilce.geojson")
-SINIR_FILE = os.path.join(BASE_DIR, "static", "izmir_sinir.geojson")
 TKGM_URL = "https://cbsapi.tkgm.gov.tr/megsiswebapi.v3/api/idariYapi/"
 TKGM_IL_ID = 57                                  # İzmir (TKGM idari yapı kimliği)
 OSM_IL_KODU = "TR-35"
@@ -56,11 +54,11 @@ VORONOI_ADIM = 0.0005                            # ilçe sınırı örnekleme (~
 
 def _getir(url, ad, veri=None):
     """JSON kaynağı, sinir_veri/<ad>.json'a önbelleklenir."""
-    return ag.json_getir(url, os.path.join(VERI_DIR, f"{ad}.json"), veri, deneme=9, bekle_sn=20)
+    return ag.json_getir(url, os.path.join(SINIR_HAM_DIR, f"{ad}.json"), veri, deneme=9, bekle_sn=20)
 
 
-def overpass(sorgu, ad):
-    return ag.overpass(sorgu, os.path.join(VERI_DIR, f"{ad}.json"), deneme=9, bekle_sn=20)
+def _overpass(sorgu, ad):
+    return ag.overpass(sorgu, os.path.join(SINIR_HAM_DIR, f"{ad}.json"), deneme=9, bekle_sn=20)
 
 
 def iliski_poligonu(rel):
@@ -132,13 +130,13 @@ def paylastir(il, ilceler):
 
 
 def main():
-    os.makedirs(VERI_DIR, exist_ok=True)
+    os.makedirs(SINIR_HAM_DIR, exist_ok=True)
     iller = _getir(TKGM_URL + "ilListe", "tkgm/il")["features"]
     ilce_f = _getir(TKGM_URL + f"ilceListe/{TKGM_IL_ID}", "tkgm/izmir_ilce")["features"]
     w, s, e, n = KUTU
     kiyi = [LineString([(p["lon"], p["lat"]) for p in yol["geometry"]])
-            for yol in overpass(f'[out:json][timeout:170];way["natural"="coastline"]({s},{w},{n},{e});out geom;', "kiyi")]
-    osm_il = iliski_poligonu(overpass(
+            for yol in _overpass(f'[out:json][timeout:170];way["natural"="coastline"]({s},{w},{n},{e});out geom;', "kiyi")]
+    osm_il = iliski_poligonu(_overpass(
         f'[out:json][timeout:170];rel["ISO3166-2"="{OSM_IL_KODU}"]["admin_level"="4"];out geom;', "il")[0])
     log.info("TKGM: %d ilçe; OSM: %d kıyı yolu", len(ilce_f), len(kiyi))
 
@@ -173,13 +171,11 @@ def main():
     buyuk = lambda t: duzelt.get(t, t).replace("i", "İ").replace("ı", "I").upper()
     ozellik = [{"type": "Feature", "properties": {"ILADI": "İZMİR", "ILCEADI": buyuk(a)},
                 "geometry": json.loads(shapely.to_geojson(g))} for a, g in zip(adlar, G)]
-    with open(ILCE_FILE, "w", encoding="utf-8") as f:
-        json.dump({"type": "FeatureCollection", "features": ozellik}, f, ensure_ascii=False, separators=(",", ":"))
-    with open(SINIR_FILE, "w", encoding="utf-8") as f:
-        json.dump({"type": "FeatureCollection", "features": [{
-            "type": "Feature",
-            "properties": {"name": "İzmir", "kaynak": "TKGM MEGSİS ilçe sınırları + OSM kıyı çizgisi, ilçe birleşimi"},
-            "geometry": json.loads(shapely.to_geojson(il))}]}, f, ensure_ascii=False, separators=(",", ":"))
+    json_yaz(ILCE_SINIRLARI, {"type": "FeatureCollection", "features": ozellik})
+    json_yaz(IL_SINIRI, {"type": "FeatureCollection", "features": [{
+        "type": "Feature",
+        "properties": {"name": "İzmir", "kaynak": "TKGM MEGSİS ilçe sınırları + OSM kıyı çizgisi, ilçe birleşimi"},
+        "geometry": json.loads(shapely.to_geojson(il))}]})
     log.info("Yazıldı: %d ilçe, kara alanı ~%.0f km², %d köşe; ilçe alanları: %s", len(G), km2(il),
              shapely.get_num_coordinates(il), {a: round(km2(g)) for a, g in zip(adlar, G)})
 

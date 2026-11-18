@@ -1,11 +1,12 @@
-"""Canlı veri toplamanın veritabanına yazdığı kayıtlar (rota maliyetine girer)."""
+"""Canlı veri toplamanın veritabanına yazdığı kayıtlar (rota maliyetine girer).
+Alan adları veritabanı kolonlarıdır."""
 import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
 
 
-class QuakeCreateRequest(BaseModel):
+class DepremKaydi(BaseModel):
     earthquake_id: str
     buyukluk: float = Field(..., gt=0)
     yer: str = Field(..., min_length=1)
@@ -14,7 +15,7 @@ class QuakeCreateRequest(BaseModel):
     deprem_zamani: datetime.datetime
 
 
-class TrafficIncidentCreateRequest(BaseModel):
+class TrafikOlayi(BaseModel):
     olay_id: str = Field(..., min_length=1)
     kategori: str = Field(..., min_length=1)
     aciklama: Optional[str] = None

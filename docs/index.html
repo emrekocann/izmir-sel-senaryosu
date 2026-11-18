@@ -116,19 +116,19 @@
 </table></div>
 
 
-    <h2 id="hk-dogrulama"><span class="tr">Doğrulama: model olayı ne kadar yakaladı?</span><span class="en">Validation: how well did the model match the event?</span></h2>
+    <h2 id="hk-dogrulama"><span class="tr">Doğrulama: model gerçek selle ne kadar örtüşüyor?</span><span class="en">Validation: how well did the model match the event?</span></h2>
     <p class="tr">Haberlerde adıyla geçen, su basan <span data-doldur="yer-sayisi"></span> yeri (mahalle, cadde, dere hattı, alt geçit) kaynaklarıyla derledim. Haberler yalnız su basan yerleri yazar. Bu yüzden şunu sordum: haberdeki yerler, modelde aynı <span data-doldur="ilce-sayisi"></span> ilçenin öteki <span data-doldur="mahalle-oteki"></span> mahallesinden ve <span data-doldur="cadde-oteki"></span> caddesinden daha mı ıslak? Puan 0,5 ise model yazı-tura kadar iyidir, 1 ise kusursuzdur. O günün yağışına en yakın senaryolar 100–150 mm / 6–24 saattir.</p>
     <p class="en">I compiled, with sources, the <span data-doldur="yer-sayisi"></span> places (neighbourhoods, streets, a stream, an underpass) the news named as flooded. News only lists flooded places, so the question was: are the reported places wetter in the model than the other <span data-doldur="mahalle-oteki"></span> neighbourhoods and <span data-doldur="cadde-oteki"></span> streets of the same <span data-doldur="ilce-sayisi"></span> districts? A score (AUC) of 0.5 is a coin toss, 1 is perfect. The scenarios closest to that night's rain are 100–150 mm over 6–24 hours.</p>
     <div class="tablo-sar"><table>
       <tr><th><span class="tr">Ölçü</span><span class="en">Measure</span></th><th class="s"><span class="tr">Sonuç</span><span class="en">Result</span></th></tr>
-      <tr><td><span class="tr">Yakalanan yer</span><span class="en">Places captured</span></td><td class="s"><span data-doldur="yakalanan"></span> / <span data-doldur="yer-sayisi"></span></td></tr>
+      <tr><td><span class="tr">Haberdeki yerlerden modelin de su gösterdiği</span><span class="en">Reported places where the model also shows water</span></td><td class="s"><span data-doldur="yakalanan"></span> / <span data-doldur="yer-sayisi"></span></td></tr>
       <tr><td><span class="tr">Mahalle puanı</span><span class="en">Neighbourhood score</span></td><td class="s" data-doldur="mahalle-puani"></td></tr>
       <tr><td><span class="tr">Cadde puanı</span><span class="en">Street score</span></td><td class="s" data-doldur="cadde-puani"></td></tr>
       <tr><td><span class="tr">30 cm+ su görülen haber caddesi</span><span class="en">Reported streets with 30 cm+ water</span></td><td class="s" data-doldur="haber-cadde"></td></tr>
       <tr><td><span class="tr">Öteki caddelerde 30 cm+ su</span><span class="en">Other streets with 30 cm+ water</span></td><td class="s" data-doldur="oteki-cadde"></td></tr>
     </table></div>
 <div class="kutu kotu">
-  <p><b><span class="tr">Neden kaçırdı?</span><span class="en">Why the misses?</span></b></p>
+  <p><b><span class="tr">Model neden bazı yerlerde su göstermedi?</span><span class="en">Why does the model show no water at some places?</span></b></p>
   <ul class="tr">
     <li><b>Kıyıdaki kanalizasyon taşkını</b> (Alsancak, Güzelyalı, Mithatpaşa ve Cemal Gürsel caddeleri): su dereden değil, dolan şebekeden geldi. Modelde şebeke yok.</li>
     <li><b>Küçük kent dereleri</b> (Soğukkuyu, Çetin Emeç'teki Hacı Ahmet Deresi): 60 m'lik yükseklik verisi, kapatılmış ya da beton kanala alınmış dar dereleri ayırt edemiyor.</li>
@@ -142,7 +142,7 @@
 
 <div class="kutu not">
   <p><b><span class="tr">Denediğim ve işe yaramayan düzeltme</span><span class="en">A fix I tried that did not work</span></b></p>
-  <p class="tr">Küçük derelerin kaçmasının nedeni "dere modelde yok" olabilir diye düşündüm. OpenStreetMap'teki 3.713 dere hattını yükseklik verisine işledim ve küçük dereleri de taşabilir yaptım. Mahalle puanı yalnız 0.02–0.03 arttı; Soğukkuyu yine kuru kaldı, Yamanlar kötüleşti. Değişikliği geri aldım. Sorun dere haritasının eksikliği değil, yükseklik verisinin çözünürlüğü.</p>
+  <p class="tr">Küçük derelerde su görünmemesinin nedeni "dere modelde yok" olabilir diye düşündüm. OpenStreetMap'teki 3.713 dere hattını yükseklik verisine işledim ve küçük dereleri de taşabilir yaptım. Mahalle puanı yalnız 0.02–0.03 arttı; Soğukkuyu yine kuru kaldı, Yamanlar kötüleşti. Değişikliği geri aldım. Sorun dere haritasının eksikliği değil, yükseklik verisinin çözünürlüğü.</p>
   <p class="en">I suspected the small creeks were simply absent from the model. I burned 3,713 OpenStreetMap waterways into the elevation data and let small creeks overflow. The neighbourhood score rose by only 0.02–0.03; Soğukkuyu stayed dry and Yamanlar got worse. I reverted the change. The limit is elevation resolution, not the stream map.</p>
 </div>
 <p class="kunye tr">Bu karşılaştırma tek olaya ve küçük bir örneğe dayanıyor. Habere girmeyen yerlerin bir kısmı da su almış olabilir; bu, puanı olduğundan düşük gösterir. Sonuçlar istatistiksel kanıt değil, modelin neyi görüp neyi göremediğinin ilk ölçümüdür.</p>
@@ -152,7 +152,7 @@
     <h2 id="hk-veri"><span class="tr">Kurum verisiyle ne değişir?</span><span class="en">What institutional data would change</span></h2>
 <div class="tablo-sar"><table>
   <tr><th><span class="tr">Eksik</span><span class="en">Gap</span></th><th><span class="tr">Gereken veri</span><span class="en">Data needed</span></th><th><span class="tr">Düzelteceği şey</span><span class="en">What it fixes</span></th></tr>
-  <tr><td><span class="tr">Kıyıdaki şebeke taşkını</span><span class="en">Coastal sewer flooding</span></td><td><span class="tr">İZSU yağmur suyu ve kanalizasyon şebekesi</span><span class="en">Water utility (İZSU) storm and sewer network</span></td><td><span class="tr">Alsancak, Güzelyalı gibi kaçırılan yerler</span><span class="en">Missed places such as Alsancak and Güzelyalı</span></td></tr>
+  <tr><td><span class="tr">Kıyıdaki şebeke taşkını</span><span class="en">Coastal sewer flooding</span></td><td><span class="tr">İZSU yağmur suyu ve kanalizasyon şebekesi</span><span class="en">Water utility (İZSU) storm and sewer network</span></td><td><span class="tr">Modelin su göstermediği Alsancak, Güzelyalı gibi yerler</span><span class="en">Places the model shows dry, such as Alsancak and Güzelyalı</span></td></tr>
   <tr><td><span class="tr">Küçük kent dereleri</span><span class="en">Small urban creeks</span></td><td><span class="tr">Hassas yükseklik ölçümü (LiDAR, 1 m)</span><span class="en">LiDAR elevation (1 m)</span></td><td><span class="tr">Soğukkuyu, Hacı Ahmet gibi dar dere yatakları</span><span class="en">Narrow channels such as Soğukkuyu and Hacı Ahmet</span></td></tr>
   <tr><td><span class="tr">Küçük doğrulama örneği</span><span class="en">Small validation sample</span></td><td><span class="tr">Belediye ve itfaiyenin su baskını ihbar kayıtları</span><span class="en">Municipal and fire-brigade flood call records</span></td><td><span class="tr">14 yer yerine yüzlerce noktayla sınama</span><span class="en">Hundreds of points instead of 14 places</span></td></tr>
   <tr><td><span class="tr">Düz ovalardaki belirsizlik</span><span class="en">Uncertainty on flat plains</span></td><td><span class="tr">DSİ taşkın haritaları, sedde ve baraj işletmesi</span><span class="en">State hydraulic works flood maps, levees, dam operation</span></td><td><span class="tr">Gediz deltası ve Menemen ovası</span><span class="en">Gediz delta and Menemen plain</span></td></tr>

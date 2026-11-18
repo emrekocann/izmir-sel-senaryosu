@@ -1,6 +1,6 @@
 // Tek harita ve ortak katmanlar. Sekmeler haritayı doğrudan değil, buradaki
 // işlevlerle kullanır: su katmanı, il sınırı, panele göre sığdırma.
-import { senaryoGorseli, IL_SINIRI } from './veri.js';
+import { senaryoGorseli, IL_SINIRI, jsonOku } from './veri.js';
 
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas';
 const ATIF = 'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors';
@@ -74,7 +74,11 @@ export function kenarCizgileri(geo) {
  *   ilGorunumu()      bütün il
  */
 export function haritaKur(kapsayici, panel, vitrin) {
-  const harita = L.map(kapsayici, { zoomControl: false, minZoom: 8, maxZoom: 18 });
+  // fadeAnimation kapalı: karo belirme animasyonu requestAnimationFrame ister;
+  // sayfa arka planda açılınca (yeni sekmede link) bu durur, Leaflet eski
+  // yakınlaştırma düzeyinin karolarını silmez ve saydam yer adı katmanında
+  // dev, bulanık bir "İzmir" yazısı kalır
+  const harita = L.map(kapsayici, { zoomControl: false, minZoom: 8, maxZoom: 18, fadeAnimation: false });
   L.control.zoom({ position: 'topright' }).addTo(harita);
   L.tileLayer(`${ESRI}/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
     { maxNativeZoom: 16, maxZoom: 18, attribution: ATIF }).addTo(harita);
@@ -85,7 +89,7 @@ export function haritaKur(kapsayici, panel, vitrin) {
     { maxNativeZoom: 16, maxZoom: 18, pane: 'etiket' }).addTo(harita);
 
   const ilSiniri = L.latLngBounds(vitrin.bounds);
-  fetch(IL_SINIRI).then((yanit) => yanit.json()).then((geo) =>
+  jsonOku(IL_SINIRI).then((geo) =>
     L.geoJSON(kenarCizgileri(geo), { style: { color: '#475569', weight: 1.2 }, interactive: false }).addTo(harita))
     .catch((hata) => console.warn('İl sınırı yüklenemedi:', hata));
 

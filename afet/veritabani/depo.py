@@ -1,10 +1,17 @@
+"""Veri erişim katmanı: canlı kayıtların yazımı, toplanma alanları ve
+pgRouting ile risk ağırlıklı rota.
+
+SQL kurucuları (baglanma_sql, _maliyet_sql, _senaryo_join) veritabanına
+dokunmaz; sınıf düzeyinde çağrılabilir ve çevrimdışı betikler de kullanır.
+Sorgu çalıştıranlar bir `Veritabani` örneği üzerinden çalışır (`depo`)."""
 import json
 import re
 
-from bounds import CENTER_LAT, CENTER_LON
-from database import db
-from schemas import QuakeCreateRequest, TrafficIncidentCreateRequest
 from loguru import logger
+
+from afet.sinir import MERKEZ_BOYLAM, MERKEZ_ENLEM
+from afet.veritabani.baglanti import Veritabani, db
+from afet.veritabani.kayitlar import DepremKaydi, TrafikOlayi
 
 NOKTA = "ST_SetSRID(ST_Point({}, {}), 4326)"      # $lon, $lat yer tutucularıyla
 LONLAT = "ST_X(konum::geometry) AS lon, ST_Y(konum::geometry) AS lat"
@@ -17,51 +24,49 @@ SAKLAMA = {
 }
 
 
-# ── Ortak erişim: her sorgu tek yerden, hata loglanır, varsayılan döner ─────
+class AfetDeposu:
 
-async def _yaz(etiket, sql, *args):
-    try:
-        async with db.baglan(yazma=True) as conn:
-            return await conn.execute(sql, *args)
-    except Exception as e:
-        logger.error(f"DB yazma hatası ({etiket}): {e}")
+    def __init__(self, veritabani: Veritabani):
+        self.db = veritabani
 
+    # ── Ortak erişim: her sorgu tek yerden, hata loglanır, varsayılan döner ──
 
-async def _toplu_yaz(etiket, sql, satirlar):
-    """Çok satırı tek bağlantı ve tek hazırlanmış sorguyla yazar."""
-    if not satirlar:
-        return
-    try:
-        async with db.baglan(yazma=True) as conn:
-            await conn.executemany(sql, satirlar)
-    except Exception as e:
-        logger.error(f"DB toplu yazma hatası ({etiket}, {len(satirlar)} satır): {e}")
+    async def _yaz(self, etiket, sql, *args):
+        try:
+            async with self.db.baglan(yazma=True) as conn:
+                return await conn.execute(sql, *args)
+        except Exception as e:
+            logger.error(f"DB yazma hatası ({etiket}): {e}")
 
+    async def _toplu_yaz(self, etiket, sql, satirlar):
+        """Çok satırı tek bağlantı ve tek hazırlanmış sorguyla yazar."""
+        if not satirlar:
+            return
+        try:
+            async with self.db.baglan(yazma=True) as conn:
+                await conn.executemany(sql, satirlar)
+        except Exception as e:
+            logger.error(f"DB toplu yazma hatası ({etiket}, {len(satirlar)} satır): {e}")
 
-async def _oku(etiket, sql, *args) -> list:
-    try:
-        async with db.baglan() as conn:
-            return [dict(r) for r in await conn.fetch(sql, *args)]
-    except Exception as e:
-        logger.error(f"DB okuma hatası ({etiket}): {e}")
-        return []
-
-
-class AfetRepository:
+    async def _oku(self, etiket, sql, *args) -> list:
+        try:
+            async with self.db.baglan() as conn:
+                return [dict(r) for r in await conn.fetch(sql, *args)]
+        except Exception as e:
+            logger.error(f"DB okuma hatası ({etiket}): {e}")
+            return []
 
     # --- YAZMA ---
 
-    @staticmethod
-    async def upsert_quakes(depremler: list[QuakeCreateRequest]):
-        await _toplu_yaz("deprem", f"""
+    async def depremleri_yaz(self, depremler: list[DepremKaydi]):
+        await self._toplu_yaz("deprem", f"""
             INSERT INTO canli_deprem_verileri (earthquake_id, buyukluk, yer, konum, deprem_zamani)
             VALUES ($1, $2, $3, {NOKTA.format('$4', '$5')}, $6)
             ON CONFLICT (earthquake_id) DO NOTHING""",
             [(d.earthquake_id, d.buyukluk, d.yer, d.lon, d.lat, d.deprem_zamani) for d in depremler])
 
-    @staticmethod
-    async def upsert_traffic_incidents(olaylar: list[TrafficIncidentCreateRequest]):
-        await _toplu_yaz("trafik", f"""
+    async def trafik_olaylarini_yaz(self, olaylar: list[TrafikOlayi]):
+        await self._toplu_yaz("trafik", f"""
             INSERT INTO canli_trafik_olaylari (olay_id, kategori, aciklama, gecikme_sn, buyukluk, konum)
             VALUES ($1, $2, $3, $4, $5, {NOKTA.format('$6', '$7')})
             ON CONFLICT (olay_id) DO UPDATE SET
@@ -70,37 +75,33 @@ class AfetRepository:
                 konum = EXCLUDED.konum, guncellendi = NOW()""",
             [(o.olay_id, o.kategori, o.aciklama, o.gecikme_sn, o.buyukluk, o.lon, o.lat) for o in olaylar])
 
-    @staticmethod
-    async def temizle_eski_kayitlar(tablolar=None):
+    async def eski_kayitlari_sil(self, tablolar=None):
         """SAKLAMA süresini aşan canlı kayıtları siler."""
         for tablo in tablolar or SAKLAMA:
             kolon, sure = SAKLAMA[tablo]
-            sonuc = await _yaz(f"temizlik {tablo}",
-                               f"DELETE FROM {tablo} WHERE {kolon} < NOW() - INTERVAL '{sure}'")
+            sonuc = await self._yaz(f"temizlik {tablo}",
+                                    f"DELETE FROM {tablo} WHERE {kolon} < NOW() - INTERVAL '{sure}'")
             if sonuc and sonuc != "DELETE 0":
                 logger.info(f"Temizlik: {tablo} — {sonuc.split()[-1]} eski kayıt silindi.")
 
     # --- OKUMA ---
 
-    @staticmethod
-    async def get_toplanma_alanlari():
-        """İBB afet ve acil durum toplanma alanları (hesap/load_toplanma_alanlari.py)."""
-        return await _oku("toplanma alanı", f"""
+    async def toplanma_alanlari(self):
+        """İBB afet ve acil durum toplanma alanları (hesap/toplanma_alanlari_yukle.py)."""
+        return await self._oku("toplanma alanı", f"""
             SELECT id, adi, ilce, mahalle, yol, {LONLAT} FROM toplanma_alanlari ORDER BY id""")
 
-    @staticmethod
-    async def get_senaryo_toplanma(senaryo: str):
+    async def senaryo_toplanma(self, senaryo: str):
         """Yağış senaryosunda rotanın hedef seçmediği toplanma alanları: su
         altındakiler (≥ SENARYO_KAPALI_M) ve düz ovadakiler (belirsiz)."""
-        return await _oku("senaryo toplanma", f"""
+        return await self._oku("senaryo toplanma", f"""
             SELECT kimlik AS id, derinlik, belirsiz FROM sel_senaryo_su
             WHERE katman = 'toplanma' AND senaryo = $1
-              AND (derinlik >= {AfetRepository.SENARYO_KAPALI_M} OR belirsiz)""", senaryo)
+              AND (derinlik >= {self.SENARYO_KAPALI_M} OR belirsiz)""", senaryo)
 
-    @staticmethod
-    async def get_alt_gecitler():
+    async def alt_gecitler(self):
         """Araç ağındaki alt geçitler (OSM kısa tünel) — orta noktaları."""
-        return await _oku("alt geçit", """
+        return await self._oku("alt geçit", """
             SELECT ST_X(p) AS lon, ST_Y(p) AS lat, highway FROM (
                 SELECT ST_LineInterpolatePoint(the_geom, 0.5) AS p, highway
                 FROM izmir_roads_noded WHERE alt_gecit) s""")
@@ -114,7 +115,7 @@ class AfetRepository:
 
     # mod → (kenar tablosu, eğim katsayısı, trafik cezası uygulanır mı).
     # Yaya %eğimden araçtan çok etkilenir; trafik sıkışıklığı yayayı etkilemez.
-    ROUTE_MODES = {
+    ROTA_MODLARI = {
         "drive": ("izmir_roads_noded", 0.05, True),
         "walk": ("izmir_yaya_noded", 0.10, False),
     }
@@ -122,12 +123,12 @@ class AfetRepository:
     # Bir noktayı yol ağına bağlarken bu yol tiplerine bağlanılmaz: otoyolun
     # yanındaki biri otoyolda değildir (en yakın düğüm otoyoldaysa rota
     # rampadan dolaşıyordu). Yol tipi kenarlarda olduğu için önce en yakın
-    # SNAP_KENAR uygun KENAR (GIST), sonra uçları arasından en yakın düğüm
+    # BAGLANMA_KENAR uygun KENAR (GIST), sonra uçları arasından en yakın düğüm
     # seçilir (tek kenarın ucu, kenar uzunsa yüzlerce metre ötede kalabilir).
-    SNAP_HARIC = ("motorway", "motorway_link", "trunk_link")
-    SNAP_KENAR = 8
+    BAGLANMA_HARIC = ("motorway", "motorway_link", "trunk_link")
+    BAGLANMA_KENAR = 8
 
-    # Sel cezası: yağış katsayısı f (0–1, sel_riski) × kenarın arazi
+    # Sel cezası: yağış katsayısı f (0–1, afet.sel.risk) × kenarın arazi
     # duyarlılığı S (0–1) → maliyet × (1 + SEL_K·f·S). Yağış yoksa (f=0) etkisiz.
     # S kenar boyunca ortalamadır; rotanın S ≥ 0.6 kısmı (sel_riskli_oran ×
     # uzunluk) yanıtta raporlanır.
@@ -157,41 +158,41 @@ class AfetRepository:
         except Exception:
             return set()
 
-    @staticmethod
-    def _senaryo_join(katman: str, senaryo: str, takma: str = "ss") -> str:
+    @classmethod
+    def _senaryo_join(cls, katman: str, senaryo: str, takma: str = "ss") -> str:
         """Kenara (ya da alana) senaryo suyunu bağlayan LEFT JOIN. senaryo
         SENARYO_DESEN'e, katman sabit listeye uyar (metne gömülür: pgr_dijkstra
         kenar sorgusunu metin olarak alır, parametre bağlanamaz)."""
-        if not AfetRepository.SENARYO_DESEN.fullmatch(senaryo) or katman not in (
+        if not cls.SENARYO_DESEN.fullmatch(senaryo) or katman not in (
                 "drive", "walk", "toplanma"):
             raise ValueError(f"Geçersiz senaryo: {senaryo!r} / {katman!r}")
         return (f"LEFT JOIN sel_senaryo_su {takma} ON {takma}.katman = '{katman}' "
                 f"AND {takma}.senaryo = '{senaryo}' AND {takma}.kimlik = ")
 
-    @staticmethod
-    async def _sel_kolon_var(conn, edge_table: str) -> bool:
+    @classmethod
+    async def _sel_kolon_var(cls, conn, edge_table: str) -> bool:
         """migration 006 uygulanmış mı (kolonlar tablo başına bir kez okunur)."""
-        if edge_table not in AfetRepository._sel_kolon:
-            AfetRepository._sel_kolon[edge_table] = {r["column_name"] for r in await conn.fetch(
+        if edge_table not in cls._sel_kolon:
+            cls._sel_kolon[edge_table] = {r["column_name"] for r in await conn.fetch(
                 "SELECT column_name FROM information_schema.columns WHERE table_name = $1",
                 edge_table)}
-        return "sel_duyarlilik" in AfetRepository._sel_kolon[edge_table]
+        return "sel_duyarlilik" in cls._sel_kolon[edge_table]
 
-    @staticmethod
-    def snap_sql(edge_table: str, point_sql: str) -> str:
-        """point_sql noktasına en yakın, SNAP_HARIC dışı yol düğümünün id'sini
-        veren skaler alt sorgu (hesap/load_toplanma_alanlari.py de kullanır)."""
-        haric = ", ".join(f"'{h}'" for h in AfetRepository.SNAP_HARIC)
+    @classmethod
+    def baglanma_sql(cls, edge_table: str, point_sql: str) -> str:
+        """point_sql noktasına en yakın, BAGLANMA_HARIC dışı yol düğümünün id'sini
+        veren skaler alt sorgu (hesap/toplanma_alanlari_yukle.py de kullanır)."""
+        haric = ", ".join(f"'{h}'" for h in cls.BAGLANMA_HARIC)
         return f"""(SELECT v.id FROM (
                         SELECT source, target FROM {edge_table}
                         WHERE COALESCE(highway, '') NOT IN ({haric})
-                        ORDER BY the_geom <-> {point_sql} LIMIT {AfetRepository.SNAP_KENAR}
+                        ORDER BY the_geom <-> {point_sql} LIMIT {cls.BAGLANMA_KENAR}
                     ) e
                     JOIN {edge_table}_vertices_pgr v ON v.id IN (e.source, e.target)
                     ORDER BY v.the_geom <-> {point_sql} LIMIT 1)"""
 
-    @staticmethod
-    def _maliyet_sql(edge_table, slope_k, trafik_var, sev, sel_k_f,
+    @classmethod
+    def _maliyet_sql(cls, edge_table, slope_k, trafik_var, sev, sel_k_f,
                      senaryo_join=None, alt_gecit_kapali=False):
         """pgr_dijkstra'nın kenar sorgusu (metin). Eğim (%) maliyeti artırır;
         son 24 saatte M≥3 deprem üssüne ~2 km'den yakın kenarlar 5 kat, ciddi
@@ -203,7 +204,7 @@ class AfetRepository:
         0.003° ≈ 300 m (ceza sezgiseldir, ölçüm değildir). senaryo_join
         (_senaryo_join) verilirse seçilen yağış senaryosunda su basan kenarlar
         kapalı, sığ sulu / belirsiz kenarlar pahalı sayılır."""
-        R = AfetRepository
+        R = cls
         trafik_cte = f"""
             , trafik_ceza AS (
                 SELECT DISTINCT rn.id FROM {edge_table} rn
@@ -238,12 +239,12 @@ class AfetRepository:
             {senaryo_join + "rn.id" if senaryo_join else ""}
         """
 
-    @staticmethod
-    def _senaryo_ozeti(rows, senaryo, sen_yol, sen_alan, ag_kapali, atlanan, hedef_su):
+    @classmethod
+    def _senaryo_ozeti(cls, rows, senaryo, sen_yol, sen_alan, ag_kapali, atlanan, hedef_su):
         """Rotanın senaryodaki suyu: art arda gelen ıslak kenarlar tek "yer"
         sayılır (kenarın tamamı değil, en derin noktası suda olabilir — bu
         yüzden metre yerine yer sayısı ve en derin nokta raporlanır)."""
-        K = AfetRepository.SENARYO_KAPALI_M
+        K = cls.SENARYO_KAPALI_M
         yer = {"derin": 0, "sig": 0}
         belirsiz_m, en_derin, onceki = 0.0, 0.0, None
         for r in rows:
@@ -268,8 +269,7 @@ class AfetRepository:
             "hedef_su": dict(hedef_su) if hedef_su else None,
         }
 
-    @staticmethod
-    async def get_smart_routes(user_lon: float, user_lat: float,
+    async def akilli_rota(self, user_lon: float, user_lat: float,
                                dest_lon: float = None, dest_lat: float = None,
                                severity: float = 1.0, mode: str = "drive",
                                sel_f: float = 0.0, senaryo: str = None,
@@ -282,30 +282,29 @@ class AfetRepository:
         toplanma alanları aday olmaz (SENARYO_*); alt_gecit_dolu o senaryoda
         alt geçitlerin dolduğunu söyler (sel_senaryo özeti). Yol ağı ve
         pgRouting kurulmamışsa dürüst bir 'unavailable' cevabı döner."""
-        R = AfetRepository
-        if mode not in AfetRepository.ROUTE_MODES:
+        R = self
+        if mode not in R.ROTA_MODLARI:
             return {"status": "error",
                     "message": f"Geçersiz mod: {mode}. Seçenekler: "
-                               f"{', '.join(AfetRepository.ROUTE_MODES)}"}
-        edge_table, slope_k, trafik_var = AfetRepository.ROUTE_MODES[mode]
+                               f"{', '.join(R.ROTA_MODLARI)}"}
+        edge_table, slope_k, trafik_var = R.ROTA_MODLARI[mode]
         vid_col = f"{mode}_vid"   # toplanma_alanlari.drive_vid / walk_vid
         hedefsiz = dest_lon is None or dest_lat is None
         if hedefsiz:
-            dest_lon, dest_lat = CENTER_LON, CENTER_LAT
+            dest_lon, dest_lat = MERKEZ_BOYLAM, MERKEZ_ENLEM
         sev = max(float(severity), 0.1)
-        start_sql = AfetRepository.snap_sql(edge_table, NOKTA.format("$1", "$2"))
+        start_sql = R.baglanma_sql(edge_table, NOKTA.format("$1", "$2"))
         try:
-            async with db.baglan() as conn:
-                sel_var = await AfetRepository._sel_kolon_var(conn, edge_table)
+            async with self.db.baglan() as conn:
+                sel_var = await R._sel_kolon_var(conn, edge_table)
                 sel_f = min(max(float(sel_f), 0.0), 1.0) if sel_var and not senaryo else 0.0
                 # senaryo suyu bu mod ve toplanma alanları için yazılmış mı
                 sen_katman = await R._senaryo_katmanlari(conn) if senaryo else set()
                 sen_yol, sen_alan = mode in sen_katman, "toplanma" in sen_katman
                 yol_join = R._senaryo_join(mode, senaryo) if sen_yol else None
                 ag_kapali = sen_yol and alt_gecit_dolu and sel_var
-                cost_sql = AfetRepository._maliyet_sql(edge_table, slope_k, trafik_var, sev,
-                                                       AfetRepository.SEL_K * sel_f,
-                                                       yol_join, ag_kapali)
+                cost_sql = R._maliyet_sql(edge_table, slope_k, trafik_var, sev,
+                                          R.SEL_K * sel_f, yol_join, ag_kapali)
                 sel_kol = ("rn.sel_duyarlilik, rn.sel_riskli_oran, rn.alt_gecit," if sel_var
                            else "NULL::real AS sel_duyarlilik, NULL::real AS sel_riskli_oran, "
                                 "NULL::boolean AS alt_gecit,")
@@ -326,7 +325,7 @@ class AfetRepository:
                             FROM toplanma_alanlari a
                             WHERE a.{vid_col} IS NOT NULL {haric}
                             ORDER BY a.konum <-> {NOKTA.format('$1', '$2')}
-                            LIMIT {AfetRepository.TOPLANMA_ADAY};
+                            LIMIT {R.TOPLANMA_ADAY};
                         """, user_lon, user_lat, *([senaryo] if sen_alan else []))
                     except Exception as e:   # migration 005 uygulanmamış
                         logger.warning(f"Toplanma alanları okunamadı, il merkezine rota: {e}")
@@ -374,7 +373,7 @@ class AfetRepository:
                                ST_AsGeoJSON(rn.the_geom)::json AS geometry
                         FROM pgr_dijkstra(
                             $5, {start_sql},
-                            {AfetRepository.snap_sql(edge_table, NOKTA.format('$3', '$4'))},
+                            {R.baglanma_sql(edge_table, NOKTA.format('$3', '$4'))},
                             directed := false
                         ) r
                         JOIN {edge_table} rn ON r.edge = rn.id
@@ -423,7 +422,7 @@ class AfetRepository:
                     "mode": mode,
                     "cost_model": f"uzunluk × (1 + eğim×{slope_k}) × deprem_cezası"
                                   + (" × trafik_cezası" if trafik_var else "")
-                                  + (f" × (1 + {AfetRepository.SEL_K:g}·{sel_f:.2f}·sel_duyarlılık)"
+                                  + (f" × (1 + {R.SEL_K:g}·{sel_f:.2f}·sel_duyarlılık)"
                                      if sel_f > 0 else "")
                                   + (f" × sığ_su_cezası + su_basan_yol_cezası ({senaryo})"
                                      if sen_yol else "")
@@ -448,3 +447,6 @@ class AfetRepository:
                 "user_location": {"lon": user_lon, "lat": user_lat},
                 "destination": {"lon": dest_lon, "lat": dest_lat},
             }
+
+
+depo = AfetDeposu(db)

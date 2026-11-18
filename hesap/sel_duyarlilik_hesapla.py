@@ -34,12 +34,12 @@ import time
 import numpy as np
 import shapely
 
-from hesap.build_road_network import load_boundary
-from database import db
+from afet.izgara import hucre_merkezleri, sinira_degen
+from afet.sinir import il_poligonu
+from afet.veritabani.baglanti import db
+from afet.yollar import DUYARLILIK, MODEL_DIR
 from hesap.dem_hidroloji import (akis_agi, cukurlar, dem_mozaik, hand_hesapla, kopru_tunel,
-                           raster_ornekle, yakin_mi, yol_noktalari)
-from harita_yardim import hucre_merkezleri, sinira_degen
-from sel_riski import DUYARLILIK_FILE, MODEL_DIR
+                                 raster_ornekle, yakin_mi, yol_noktalari)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("sel")
@@ -73,9 +73,8 @@ def duyarlilik(hand, cukur, veri_yok):
 
 
 async def kenarlara_yaz(s, tr, kopru, alt_gecit, uzun_tunel):
-    await db.connect()
-    try:
-        async with db.write_pool.acquire() as conn:
+    async with db.oturum():
+        async with db.baglan(yazma=True) as conn:
             for tablo in TABLOLAR:
                 t = time.time()
                 rows = await conn.fetch(f"SELECT id, ST_AsBinary(the_geom) AS wkb FROM {tablo}")
@@ -102,8 +101,6 @@ async def kenarlara_yaz(s, tr, kopru, alt_gecit, uzun_tunel):
                 log.info("%s: %d kenar (%d örnek nokta), yol uzunluğunun %%%.1f'i S≥%.1f, alt geçit: %d — %.0f sn",
                          tablo, len(ids), len(x), (uz * oran).sum() / uz.sum() * 100, RISKLI_S,
                          kenar_ag.sum(), time.time() - t)
-    finally:
-        await db.disconnect()
 
 
 def harita_kaydet(s, tr, sinir):
@@ -115,14 +112,14 @@ def harita_kaydet(s, tr, sinir):
     # haritaya sınıra değen hücreler de girer (tarayıcı il sınırıyla kırpar)
     kapsa = sinira_degen(sinir, lon, lat, tr.a, tr.e)
     u8 = np.where(kapsa, np.maximum(np.round(s * 255), 1), 0).astype(np.uint8)
-    np.savez_compressed(DUYARLILIK_FILE, s=u8, bati=tr.c, kuzey=tr.f, dx=tr.a, dy=tr.e)
+    np.savez_compressed(DUYARLILIK, s=u8, bati=tr.c, kuzey=tr.f, dx=tr.a, dy=tr.e)
     v = s[icinde]
     log.info("İl içi alan payı — S≥0.3: %%%.1f, S≥0.6: %%%.1f, S≥0.85: %%%.1f",
              (v >= 0.3).mean() * 100, (v >= 0.6).mean() * 100, (v >= 0.85).mean() * 100)
 
 
 async def main():
-    sinir = load_boundary()
+    sinir = il_poligonu()
     dem_mozaik(sinir)
     tr, hand, cukur, veri_yok = hidroloji()
     s = duyarlilik(hand, cukur, veri_yok)

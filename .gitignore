@@ -2,7 +2,10 @@ __pycache__/
 *.pyc
 .env
 venv/
-.vscode/.DS_Store
+.vscode/
+.DS_Store
+.claude/
+DEVIR_RAPORU.md
 logs/
 cache/
 dem_cache/

@@ -4,12 +4,13 @@ istemcisini (ag.istemci) kullanır; satırlar veritabanına toplu yazılır."""
 import asyncio
 import datetime
 
-import ag
-from bounds import BOUNDS, cercevede
-from config import settings
 from loguru import logger
-from repository import AfetRepository
-from schemas import QuakeCreateRequest, TrafficIncidentCreateRequest
+
+from afet import ag
+from afet.ayarlar import ayarlar
+from afet.sinir import CERCEVE, cercevede
+from afet.veritabani.depo import depo
+from afet.veritabani.kayitlar import DepremKaydi, TrafikOlayi
 
 TR_SAATI = datetime.timezone(datetime.timedelta(hours=3))
 
@@ -28,7 +29,7 @@ def tomtom_kategori_adi(icon_category) -> str:
         return "Diğer"
 
 
-async def fetch_quake_data(client):
+async def depremleri_getir(client):
     r = await client.get("https://api.orhanaydogdu.com.tr/deprem/kandilli/live", timeout=10)
     data = r.json()
     if not data.get("status"):
@@ -49,16 +50,16 @@ async def fetch_quake_data(client):
             zaman = datetime.datetime.now(datetime.timezone.utc)
         if zaman < esik:
             continue
-        depremler.append(QuakeCreateRequest(
+        depremler.append(DepremKaydi(
             earthquake_id=eq.get("earthquake_id", ""), buyukluk=float(eq["mag"]),
             yer=eq["title"], lat=lat, lon=lon, deprem_zamani=zaman))
-    await AfetRepository.upsert_quakes(depremler)
+    await depo.depremleri_yaz(depremler)
 
 
-async def fetch_traffic_incidents(client):
+async def trafik_olaylarini_getir(client):
     """TomTom Incident Details v5. API bbox başına ~10.000 km² kabul ettiği
     için il çerçevesi 2x2 çeyreğe bölünerek sorgulanır."""
-    b = BOUNDS
+    b = CERCEVE
     lon_orta, lat_orta = (b["lon_min"] + b["lon_max"]) / 2, (b["lat_min"] + b["lat_max"]) / 2
     ceyrekler = [(lo0, la0, lo1, la1)
                  for lo0, lo1 in ((b["lon_min"], lon_orta), (lon_orta, b["lon_max"]))
@@ -69,7 +70,7 @@ async def fetch_traffic_incidents(client):
     for bbox in ceyrekler:
         try:
             r = await client.get("https://api.tomtom.com/traffic/services/5/incidentDetails", params={
-                "key": settings.tomtom_api_key, "bbox": ",".join(f"{v:.4f}" for v in bbox),
+                "key": ayarlar.tomtom_api_key, "bbox": ",".join(f"{v:.4f}" for v in bbox),
                 "fields": fields, "language": "tr-TR"}, timeout=15)
             r.raise_for_status()
             for inc in r.json().get("incidents", []):
@@ -80,21 +81,21 @@ async def fetch_traffic_incidents(client):
                 nokta = coords[0] if isinstance(coords[0], list) else coords   # LineString → ilk nokta
                 aciklama = "; ".join(e["description"] for e in props.get("events") or []
                                      if e.get("description")) or None
-                olaylar.append(TrafficIncidentCreateRequest(
+                olaylar.append(TrafikOlayi(
                     olay_id=str(props["id"]), kategori=tomtom_kategori_adi(props.get("iconCategory")),
                     aciklama=aciklama, gecikme_sn=props.get("delay"),
                     buyukluk=props.get("magnitudeOfDelay") or 0,
                     lon=float(nokta[0]), lat=float(nokta[1])))
         except Exception as e:
             logger.error(f"TomTom trafik hatası (bbox={bbox}): {e}")
-    await AfetRepository.upsert_traffic_incidents(olaylar)
-    await AfetRepository.temizle_eski_kayitlar(["canli_trafik_olaylari"])
+    await depo.trafik_olaylarini_yaz(olaylar)
+    await depo.eski_kayitlari_sil(["canli_trafik_olaylari"])
     if olaylar:
         logger.info(f"Trafik: {len(olaylar)} olay güncellendi.")
 
 
 async def _temizlik(_client):
-    await AfetRepository.temizle_eski_kayitlar()
+    await depo.eski_kayitlari_sil()
 
 
 async def _dongu(ad, is_, aralik_sn, gecikme_sn=0):
@@ -110,17 +111,18 @@ async def _dongu(ad, is_, aralik_sn, gecikme_sn=0):
 # (ad, iş, aralık sn, ilk gecikme sn). Trafik: 4 çeyrek × 144 tur/gün = 576
 # istek/gün (TomTom ücretsiz katman 2500 sınırında).
 DONGULER = [
-    ("Deprem", fetch_quake_data, 60, 0),
-    ("Trafik", fetch_traffic_incidents, 600, 5),
+    ("Deprem", depremleri_getir, 60, 0),
+    ("Trafik", trafik_olaylarini_getir, 600, 5),
     ("Temizlik", _temizlik, 3600, 30),
 ]
 
 _gorevler = []      # görev referansları (asyncio yalnız zayıf referans tutar)
 
 
-def start_ingestion():
+def baslat():
+    """Döngüleri arka plan görevi olarak başlatır (uygulama açılışında)."""
     for ad, is_, aralik, gecikme in DONGULER:
-        if is_ is fetch_traffic_incidents and not settings.tomtom_api_key:
+        if is_ is trafik_olaylarini_getir and not ayarlar.tomtom_api_key:
             logger.warning("TOMTOM_API_KEY yok — rota trafik cezasız çalışır.")
             continue
         _gorevler.append(asyncio.create_task(_dongu(ad, is_, aralik, gecikme)))

@@ -4,7 +4,7 @@ ilçelerin araç yol ağını ve her yağış senaryosunun suyunu dosyaya yazar.
 Sayfa (docs/js/cekirdek/rota_motoru.js) bu ağ üzerinde Dijkstra çalıştırır:
 kullanıcı haritada istediği noktayı seçer, yağışı değiştirir, rota anında
 yeniden hesaplanır. Maliyet sunucudaki pgRouting sorgusunun
-(repository.AfetRepository._maliyet_sql) senaryo kısmıyla aynıdır:
+(afet.veritabani.depo.AfetDeposu._maliyet_sql) senaryo kısmıyla aynıdır:
 
   uzunluk × (1 + eğim × 0.05)
     × 5          kenarda sığ su (0.1–0.3 m) ya da düz ova belirsizliği varsa
@@ -24,7 +24,7 @@ Ağ boyutu: kavşak olmayan (iki kenarlı) düğümler zincir halinde birleştir
 tamsayı farkları olarak yazılır.
 
 Çalıştırma: venv/bin/python -m hesap.rota_agi_hazirla
-Önkoşul: yol ağı (hesap/build_road_network.py), sel_senaryo_su tablosu
+Önkoşul: yol ağı (hesap/yol_agi_kur.py), sel_senaryo_su tablosu
 (hesap/sel_senaryo_yollar.py), toplanma alanları, DB açık.
 """
 import asyncio
@@ -38,25 +38,24 @@ import shapely
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 
-from database import db
+from afet.dosya import json_yaz
+from afet.veritabani.baglanti import db
+from afet.veritabani.depo import AfetDeposu as R
+from afet.yollar import ROTA_VERI_DIR
 from hesap.sel_dogrulama import ilceler_ve_mahalleler
-from repository import AfetRepository as R
 
 log = logging.getLogger("rota_agi")
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CIKTI = os.path.join(BASE_DIR, "docs", "veri", "rota")
-VITRIN = os.path.join(BASE_DIR, "docs", "veri", "vitrin.json")
 
 # İzmir'in kent merkezini oluşturan ilçeler (TKGM yazımıyla)
 ILCELER = ["Balçova", "Bayrakli", "Bornova", "Buca", "Çiğli", "Gaziemir", "Güzelbahçe",
            "Karabağlar", "Karşiyaka", "Konak", "Narlidere"]
 OLCEK = 100_000              # derece → tamsayı (1e-5° ≈ 1 m)
 SADELESTIR = 0.00003         # ~3 m: kenar geometrisi sadeleştirme (uçlar korunur)
-EGIM_K = R.ROUTE_MODES["drive"][1]
+EGIM_K = R.ROTA_MODLARI["drive"][1]
 ISLAK_K = R.SENARYO_ISLAK_K
 KAPALI_M = R.SENARYO_KAPALI_M
 KAPALI_EK = R.SENARYO_KAPALI_EK
-SNAP_HARIC = set(R.SNAP_HARIC)
+BAGLANMA_HARIC = set(R.BAGLANMA_HARIC)
 ISE_YARAMAZ = ("demolished", "escape", "emergency_bay")
 
 
@@ -167,6 +166,8 @@ def bolge():
 
 
 async def oku(alan):
+    """Bölgedeki yollar, toplanma alanları ve senaryo suyu. Satırlar sıralı
+    okunur: aynı veritabanından her çalıştırma aynı dosyaları üretir."""
     haric = ", ".join(f"'{h}'" for h in ISE_YARAMAZ)
     async with db.baglan() as c:
         kenarlar = await c.fetch(f"""
@@ -175,7 +176,8 @@ async def oku(alan):
                    ST_AsBinary(ST_Simplify(the_geom, {SADELESTIR})) AS wkb
             FROM izmir_roads_noded
             WHERE ST_Intersects(the_geom, ST_GeomFromText($1, 4326))
-              AND COALESCE(highway, '') NOT IN ({haric})""", alan.wkt)
+              AND COALESCE(highway, '') NOT IN ({haric})
+            ORDER BY id""", alan.wkt)
         alanlar = await c.fetch("""
             SELECT id, adi, ilce, mahalle, drive_vid, ST_X(konum) AS lon, ST_Y(konum) AS lat
             FROM toplanma_alanlari
@@ -183,7 +185,8 @@ async def oku(alan):
             ORDER BY id""", alan.wkt)
         su = await c.fetch("""
             SELECT senaryo, katman, kimlik, derinlik, belirsiz FROM sel_senaryo_su
-            WHERE katman IN ('drive', 'toplanma')""")
+            WHERE katman IN ('drive', 'toplanma')
+            ORDER BY katman, senaryo, kimlik""")
     return kenarlar, alanlar, su
 
 
@@ -204,7 +207,7 @@ def ag_kur(kenarlar, alanlar):
 
     uzunluk = np.array([r["length"] for r in kenarlar])
     taban = uzunluk * (1 + np.array([r["slope"] for r in kenarlar]) * EGIM_K)
-    ayri = np.array([r["highway"] in SNAP_HARIC for r in kenarlar])
+    ayri = np.array([r["highway"] in BAGLANMA_HARIC for r in kenarlar])
     alt = np.array([r["alt_gecit"] for r in kenarlar])
     geo = [shapely.get_coordinates(shapely.from_wkb(r["wkb"])) for r in kenarlar]
 
@@ -303,20 +306,16 @@ def kapsam_siniri(alan):
 
 
 def yaz(ad, veri):
-    yol = os.path.join(CIKTI, ad)
-    with open(yol, "w", encoding="utf-8") as f:
-        json.dump(veri, f, ensure_ascii=False, separators=(",", ":"))
-    return os.path.getsize(yol)
+    return json_yaz(os.path.join(ROTA_VERI_DIR, ad), veri)
 
 
 async def calistir():
     alan = bolge()
-    await db.connect()
-    kenarlar, alanlar, su = await oku(alan)
+    async with db.oturum():
+        kenarlar, alanlar, su = await oku(alan)
     log.info("%d yol parçası, %d toplanma alanı, %d su satırı", len(kenarlar), len(alanlar), len(su))
     ag, zincirler, kimlik, taban, zincir_kimlik, ikiz = ag_kur(kenarlar, alanlar)
     ag["kapsam"] = kapsam_siniri(alan)
-    os.makedirs(CIKTI, exist_ok=True)
     boyut = yaz("ag.json", ag)
     log.info("ag.json: %d düğüm, %d kenar, %d alan, %.1f MB", len(ag["dugum_x"]),
              len(ag["kenar_a"]), len(ag["alanlar"]), boyut / 1e6)

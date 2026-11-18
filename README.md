@@ -10,7 +10,7 @@ Tek bir soruyu yanıtlayan, PostGIS + pgRouting tabanlı bir karar destek harita
 - **Önümüzdeki 24 saat:** arazi duyarlılığı × Open-Meteo yağış tahmini.
 - **Arazi duyarlılığı:** yağıştan bağımsız; kuvvetli yağışta suyun toplandığı ya da taştığı yerler.
 - **Tahliye rotası (🧭):** İBB'nin 2.380 afet ve acil durum toplanma alanına araç ya da yaya rotası. Maliyete eğim, son 24 saatin depremleri (Kandilli) ve ciddi trafik olayları (TomTom, isteğe bağlı) girer. **Rota, haritada seçili yağış senaryosuna göre çizilir:** o yağışta su basan yollar kapalı sayılır, su altındaki toplanma alanları hedef seçilmez; rota yine de suya girmek zorundaysa nerede ve ne derinlikte girdiği söylenir. Diğer sel modlarında yağış bekleniyorsa sel duyarlılığı cezası uygulanır.
-- **Sınır verisi:** Kara sınırları resmî **TKGM** (MEGSİS idari yapı servisi) ilçe sınırlarıdır — harita altlığının (Esri/HERE) çizdiği il sınırıyla örtüşür; OSM idari sınırları kara sınırında ortalama ~0.6 km, en çok ~4 km sapıyordu. TKGM kıyısı kaba ve adasız olduğundan kıyı ve adalar OSM kıyı çizgisinden tamamlanır. TKGM kara alanı OSM ile kırpılmaz: OSM tuzla, lagün ve dolgu alanlarını (ör. Çamaltı, Karşıyaka–Çiğli kıyısı) deniz sayar, altlık ve TKGM kara sayar. İl içinde TKGM'de hiçbir ilçeye verilmemiş boşluklar (Çeşme–Urla arası) da il alanına katılır. İlçeler boşluksuz/örtüşmesiz paylaştırılır; `izmir_sinir.geojson` ilçelerin birleşimidir (kara ~12.185 km²). Üretim: `venv/bin/python -m hesap.sinir_hazirla`. Yol ağı ve sel hesapları bu sınırla üretilir; sınır değişirse hepsi yeniden üretilmelidir. Ön yüzdeki il çerçevesi de sunucu tarafından bu dosyadan doldurulur (`bounds.py`).
+- **Sınır verisi:** Kara sınırları resmî **TKGM** (MEGSİS idari yapı servisi) ilçe sınırlarıdır — harita altlığının (Esri/HERE) çizdiği il sınırıyla örtüşür; OSM idari sınırları kara sınırında ortalama ~0.6 km, en çok ~4 km sapıyordu. TKGM kıyısı kaba ve adasız olduğundan kıyı ve adalar OSM kıyı çizgisinden tamamlanır. TKGM kara alanı OSM ile kırpılmaz: OSM tuzla, lagün ve dolgu alanlarını (ör. Çamaltı, Karşıyaka–Çiğli kıyısı) deniz sayar, altlık ve TKGM kara sayar. İl içinde TKGM'de hiçbir ilçeye verilmemiş boşluklar (Çeşme–Urla arası) da il alanına katılır. İlçeler boşluksuz/örtüşmesiz paylaştırılır; `izmir_sinir.geojson` ilçelerin birleşimidir (kara ~12.185 km²). Üretim: `venv/bin/python -m hesap.sinir_hazirla`. Yol ağı ve sel hesapları bu sınırla üretilir; sınır değişirse hepsi yeniden üretilmelidir. Sunucunun il çerçevesi ve merkezi de bu dosyadan türetilir (`afet/sinir.py`).
 
 **Ana daldan çıkarılanlar:** önceki sürümdeki sıcaklık, rüzgâr, hava kalitesi, uydu ısı anomalisi, trafik akış katmanı, heksagon risk ızgarası, deprem zaman makinesi ve GeoAI yangın riski modeli `arsiv/tum-katmanlar` dalında durur. Proje tek bir soruya odaklansın diye çıkarıldılar; tabloları `migrations/010` siler.
 
@@ -39,16 +39,16 @@ psql -h localhost -p $DB_PORT -U $DB_USER -d $DB_NAME -f migrations/002_quake_ti
 
 # Sıfırdan tam kurulum (yol ağı, toplanma alanları, sel kolonları):
 #   004, 005 göçleri → CREATE EXTENSION pgrouting;
-#   hesap/build_road_network.py all --pbf osm_indirme/turkey-latest.osm.pbf  (Geofabrik, ~650 MB;
+#   hesap/yol_agi_kur.py all --pbf osm_indirme/turkey-latest.osm.pbf  (Geofabrik, ~650 MB;
 #     Overpass genel sunucuları çoğu zaman "kapasite dolu" — dosyayla ~25 dk)
-#   hesap/load_toplanma_alanlari.py → 006 göçü → hesap/sel_duyarlilik_hesapla.py
+#   hesap/toplanma_alanlari_yukle.py → 006 göçü → hesap/sel_duyarlilik_hesapla.py
 #   → 011 göçü → hesap/sel_senaryo_hazirla.py (sonunda hesap/sel_senaryo_yollar.py'yi kendisi çalıştırır)
 # Eski veritabanları rota ↔ senaryo bağlantısı için: 011 göçü → hesap/sel_senaryo_yollar.py (~30 sn)
 
 # Yerel geliştirme (Docker'sız backend)
 pip install -r requirements.txt           # yalnız sunucu
 pip install -r requirements-hesap.txt     # + çevrimdışı hesap betikleri (yol ağı, sel, sınır)
-uvicorn main:app --reload
+uvicorn afet.api:app --reload        # API: http://127.0.0.1:8000/docs
 ```
 
 ### Klasör düzeni
@@ -65,12 +65,12 @@ hesap/        Çevrimdışı hesap betikleri — kökten "python -m hesap.<betik
               (yol ağı, sınır, sel duyarlılığı, senaryolar, doğrulama, yayın verisi)
 tests/        Otomatik testler (pytest)
 migrations/   Veritabanı göçleri (SQL)
-static/       Canlı uygulamanın ön yüzü (Leaflet): index.html, css/, js/
+sinir/        İl ve ilçe sınırı (GeoJSON; hesap/sinir_hazirla.py üretir)
 sel_model/    Hesaplanmış sel sonuçları (senaryo.npz, duyarlilik.npz)
 dogrulama/    2 Şubat 2021 olay verisi ve karşılaştırma sonucu
 denetim/      Toplanma alanı denetim listesi (CSV)
 egitim/       İtfaiye çağrısı × yağış ilçe-gün eğitim veri seti (CSV)
-*.py (kök)    Canlı sunucu: main, repository, ingestion, database, sel_senaryo, sel_riski…
+afet/         Python paketi: API sunucusu ve hesap betiklerinin ortak kodu
 
 Depoda olmayan, yerelde üretilen / indirilen klasörler (.gitignore):
 osm_indirme/  Geofabrik OSM dosyası        sel_veri/    DEM, arazi örtüsü, OSM önbellekleri
@@ -81,21 +81,38 @@ itfaiye_veri/ İBB itfaiye Excel'leri, yağış arşivi önbelleği
 
 ### Kod düzeni
 
-- `main.py` — uç noktalar; ortak yanıt yardımcıları (ETag/304, PNG). `/` sayfası bellekte tutulur; `static/css/app.css` ve `static/js/app.js` adreslerine içerik özeti eklenir (`?v=…`), tarayıcı bunları bir yıl önbellekte tutar, dosya değişince adres değişir.
-- `ingestion.py` — rota maliyetine giren canlı veri döngüleri (deprem, trafik; toplu yazma); `repository.py` — tüm SQL tek yerde, hata loglanır, okuma hatasında boş döner.
-- `ag.py` — dış servis erişimi: sunucuda tek paylaşılan HTTP istemcisi (bağlantı havuzu), çevrimdışı betiklerde yansı listeli / yeniden denemeli / doğrulamalı / önbellekli `getir`, Overpass, Open-Meteo, ESA WorldCover.
-- `onbellek.py` — süreli önbellek: aynı anda gelen istekler dış servise tek istek gönderir; servis kapalıysa eski veri sunulabilir.
-- `harita_yardim.py` — sunucuda üretilen harita PNG'leri (Mercator satırları, renk tablosu), ızgara hücre merkezleri.
-- `hesap/dem_hidroloji.py` — sel duyarlılığı ve yağış senaryosunun ortak yükseklik / akış altyapısı (DEM, akış ağı, HAND, çukurlar, köprü/alt geçit, yol örnekleme).
+```
+afet/
+  api.py              FastAPI uç noktaları (yalnız API; kök adres /docs'a yönlenir)
+  canli_veri.py       rota maliyetine giren canlı veri döngüleri (Kandilli, TomTom)
+  veritabani/
+    baglanti.py       Veritabani: okuma / yazma havuzları, yeniden bağlanma, oturum()
+    depo.py           AfetDeposu: bütün SQL tek yerde (pgRouting rotası dahil)
+    kayitlar.py       DepremKaydi, TrafikOlayi (pydantic doğrulama)
+  sel/
+    senaryo.py        SelSenaryolari: yağış senaryosu su derinliği katmanı
+    risk.py           SelRiski: arazi duyarlılığı × saatlik yağış tahmini
+  izgara.py           IzgaraKatmani (iki sel katmanının ortak tabanı), Mercator PNG
+  sinir.py            il çerçevesi / merkezi / poligonu, TKGM ilçe ve mahalleleri
+  ag.py               dış servisler: paylaşılan HTTP istemcisi, yeniden denemeli getir, Overpass
+  onbellek.py         SureliOnbellek: aynı anda gelen istekler dış servise tek istek gönderir
+  dosya.py            JSON okuma / yazma (betiklerin ortak biçimi)
+  yollar.py           projedeki bütün dosya ve klasör yolları — tek yerde
+  ayarlar.py, gunluk.py  .env ayarları, sunucu günlüğü
+hesap/dem_hidroloji.py  sel hesaplarının ortak yükseklik / akış altyapısı (DEM, HAND,
+                        çukurlar, köprü/alt geçit, OSM çizgileri, yol örnekleme)
+```
 
-**Saklama süresi:** canlı tablolar saatte bir temizlenir (`repository.SAKLAMA`): deprem 24 saat, trafik 2 saat.
+Sunucu ile çevrimdışı betikler aynı kodu paylaşır: rota maliyeti sabitleri (`AfetDeposu.SENARYO_*`) sunucunun pgRouting sorgusunda, `hesap/` betiklerinde ve tarayıcının rota dosyalarında aynıdır.
+
+**Saklama süresi:** canlı tablolar saatte bir temizlenir (`afet/veritabani/depo.py`, `SAKLAMA`): deprem 24 saat, trafik 2 saat.
 
 ## 🛣️ Yol Ağı & Tahliye Rotası (kurulum gerektirir)
 
 `/api/v1/routing/smart` endpoint'i, kenar maliyetini **uzunluk × (1 + eğim×0.05) × deprem cezası × trafik cezası × sel cezası × şiddet** formülüyle hesaplayan pgRouting tabanlı rota üretir (son 24 saatte M≥3 deprem merkez üssüne 2 km'den yakın yollar 5 kat cezalandırılır; trafik ve sel cezası aşağıda). `senaryo=50_1` gibi bir yağış senaryosu verilirse sel cezası yerine o senaryodaki su kullanılır (aşağıda "Rota ve yağış senaryosu"). Çalışması için:
 
 1. pgRouting uzantısı: docker-compose'daki `imresamu/postgis:14-3.4-bundle0` imajı pgRouting içerir (arm64 dahil); `CREATE EXTENSION pgrouting;` yeterlidir.
-2. Yol ağı tabloları: `venv/bin/python -m hesap.build_road_network [drive|walk|all]` — İzmir sınırı içindeki OSM ağını Overpass'tan indirir (Overpass yoğunsa `--pbf turkey-latest.osm.pbf` ile Geofabrik dosyasından aynı filtrelerle kurar), düğüm yüksekliklerini AWS terrain-tiles (SRTM) karolarından örnekleyip kenar eğimini (%) hesaplar ve tabloları yazar (yeniden çalıştırmak baştan kurar):
+2. Yol ağı tabloları: `venv/bin/python -m hesap.yol_agi_kur [drive|walk|all]` — İzmir sınırı içindeki OSM ağını Overpass'tan indirir (Overpass yoğunsa `--pbf turkey-latest.osm.pbf` ile Geofabrik dosyasından aynı filtrelerle kurar), düğüm yüksekliklerini AWS terrain-tiles (SRTM) karolarından örnekleyip kenar eğimini (%) hesaplar ve tabloları yazar (yeniden çalıştırmak baştan kurar):
    - **drive** → `izmir_roads_noded` (~367 bin kenar): araç ağı
    - **walk** → `izmir_yaya_noded`: yaya ağı — patika, merdiven, yaya yolu, servis yolları dahil OSM'deki yürünebilir her yol
 
@@ -111,10 +128,10 @@ Hedef verilmeyen rota, **İzmir Büyükşehir Belediyesi açık verisindeki 2.38
 
 ```bash
 psql -h localhost -p $DB_PORT -U $DB_USER -d $DB_NAME -f migrations/005_toplanma_alanlari.sql
-venv/bin/python -m hesap.load_toplanma_alanlari   # İBB CSV'sini indirir, alanları yol ağına bağlar
+venv/bin/python -m hesap.toplanma_alanlari_yukle   # İBB CSV'sini indirir, alanları yol ağına bağlar
 ```
 
-Kaynak: [acikveri.bizizmir.com — Afet ve Acil Durum Toplanma Alanları](https://acikveri.bizizmir.com/dataset/afet-ve-acil-durum-toplanma-alanlari) (İBB Açık Veri Lisansı). Alan listesi `/api/v1/toplanma_alanlari`'ndan sunulur; dashboard'da 🧭 rota paneli açıkken yeşil noktalar olarak görünür. Haritaya her tıklama yeni başlangıçtır ve hedef her zaman otomatik seçilen alandır; istenirse bir yeşil noktaya tıklanarak başka alan seçilebilir.
+Kaynak: [acikveri.bizizmir.com — Afet ve Acil Durum Toplanma Alanları](https://acikveri.bizizmir.com/dataset/afet-ve-acil-durum-toplanma-alanlari) (İBB Açık Veri Lisansı). Alan listesi `/api/v1/toplanma_alanlari`'ndan sunulur. Hedef verilmezse otomatik seçilen alana, `dest_lon`/`dest_lat` verilirse o noktaya rota çizilir.
 
 Rota yalnızca OSM yol verisi (sokak, patika, merdiven, yaya yolu) üzerinde hesaplanır. Tıklanan noktadan yol ağına ve ağdan alanın kendisine kalan kısım veride yoktur; yanıttaki `ag_giris` / `ag_cikis` düğümleriyle haritada kesikli çizgi (kuş uçuşu, yürüyerek) olarak gösterilir ve mesafeye eklenir.
 
@@ -136,7 +153,7 @@ Soldaki **🌊 Sel / Su Baskını** paneli üç harita gösterir:
    - OSM köprüleri hariç tutulur, çünkü yol suyun üstünden geçer.
    - Kısa tüneller (<400 m; kentte alt geçit) yükseklik verisinde görünmez ama su biriktirir. Bunlar S ≥ 0.9 sayılır (`alt_gecit` kolonu, haritada 🚇).
 
-**Yağış katsayısı f** (`sel_riski.py`): Open-Meteo saatlik tahmini 0.25° ızgarada çekilir (1 saat önbellek) ve WMO şiddet sınıflarına çevrilir:
+**Yağış katsayısı f** (`afet/sel/risk.py`): Open-Meteo saatlik tahmini 0.25° ızgarada çekilir (1 saat önbellek) ve WMO şiddet sınıflarına çevrilir:
 
 | Saatlik yağış | Sınıf | f |
 |---|---|---|
@@ -163,7 +180,7 @@ psql -h localhost -p $DB_PORT -U $DB_USER -d $DB_NAME -f migrations/006_sel_duya
 venv/bin/python -m hesap.sel_duyarlilik_hesapla   # yol ağı yeniden kurulursa tekrar çalıştırılmalı
 ```
 
-### 🌧️ Kademeli yağış senaryosu (`hesap/sel_senaryo_hazirla.py`, `sel_senaryo.py`)
+### 🌧️ Kademeli yağış senaryosu (`hesap/sel_senaryo_hazirla.py`, `afet/sel/senaryo.py`)
 
 Kullanıcı kaydırıcıyla yağış miktarını (10–250 mm) ve süresini (1 / 6 / 24 saat) seçer. Harita suyun derinliğini dört sınıfta gösterir: 10–30 cm, 30 cm–1 m, 1–2 m, 2 m+. Özet şunları verir:
 - 30 cm'den derin su alanı (km²)
@@ -360,7 +377,7 @@ pytest
 
 ## 📚 Veri kaynakları ve lisanslar
 
-Kod **MIT** lisanslıdır (`LICENSE`). Veriler kendi koşullarına tabidir; depodaki türetilmiş dosyalar (`sel_model/`, `static/*.geojson`, `docs/veri/`, `dogrulama/`, `egitim/`) bu kaynaklardan üretilmiştir:
+Kod **MIT** lisanslıdır (`LICENSE`). Veriler kendi koşullarına tabidir; depodaki türetilmiş dosyalar (`sel_model/`, `sinir/*.geojson`, `docs/veri/`, `dogrulama/`, `egitim/`) bu kaynaklardan üretilmiştir:
 
 | Veri | Kaynak | Koşul |
 |---|---|---|

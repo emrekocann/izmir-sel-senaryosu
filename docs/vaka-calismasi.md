@@ -68,16 +68,16 @@ Teknoloji: PostGIS, pgRouting, Python (pysheds, rasterio, shapely), FastAPI, Lea
 | Haberdeki caddelerde 30 cm+ su | 5 caddeden 2–3'ü |
 | Öteki caddelerde 30 cm+ su | %17–29 |
 
-**Yakaladıkları**
+**Modelin de su gösterdiği yerler**
 - Karşıyaka Anadolu Caddesi: modelde 0.4–1.8 m su.
 - Poligon Deresi hattı: 0.2–0.8 m su.
 - Örnekköy ve Yamanlar mahalleleri en ıslak %12–20 içinde.
 
-**Kaçırdıkları**
+**Modelin su göstermediği yerler**
 - **Kıyıdaki kanalizasyon taşkını** (Alsancak, Güzelyalı, Mithatpaşa ve Cemal Gürsel caddeleri). Burada su dereden değil, dolan şebekeden geldi. Modelde şebeke yok.
 - **Küçük kent dereleri** (Soğukkuyu, Çetin Emeç'teki Hacı Ahmet Deresi). Modelde bu mahallelerde neredeyse hiç su yok.
 
-**Bir düzeltme denemesi ve sonucu.** Küçük derelerin kaçmasının nedeni "dere modelde yok" olabilir diye düşündüm. OpenStreetMap'teki 3.713 dere hattını yükseklik verisine işledim ve küçük dereleri de taşabilir yaptım. Mahalle puanı yalnız 0.02–0.03 arttı; Soğukkuyu yine kuru kaldı, Yamanlar kötüleşti. Değişikliği geri aldım. Çıkardığım sonuç: sorun dere haritasının eksikliği değil. 60 m'lik yükseklik verisi, kent içinde kapatılmış ya da beton kanala alınmış dar dereleri ayırt edemiyor.
+**Bir düzeltme denemesi ve sonucu.** Küçük derelerde su görünmemesinin nedeni "dere modelde yok" olabilir diye düşündüm. OpenStreetMap'teki 3.713 dere hattını yükseklik verisine işledim ve küçük dereleri de taşabilir yaptım. Mahalle puanı yalnız 0.02–0.03 arttı; Soğukkuyu yine kuru kaldı, Yamanlar kötüleşti. Değişikliği geri aldım. Çıkardığım sonuç: sorun dere haritasının eksikliği değil. 60 m'lik yükseklik verisi, kent içinde kapatılmış ya da beton kanala alınmış dar dereleri ayırt edemiyor.
 
 **Bu karşılaştırmanın sınırı:** tek olay ve küçük bir örnek. Habere girmeyen yerlerin bir kısmı da su almış olabilir; bu, puanı olduğundan düşük gösterir. Sonuçlar istatistiksel kanıt değil, modelin neyi görüp neyi göremediğinin ilk ölçümüdür.
 
@@ -128,7 +128,7 @@ Tam liste: `denetim/toplanma_denetimi.csv` (ilçe, mahalle, alan adı, koordinat
 
 | Eksik | Gereken veri | Düzelteceği şey |
 |---|---|---|
-| Kıyıdaki şebeke taşkını | İZSU yağmur suyu ve kanalizasyon şebekesi | Alsancak, Güzelyalı gibi kaçırılan yerler |
+| Kıyıdaki şebeke taşkını | İZSU yağmur suyu ve kanalizasyon şebekesi | Modelin su göstermediği Alsancak, Güzelyalı gibi yerler |
 | Küçük kent dereleri | Belediyenin hassas yükseklik ölçümü (LiDAR, 1 m) | Soğukkuyu, Hacı Ahmet gibi dar dere yatakları |
 | Zayıf doğrulama | Belediyenin ve itfaiyenin su baskını ihbar kayıtları | 14 yer yerine yüzlerce noktayla sınama |
 | Düz ovalardaki belirsizlik | DSİ taşkın haritaları, sedde ve baraj işletmesi | Gediz deltası ve Menemen ovası |

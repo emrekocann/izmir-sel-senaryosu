@@ -47,7 +47,6 @@ yıl neredeyse hiç kullanılmamış (çağrıların %11'i, sonraki yıllarda %5
 Çıktı: egitim/ols_sonuc.json (katsayılar, güven aralıkları, VIF, sınama
 ölçüleri, ilçe artıkları). Çalıştırma: venv/bin/python -m hesap.ols_model
 """
-import json
 import logging
 import os
 
@@ -56,6 +55,7 @@ import pandas as pd
 import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
+from afet.dosya import json_yaz
 from hesap.ilce_gun import CIKTI_DIR, ILCE_GUN_CSV
 
 log = logging.getLogger("ols")
@@ -246,8 +246,7 @@ def yazdir(r):
 def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     r = calistir(pd.read_csv(ILCE_GUN_CSV))
-    with open(SONUC_JSON, "w", encoding="utf-8") as f:
-        json.dump(r, f, ensure_ascii=False, indent=1)
+    json_yaz(SONUC_JSON, r, okunur=True)
     yazdir(r)
     print(f"\nYazıldı: {SONUC_JSON}")
 

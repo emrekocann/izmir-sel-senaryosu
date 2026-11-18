@@ -18,17 +18,18 @@ alanları yeniden yüklenirse bu betik tek başına çalıştırılır, ~2 dk.)
 Önkoşul: migrations/011_sel_senaryo_su.sql, sel_model/senaryo.npz, DB açık.
 """
 import asyncio
-import json
 import logging
 import time
 
 import numpy as np
 from affine import Affine
 
-from hesap.build_road_network import load_boundary
-from database import db
+from afet.dosya import json_oku
+from afet.sel.senaryo import BELIRSIZ
+from afet.sinir import il_poligonu
+from afet.veritabani.baglanti import db
+from afet.yollar import SENARYO, SENARYO_OZETI
 from hesap.dem_hidroloji import kopru_tunel, raster_ornekle, yakin_mi, yol_noktalari
-from sel_senaryo import BELIRSIZ, OZET_FILE, SENARYO_FILE
 
 log = logging.getLogger("sel")
 
@@ -60,15 +61,13 @@ def satirlar(katman, senaryo, kimlikler, derinlik, belirsiz):
 
 
 async def yaz():
-    with open(OZET_FILE, encoding="utf-8") as f:
-        ozet = json.load(f)
+    ozet = json_oku(SENARYO_OZETI)
     tr = Affine(ozet["dx"], 0, ozet["bati"], 0, ozet["dy"], ozet["kuzey"])
-    senaryo_npz = np.load(SENARYO_FILE)
+    senaryo_npz = np.load(SENARYO)
     senaryolar = sorted(k[2:] for k in senaryo_npz.files if k.startswith("d_"))
-    kopru, _, uzun_tunel = kopru_tunel(load_boundary())
+    kopru, _, uzun_tunel = kopru_tunel(il_poligonu())
 
-    await db.connect()
-    try:
+    async with db.oturum():
         async with db.baglan(yazma=True) as conn:
             for katman, tablo in YOL_TABLOLARI.items():
                 t = time.time()
@@ -99,8 +98,6 @@ async def yaz():
             await _degistir(conn, "toplanma", kayit, len(senaryolar))
             log.info("toplanma: %d alan × %d senaryo → %d ıslak/belirsiz satır",
                      len(ids), len(senaryolar), len(kayit))
-    finally:
-        await db.disconnect()
 
 
 async def _degistir(conn, katman, kayit, senaryo_sayisi):

@@ -33,7 +33,6 @@ sel_model/duyarlilik.npz, DB açık.
 """
 import asyncio
 import csv
-import json
 import logging
 import os
 import shutil
@@ -43,23 +42,20 @@ import numpy as np
 import shapely
 from affine import Affine
 
-import sel_riski
-from database import db
-from hesap.build_road_network import load_boundary
-from hesap.dem_hidroloji import VERI_DIR, raster_ornekle
-from repository import AfetRepository
+from afet.dosya import json_oku, json_yaz
+from afet.sel.risk import BANT_ESIK
+from afet.sinir import il_poligonu
+from afet.veritabani.baglanti import db
+from afet.veritabani.depo import AfetDeposu
+from afet.yollar import DENETIM_CSV, DUYARLILIK, OSM_DERELER, SITE_VERI_DIR
+from hesap.dem_hidroloji import osm_cizgileri, raster_ornekle
 
 log = logging.getLogger("denetim")
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
-CSV_YOLU = os.path.join(BASE_DIR, "denetim", "toplanma_denetimi.csv")
-SAYFA_DIR = os.path.join(BASE_DIR, "docs", "veri")
 
-SU_M = AfetRepository.SENARYO_KAPALI_M          # 0.3 m
+SU_M = AfetDeposu.SENARYO_KAPALI_M          # 0.3 m
 ONCELIK_1 = ["25_24", "50_24", "75_24", "100_24"]      # 24 saate yayılmış ≤ 100 mm
 ONCELIK_2 = ["100_6", "150_24"]                        # 2 Şubat 2021'e yakın yağış
-DUYARLI_S = sel_riski.BANT_ESIK[-1]                    # 0.85: çok yüksek duyarlılık
-OSM_DERE_FILE = os.path.join(VERI_DIR, "osm_dereler.json")
-PBF = os.path.join(BASE_DIR, "osm_indirme", "turkey-latest.osm.pbf")
+DUYARLI_S = BANT_ESIK[-1]                    # 0.85: çok yüksek duyarlılık
 OSM_DERE_TURLERI = ("river", "stream", "canal", "drain")     # hendek (ditch) alınmaz
 DERE_YAKIN_M = 100
 ONCELIK_AD = {1: "1", 2: "2", 3: "3", "ova": "ova", None: ""}
@@ -90,25 +86,10 @@ def en_kucuk_yagis(su):
 def osm_dereleri():
     """İl çerçevesindeki OSM dere / kanal hatları (Geofabrik dosyasından bir
     kez okunur, ~1 dk; önbellekli)."""
-    if not os.path.exists(OSM_DERE_FILE):
-        import osmium
-        minx, miny, maxx, maxy = load_boundary().bounds
-        hatlar = []
-        fp = osmium.FileProcessor(PBF).with_locations().with_filter(
-            osmium.filter.EntityFilter(osmium.osm.WAY))
-        for o in fp:
-            if o.tags.get("waterway") not in OSM_DERE_TURLERI:
-                continue
-            try:
-                xy = [(n.lon, n.lat) for n in o.nodes]
-            except osmium.InvalidLocationError:
-                continue
-            xs, ys = [p[0] for p in xy], [p[1] for p in xy]
-            if len(xy) >= 2 and max(xs) >= minx and min(xs) <= maxx and max(ys) >= miny and min(ys) <= maxy:
-                hatlar.append(xy)
-        with open(OSM_DERE_FILE, "w") as f:
-            json.dump(hatlar, f)
-    return [shapely.LineString(h) for h in json.load(open(OSM_DERE_FILE))]
+    if not os.path.exists(OSM_DERELER):
+        dere_mi = lambda t: True if t.get("waterway") in OSM_DERE_TURLERI else None
+        json_yaz(OSM_DERELER, [xy for _, _, xy in osm_cizgileri(il_poligonu().bounds, dere_mi)])
+    return [shapely.LineString(h) for h in json_oku(OSM_DERELER)]
 
 
 def dereye_uzaklik_m(lon, lat, dereler):
@@ -123,8 +104,7 @@ def dereye_uzaklik_m(lon, lat, dereler):
 
 
 async def veri():
-    await db.connect()
-    try:
+    async with db.oturum():
         async with db.baglan() as c:
             alanlar = [dict(r) for r in await c.fetch(
                 "SELECT id, kod, adi, ilce, mahalle, yol, walk_vid, "
@@ -142,8 +122,6 @@ async def veri():
                 WHERE a.walk_vid IS NOT NULL
                 GROUP BY a.id, s.senaryo
                 HAVING count(*) = count(ss.kimlik)""", ONCELIK_2)
-    finally:
-        await db.disconnect()
     return alanlar, su, erisim
 
 
@@ -184,18 +162,18 @@ def sirala(satirlar):
 
 def yaz(satirlar):
     isaretli = [r for r in sirala(satirlar) if r["oncelik"] or r["duyarli"] or r["erisim_kapali"]]
-    os.makedirs(os.path.dirname(CSV_YOLU), exist_ok=True)
+    os.makedirs(os.path.dirname(DENETIM_CSV), exist_ok=True)
     kolonlar = ["oncelik", "ilce", "mahalle", "adi", "yol", "kod", "lat", "lon",
                 "en_kucuk_yagis_mm", "en_kucuk_yagis_saat"] + [f"su_{s}_m" for s in ONCELIK_2] + [
                 "duyarlilik", "duyarli", "dereye_m", "erisim_kapali", "id"]
-    with open(CSV_YOLU, "w", encoding="utf-8-sig", newline="") as f:      # BOM: Excel Türkçe karakter
+    with open(DENETIM_CSV, "w", encoding="utf-8-sig", newline="") as f:      # BOM: Excel Türkçe karakter
         w = csv.DictWriter(f, fieldnames=kolonlar, extrasaction="ignore")
         w.writeheader()
         for r in isaretli:
             w.writerow({**r, "oncelik": ONCELIK_AD[r["oncelik"]], "lat": round(r["lat"], 6),
                         "lon": round(r["lon"], 6), "duyarli": int(r["duyarli"]),
                         "erisim_kapali": int(r["erisim_kapali"])})
-    shutil.copy(CSV_YOLU, os.path.join(SAYFA_DIR, "toplanma_denetimi.csv"))
+    shutil.copy(DENETIM_CSV, os.path.join(SITE_VERI_DIR, "toplanma_denetimi.csv"))
 
     say = Counter(ONCELIK_AD[r["oncelik"]] for r in satirlar)
     ilce = {}
@@ -226,15 +204,14 @@ def yaz(satirlar):
                    } | {"su_m": max(r[f"su_{s}_m"] for s in ONCELIK_2)}
                   for r in isaretli if r["oncelik"] in (1, 2)],
     }
-    with open(os.path.join(SAYFA_DIR, "denetim.json"), "w", encoding="utf-8") as f:
-        json.dump(ozet, f, ensure_ascii=False, separators=(",", ":"))
+    json_yaz(os.path.join(SITE_VERI_DIR, "denetim.json"), ozet)
     return ozet, len(isaretli)
 
 
 def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     alanlar, su, erisim = asyncio.run(veri())
-    z = np.load(sel_riski.DUYARLILIK_FILE)
+    z = np.load(DUYARLILIK)
     tr = Affine(float(z["dx"]), 0, float(z["bati"]), 0, float(z["dy"]), float(z["kuzey"]))
     s = raster_ornekle(z["s"], tr, np.array([a["lon"] for a in alanlar]),
                        np.array([a["lat"] for a in alanlar])) / 255.0
@@ -246,7 +223,7 @@ def main():
     log.info("%d alan: 1. öncelik %d, 2. öncelik %d, 3. öncelik %d, düz ova %d; çok duyarlı arazi %d "
              "(%d'i öncelikli), erişimi kapanan %d — %d işaretli alan %s",
              ozet["toplam"], *[ozet["sayim"][k] for k in ("1", "2", "3", "ova")], ozet["duyarli"],
-             ozet["duyarli_ve_oncelikli"], ozet["erisim_kapali"], n, CSV_YOLU)
+             ozet["duyarli_ve_oncelikli"], ozet["erisim_kapali"], n, DENETIM_CSV)
 
 
 if __name__ == "__main__":

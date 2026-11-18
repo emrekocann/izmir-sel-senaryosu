@@ -2,7 +2,7 @@ import numpy as np
 
 
 def test_yagis_katsayisi_wmo_siniflari():
-    from sel_riski import yagis_katsayisi
+    from afet.sel.risk import yagis_katsayisi
 
     assert yagis_katsayisi(0.2, 0.4) == (0.0, "Yağış yok")
     assert yagis_katsayisi(1.0, 3.0) == (0.15, "Hafif")
@@ -12,7 +12,7 @@ def test_yagis_katsayisi_wmo_siniflari():
 
 
 def test_uzun_sureli_yagis_toplami_seviyeyi_yukseltir():
-    from sel_riski import yagis_katsayisi
+    from afet.sel.risk import yagis_katsayisi
 
     # saatlik hafif ama gün boyu süren yağış
     assert yagis_katsayisi(2.0, 55.0) == (0.8, "Kuvvetli")
@@ -20,7 +20,7 @@ def test_uzun_sureli_yagis_toplami_seviyeyi_yukseltir():
 
 
 def test_katsayi_noktada_bilinear():
-    from sel_riski import katsayi_noktada
+    from afet.sel.risk import katsayi_noktada
 
     yagis = {"lats": np.array([38.0, 38.25]), "lons": np.array([27.0, 27.25]),
              "F": np.array([[0.0, 1.0], [0.0, 1.0]])}

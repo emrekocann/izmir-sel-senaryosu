@@ -1,4 +1,4 @@
-"""Sunucuda üretilen harita görüntüleri için ortak yardımcılar.
+"""Izgara (raster) katmanları ve harita görüntüleri için ortak yardımcılar.
 
 Leaflet L.imageOverlay görüntüyü iki köşesinden Web Mercator'da DOĞRUSAL
 gerer. Raster ise eşit ENLEM aralıklıdır; satırları olduğu gibi vermek,
@@ -6,16 +6,19 @@ gerer. Raster ise eşit ENLEM aralıklıdır; satırları olduğu gibi vermek,
 kaydırır. Bu yüzden görüntünün her satırı Mercator'da eşit aralıklı seçilir
 ve o satırın gerçek enlemindeki raster satırı okunur.
 """
+import os
+
 import numpy as np
 
 
-def _merc(lat):
+def mercator_y(lat):
+    """Enlemin (derece) Web Mercator y koordinatı (birim küre üzerinde)."""
     return np.log(np.tan(np.pi / 4 + np.radians(lat) / 2))
 
 
 def mercator_satir_enlemleri(guney, kuzey, n):
     """Mercator'da eşit aralıklı n satırın (üstten alta) merkez enlemleri."""
-    y = _merc(kuzey) - (np.arange(n) + 0.5) / n * (_merc(kuzey) - _merc(guney))
+    y = mercator_y(kuzey) - (np.arange(n) + 0.5) / n * (mercator_y(kuzey) - mercator_y(guney))
     return np.degrees(2 * np.arctan(np.exp(y)) - np.pi / 2)
 
 
@@ -61,3 +64,48 @@ def renkli_png(sinif, renkler) -> bytes:
     buf = io.BytesIO()
     Image.fromarray(tablo[np.asarray(sinif, dtype=np.uint8)], "RGBA").save(buf, format="PNG", optimize=True)
     return buf.getvalue()
+
+
+class IzgaraKatmani:
+    """Çevrimdışı üretilmiş bir ızgara dosyasının çalışma zamanı katmanı.
+
+    Dosya ilk erişimde bir kez yüklenir (`veri`); çerçeve, Leaflet sınırları
+    ve üretilen PNG'lerin önbelleği bütün katmanlarda ortaktır. Alt sınıf
+    `_yukle()` ile veriyi okur ve `cerceve()` ile ızgaranın batı ve kuzey
+    kenarını, hücre adımlarını ve boyutunu verir."""
+
+    def __init__(self, *dosyalar):
+        self.dosyalar = dosyalar
+        self._veri = None
+        self._png = {}
+
+    def hazir(self) -> bool:
+        """Katmanın dosyaları üretilmiş mi?"""
+        return all(os.path.exists(d) for d in self.dosyalar)
+
+    @property
+    def veri(self):
+        if self._veri is None:
+            self._veri = self._yukle()
+        return self._veri
+
+    def _yukle(self):
+        raise NotImplementedError
+
+    def cerceve(self):
+        """(batı, kuzey, dx, dy, (satır, sütun))."""
+        raise NotImplementedError
+
+    def sinirlar(self):
+        """(batı, güney, doğu, kuzey)."""
+        return izgara_sinirlari(*self.cerceve())
+
+    def leaflet_sinirlari(self):
+        """L.imageOverlay sınırı: [[güney, batı], [kuzey, doğu]]."""
+        bati, guney, dogu, kuzey = self.sinirlar()
+        return [[guney, bati], [kuzey, dogu]]
+
+    def _onbellekli_png(self, anahtar, uret):
+        if anahtar not in self._png:
+            self._png[anahtar] = uret()
+        return self._png[anahtar]

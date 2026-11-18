@@ -113,6 +113,13 @@ td.s, th.s { text-align: right; font-variant-numeric: tabular-nums; white-space:
   background: var(--kart); border: 1px solid var(--cizgi); border-radius: 10px; box-shadow: var(--golge);
   padding: 8px 11px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
 #lejant:empty { display: none; }
+.lejant-ic { display: flex; flex-direction: column; gap: 4px; }
+#lejant.kapali .lejant-ic { display: none; }
+.lejant-dugme { border: 0; background: none; padding: 0; font: inherit; font-weight: 700; color: var(--yazi); cursor: pointer;
+  display: flex; align-items: center; gap: 6px; text-align: left; }
+.lejant-dugme::after { content: ''; width: 6px; height: 6px; border-right: 2px solid var(--soluk); border-bottom: 2px solid var(--soluk);
+  transform: rotate(45deg); margin: -3px 0 0 auto; }
+#lejant:not(.kapali) .lejant-dugme::after { transform: rotate(-135deg); margin-top: 3px; }
 .lej { display: flex; align-items: center; gap: 7px; }
 /* renk yarı saydam olabilir (su sınıfları): haritadaki gibi açık zemin üstünde gösterilir */
 .lej i { width: 13px; height: 13px; flex: none; border-radius: 3px; border: 1px solid rgba(0, 0, 0, .15);

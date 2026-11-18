@@ -25,27 +25,22 @@ ilk kontroldür.
 (ilk çalıştırmada OSM dosyasından adlı yollar/dereler çıkarılır, ~1.5 dk)
 Çıktı: dogrulama/sonuc_<tarih>.json ve ekrana tablo.
 """
-import glob
-import json
 import logging
 import os
 import sys
 
 import numpy as np
-import osmium
 import shapely
 from affine import Affine
 from rasterio.features import rasterize
 
-from hesap.build_road_network import load_boundary
-from hesap.dem_hidroloji import kopru_tunel, raster_ornekle, yakin_mi, yol_noktalari
-from sel_senaryo import BELIRSIZ, OZET_FILE, SENARYO_FILE
+from afet.dosya import json_oku, json_yaz
+from afet.sel.senaryo import BELIRSIZ
+from afet.sinir import il_poligonu, tkgm_ilceler, tkgm_mahalleler
+from afet.yollar import OLAY_2021, OSM_ADLI_YOLLAR, SENARYO, SENARYO_OZETI
+from hesap.dem_hidroloji import kopru_tunel, osm_cizgileri, raster_ornekle, yakin_mi, yol_noktalari
 
 log = logging.getLogger("dogrulama")
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
-TKGM_DIR = os.path.join(BASE_DIR, "sinir_veri", "tkgm")
-PBF = os.path.join(BASE_DIR, "osm_indirme", "turkey-latest.osm.pbf")
-OSM_ONBELLEK = os.path.join(BASE_DIR, "sel_veri", "osm_adli_yollar.geojson")
 CERCEVE = (26.90, 38.30, 27.35, 38.55)       # İzmir merkez ilçeleri (OSM çıkarımı)
 
 # Olaya yakın senaryolar: 2 Şubat 2021'de merkezde 100–140 mm, 8–14 saatte
@@ -61,51 +56,32 @@ M_DERECE = 111_320.0
 
 def osm_adli_cizgiler():
     """Çerçevedeki adlı yollar ve (adlı ya da adsız) dereler — önbellekli."""
-    if os.path.exists(OSM_ONBELLEK):
-        return json.load(open(OSM_ONBELLEK, encoding="utf-8"))["features"]
+    if os.path.exists(OSM_ADLI_YOLLAR):
+        return json_oku(OSM_ADLI_YOLLAR)["features"]
     log.info("OSM dosyasından adlı yollar çıkarılıyor (~1.5 dk)…")
-    x0, y0, x1, y1 = CERCEVE
-    out = []
-    fp = osmium.FileProcessor(PBF).with_locations().with_filter(
-        osmium.filter.EntityFilter(osmium.osm.WAY))
-    for o in fp:
-        t = o.tags
-        tur = ("yol" if "highway" in t else
-               "dere" if t.get("waterway") in ("river", "stream", "canal", "drain", "ditch") else None)
-        if tur is None or (tur == "yol" and "name" not in t):
-            continue
-        try:
-            xy = [(n.lon, n.lat) for n in o.nodes]
-        except osmium.InvalidLocationError:
-            continue
-        xs, ys = [p[0] for p in xy], [p[1] for p in xy]
-        if len(xy) < 2 or max(xs) < x0 or min(xs) > x1 or max(ys) < y0 or min(ys) > y1:
-            continue
-        out.append({"type": "Feature",
-                    "properties": {"tur": tur, "ad": t.get("name"), "highway": t.get("highway")},
-                    "geometry": {"type": "LineString", "coordinates": xy}})
-    os.makedirs(os.path.dirname(OSM_ONBELLEK), exist_ok=True)
-    with open(OSM_ONBELLEK, "w", encoding="utf-8") as f:
-        json.dump({"type": "FeatureCollection", "features": out}, f, ensure_ascii=False)
+    out = [{"type": "Feature",
+            "properties": {"tur": tur, "ad": t.get("name"), "highway": t.get("highway")},
+            "geometry": {"type": "LineString", "coordinates": xy}}
+           for tur, t, xy in osm_cizgileri(CERCEVE, _adli_yol_ya_da_dere)]
+    json_yaz(OSM_ADLI_YOLLAR, {"type": "FeatureCollection", "features": out})
     return out
+
+
+def _adli_yol_ya_da_dere(t):
+    if "highway" in t:
+        return "yol" if "name" in t else None
+    return "dere" if t.get("waterway") in ("river", "stream", "canal", "drain", "ditch") else None
 
 
 def ilceler_ve_mahalleler(ilce_adlari):
     """{ilçe: poligon}, [(ilçe, mahalle, poligon)] — TKGM."""
     ilce_id, ilce = {}, {}
-    for f in json.load(open(os.path.join(TKGM_DIR, "izmir_ilce.json"), encoding="utf-8"))["features"]:
-        ad = f["properties"]["text"]
+    for kimlik, ad, geom in tkgm_ilceler():
         if ad in ilce_adlari:
-            ilce_id[f["properties"]["id"]] = ad
-            ilce[ad] = shapely.geometry.shape(f["geometry"])
-    mahalleler = []
-    for yol in sorted(glob.glob(os.path.join(TKGM_DIR, "mahalle", "*.json"))):
-        ad = ilce_id.get(int(os.path.basename(yol)[:-5]))
-        if ad is None:
-            continue
-        for f in json.load(open(yol, encoding="utf-8"))["features"]:
-            if f["geometry"]:
-                mahalleler.append((ad, f["properties"]["text"], shapely.geometry.shape(f["geometry"])))
+            ilce_id[kimlik] = ad
+            ilce[ad] = shapely.geometry.shape(geom)
+    mahalleler = [(ilce_id[k], ad, shapely.geometry.shape(geom))
+                  for k, ad, geom in tkgm_mahalleler() if k in ilce_id]
     return ilce, mahalleler
 
 
@@ -166,10 +142,10 @@ def yuzdelik(deger, nufus):
 
 
 def dogrula(olay_yolu):
-    olay = json.load(open(olay_yolu, encoding="utf-8"))
-    ozet = json.load(open(OZET_FILE, encoding="utf-8"))
+    olay = json_oku(olay_yolu)
+    ozet = json_oku(SENARYO_OZETI)
     tr = Affine(ozet["dx"], 0, ozet["bati"], 0, ozet["dy"], ozet["kuzey"])
-    npz = np.load(SENARYO_FILE)
+    npz = np.load(SENARYO)
     yerler = olay["yerler"]
     ilce_adlari = sorted({y["ilce"] for y in yerler} | {"Bornova"})
     ilce, mahalleler = ilceler_ve_mahalleler(ilce_adlari)
@@ -178,7 +154,7 @@ def dogrula(olay_yolu):
     for y in yerler:
         y["osm"] = y.get("osm_ad", y["ad"])
     caddeler = adli_caddeler(cizgiler, ilce, {y["osm"] for y in yerler if y["tur"] == "cadde"})
-    kopru, _, uzun_tunel = kopru_tunel(load_boundary())
+    kopru, _, uzun_tunel = kopru_tunel(il_poligonu())
     haric = kopru + uzun_tunel
 
     shape = npz[f"d_{SENARYOLAR[0]}"].shape
@@ -273,12 +249,11 @@ def yazdir(sonuc):
 
 def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
-    olay_yolu = sys.argv[1] if len(sys.argv) > 1 else os.path.join(BASE_DIR, "dogrulama", "olay_2021_02_02.json")
+    olay_yolu = sys.argv[1] if len(sys.argv) > 1 else OLAY_2021
     sonuc = dogrula(olay_yolu)
     cikti = os.path.join(os.path.dirname(olay_yolu),
                          os.path.basename(olay_yolu).replace("olay_", "sonuc_"))
-    with open(cikti, "w", encoding="utf-8") as f:
-        json.dump(sonuc, f, ensure_ascii=False, indent=1)
+    json_yaz(cikti, sonuc, okunur=True)
     yazdir(sonuc)
     print(f"\nYazıldı: {cikti}")
 

@@ -17,7 +17,7 @@ class _Yanit(io.BytesIO):
 
 
 def test_getir_yansi_dener_dogrular_ve_onbellekler(tmp_path, monkeypatch):
-    import ag
+    from afet import ag
     istenen = []
     yanitlar = [urllib.error.URLError("502"), b"zaman asimi duz metin", b'{"elements": [1, 2]}']
 
@@ -41,7 +41,7 @@ def test_getir_yansi_dener_dogrular_ve_onbellekler(tmp_path, monkeypatch):
 
 
 def test_getir_bozuk_onbellegi_yeniler(tmp_path, monkeypatch):
-    import ag
+    from afet import ag
     yol = tmp_path / "x.json"
     yol.write_text("{yarim")
     monkeypatch.setattr(ag.urllib.request, "urlopen", lambda req, timeout: _Yanit(b'{"ok": 1}'))
@@ -49,7 +49,7 @@ def test_getir_bozuk_onbellegi_yeniler(tmp_path, monkeypatch):
 
 
 def test_getir_vazgecer(monkeypatch):
-    import ag
+    from afet import ag
 
     def hep_hata(req, timeout):
         raise urllib.error.URLError("kapali")
@@ -61,7 +61,7 @@ def test_getir_vazgecer(monkeypatch):
 
 
 def test_sureli_onbellek_tek_uretim_ve_eski_veri():
-    from onbellek import SureliOnbellek
+    from afet.onbellek import SureliOnbellek
 
     async def senaryo():
         sayac = {"n": 0}
@@ -89,7 +89,7 @@ def test_sureli_onbellek_tek_uretim_ve_eski_veri():
 
 def test_renkli_png_saydam_ve_renkler():
     from PIL import Image
-    from harita_yardim import renkli_png
+    from afet.izgara import renkli_png
 
     sinif = np.array([[0, 1], [2, 0]], dtype=np.uint8)
     img = Image.open(io.BytesIO(renkli_png(sinif, [(255, 0, 0, 200), (0, 0, 255, 255)])))
@@ -100,7 +100,7 @@ def test_renkli_png_saydam_ve_renkler():
 
 
 def test_ara_deger_bilinear_ve_yayin():
-    from sel_riski import YAGIS_DERECE, _ara_deger
+    from afet.sel.risk import YAGIS_DERECE, _ara_deger
 
     lats = np.array([38.0, 38.0 + YAGIS_DERECE])
     lons = np.array([27.0, 27.0 + YAGIS_DERECE])
@@ -130,7 +130,7 @@ def test_raster_ornekle_ve_yakinlik():
 def test_veritabani_sonradan_acilinca_baglanir(monkeypatch):
     """Açılışta kapalı olan veritabanı açılınca sunucu yeniden başlatılmadan
     bağlanır; kapalıyken her istekte değil, aralıklı denenir."""
-    import database
+    from afet.veritabani import baglanti
 
     class SahteHavuz:
         def acquire(self):
@@ -143,18 +143,18 @@ def test_veritabani_sonradan_acilinca_baglanir(monkeypatch):
             return Baglanti()
 
     async def senaryo():
-        d = database.Database()
+        d = baglanti.Veritabani("postgresql://yok")
         acik = {"durum": False, "deneme": 0}
 
         async def ac():
             acik["deneme"] += 1
             if not acik["durum"]:
                 raise OSError("bağlantı reddedildi")
-            d.read_pool = d.write_pool = SahteHavuz()
+            d.okuma_havuzu = d.yazma_havuzu = SahteHavuz()
 
         monkeypatch.setattr(d, "_havuzlari_ac", ac)
         saat = {"t": 1000.0}
-        monkeypatch.setattr(database.time, "monotonic", lambda: saat["t"])
+        monkeypatch.setattr(baglanti.time, "monotonic", lambda: saat["t"])
 
         with pytest.raises(ConnectionError):
             async with d.baglan():
@@ -164,7 +164,7 @@ def test_veritabani_sonradan_acilinca_baglanir(monkeypatch):
                 pass
         assert acik["deneme"] == 1
         acik["durum"] = True
-        saat["t"] += database.YENIDEN_DENEME_SN
+        saat["t"] += baglanti.YENIDEN_DENEME_SN
         async with d.baglan(yazma=True) as conn:
             assert conn == "baglanti"
         assert acik["deneme"] == 2

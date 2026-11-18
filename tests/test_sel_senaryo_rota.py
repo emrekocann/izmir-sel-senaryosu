@@ -2,8 +2,8 @@
 import numpy as np
 import pytest
 
-from repository import AfetRepository as R
-from sel_senaryo import BELIRSIZ
+from afet.sel.senaryo import BELIRSIZ
+from afet.veritabani.depo import AfetDeposu as R
 from hesap.sel_senaryo_yollar import kenar_derinligi, satirlar
 
 
@@ -60,8 +60,8 @@ def test_senaryo_ozeti_yer_sayisi():
 
 def test_rota_ucu_senaryo_parametresi():
     from fastapi.testclient import TestClient
-    import main
-    istemci = TestClient(main.app)
+    from afet.api import app
+    istemci = TestClient(app)
     r = istemci.get("/api/v1/routing/smart",
                     params={"user_lon": 27.2, "user_lat": 38.45, "senaryo": "50_1; --"})
     assert r.status_code == 422          # biçim dışı senaryo reddedilir

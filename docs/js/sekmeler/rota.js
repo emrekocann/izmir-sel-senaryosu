@@ -5,17 +5,11 @@
 import { T, sayi } from '../cekirdek/dil.js';
 import { senaryoAdi, alanAdi, baslik, kacis, mesafe, yerAdi } from '../cekirdek/bicim.js';
 import { secimHtml, secimDinle, sayiKutulari, lejantOgesi, suLejanti } from '../cekirdek/arayuz.js';
-import { ROTA_AGI, rotaSuyu } from '../cekirdek/veri.js';
+import { ROTA_AGI, jsonOku, rotaSuyu } from '../cekirdek/veri.js';
 import { kenarCizgileri } from '../cekirdek/harita.js';
 import { agKur, suKur, enYakinDugum, rotaBul, rotaCizgisi, rotaOzeti } from '../cekirdek/rota_motoru.js';
 
 const ROTA_RENGI = '#4f46e5', KURU_RENGI = '#64748b', ALAN_RENGI = '#059669';
-
-async function json(yol) {
-  const yanit = await fetch(yol, { cache: 'no-cache' });
-  if (!yanit.ok) throw new Error(`${yol}: ${yanit.status}`);
-  return yanit.json();
-}
 
 export function rotaSekmesi({ vitrin, harita }) {
   const [ilkMm, ilkSaat] = vitrin.olay_senaryolari[0].split('_').map(Number);
@@ -30,11 +24,11 @@ export function rotaSekmesi({ vitrin, harita }) {
   const altGecitDolu = (a) => Boolean(a && vitrin.senaryolar[a]?.alt_gecit_dolu);
 
   function agYukle() {
-    agSozu ??= json(ROTA_AGI).then((ham) => { ag = agKur(ham); return ag; });
+    agSozu ??= jsonOku(ROTA_AGI).then((ham) => { ag = agKur(ham); return ag; });
     return agSozu;
   }
   function suYukle(a) {
-    if (!suOnbellek.has(a)) suOnbellek.set(a, json(rotaSuyu(a)).then((ham) => suKur(ag, ham)));
+    if (!suOnbellek.has(a)) suOnbellek.set(a, jsonOku(rotaSuyu(a)).then((ham) => suKur(ag, ham)));
     return suOnbellek.get(a);
   }
 

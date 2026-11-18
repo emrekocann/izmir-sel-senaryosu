@@ -27,7 +27,7 @@ export function olaySekmesi({ vitrin, harita }) {
     return o.en_derin_m > 0 ? T(`en derin nokta ${sayi(o.en_derin_m, 1)} m`, `deepest point ${sayi(o.en_derin_m, 1)} m`) : T('su yok', 'no water');
   }
 
-  const rozet = (yer) => `<span class="rozet ${yer.yakalandi ? 'iyi' : 'kotu'}">${yer.yakalandi ? T('yakalandı', 'captured') : T('kaçırıldı', 'missed')}</span>`;
+  const rozet = (yer) => `<span class="rozet ${yer.yakalandi ? 'iyi' : 'kotu'}">${yer.yakalandi ? T('model de gösterdi', 'model shows it') : T('model göstermedi', 'model does not')}</span>`;
 
   const acilir = (yer) => `<b>${kacis(yerAdi(yer.ad))}</b> · ${kacis(yerAdi(yer.ilce))} ${rozet(yer)}<br>
     <span class="soluk">${T('Haber', 'Report')}:</span> ${kacis(yer.anlatim)}<br>
@@ -55,7 +55,7 @@ export function olaySekmesi({ vitrin, harita }) {
     const ilk = d[0];
     const haberCadde = d.map((x) => Math.round(x.cadde_kapali_oran.haber * x.cadde_sayisi.haber));
     return `<div class="kutu kotu">
-      <b>${T(`Yakalanan: ${yakalanan} / ${vitrin.yerler.length} yer`, `Captured: ${yakalanan} of ${vitrin.yerler.length} places`)}</b>
+      <b>${T(`Haberlerde su bastığı yazılan ${vitrin.yerler.length} yerden ${yakalanan} tanesinde model de su gösteriyor.`, `Of the ${vitrin.yerler.length} places the news reported as flooded, the model also shows water at ${yakalanan}.`)}</b>
       <ul>
         <li>${T(`<b>Mahalle puanı ${aralik(d.map((x) => x.mahalle_auc_yalniz_derinlik))}:</b> model, su basan ${ilk.mahalle_sayisi.haber} mahalleyi aynı ilçelerin öteki ${ilk.mahalle_sayisi.oteki} mahallesinden ayırt edemiyor (0,5 yazı-tura, 1 kusursuz).`,
                  `<b>Neighbourhood score ${aralik(d.map((x) => x.mahalle_auc_yalniz_derinlik))}:</b> the model cannot tell the ${ilk.mahalle_sayisi.haber} flooded neighbourhoods from the other ${ilk.mahalle_sayisi.oteki} in the same districts (0.5 is a coin toss, 1 is perfect).`)}</li>
@@ -95,9 +95,9 @@ export function olaySekmesi({ vitrin, harita }) {
           <div><b>${kacis(yerAdi(yer.ad))}</b> ${rozet(yer)}</div>
           <div class="soluk">${turAdi(yer.tur)} · ${kacis(yerAdi(yer.ilce))} · ${modelSonucu(yer)}</div>
         </li>`).join('')}</ul>
-      <p class="kucuk">${T('"Yakalandı" ölçütü: mahalle modelde en ıslak %25 içinde; cadde ya da dere hattında 30 cm\'den derin su noktası var. Konak Alt Geçidi OpenStreetMap\'te adıyla bulunmadığı için haritada yok.',
-                           '"Captured" means: a neighbourhood ranks in the model\'s wettest 25%; a street or stream has a point deeper than 30 cm. The Konak underpass is not named in OpenStreetMap, so it is not on the map.')}</p>
-      <div class="kutu not"><b>${T('Neden kaçırdı?', 'Why the misses?')}</b>
+      <p class="kucuk">${T('"Model de gösterdi" ne demek: mahalle, modelin en ıslak gösterdiği %25 mahalle arasında; cadde ya da dere hattında modelde 30 cm\'den derin su olan bir nokta var. Konak Alt Geçidi OpenStreetMap\'te adıyla bulunmadığı için haritada yok.',
+                           '"Model shows it" means: the neighbourhood is among the 25% the model shows wettest; the street or stream has a point under more than 30 cm of water in the model. The Konak underpass is not named in OpenStreetMap, so it is not on the map.')}</p>
+      <div class="kutu not"><b>${T('Model neden bazı yerlerde su göstermedi?', 'Why does the model show no water at some places?')}</b>
         <ul>
           <li>${T('<b>Kıyıdaki kanalizasyon taşkını:</b> su dereden değil, dolan şebekeden geldi. Modelde şebeke yok.',
                    '<b>Coastal sewer flooding:</b> the water came from a surcharged network, not a stream. The model has no sewer network.')}</li>
@@ -144,6 +144,6 @@ export function olaySekmesi({ vitrin, harita }) {
       harita.suGoster(null);
     },
     ciz,
-    lejant: () => lejantOgesi(RENK.yakalandi, T('yakalandı', 'captured')) + lejantOgesi(RENK.kacirildi, T('kaçırıldı', 'missed')) + suLejanti(vitrin.siniflar),
+    lejant: () => lejantOgesi(RENK.yakalandi, T('haberde su bastı, model de gösterdi', 'reported flooded, model shows it')) + lejantOgesi(RENK.kacirildi, T('haberde su bastı, model göstermedi', 'reported flooded, model does not')) + suLejanti(vitrin.siniflar),
   };
 }

@@ -46,8 +46,6 @@ ve tahliye rotası için sel_senaryo_su tablosu (hesap/sel_senaryo_yollar.py).
 DEM'ini ve köprü/alt geçit önbelleğini kullanır; ~20–30 dk)
 """
 import asyncio
-import glob
-import json
 import logging
 import math
 import os
@@ -59,23 +57,21 @@ from rasterio.features import rasterize
 from rasterio.windows import from_bounds
 from scipy import ndimage
 
-import ag
+from afet import ag
+from afet.dosya import json_yaz
+from afet.izgara import hucre_merkezleri, sinira_degen
+from afet.sel.senaryo import BELIRSIZ
+from afet.sinir import il_poligonu, tkgm_ilceler, tkgm_mahalleler
+from afet.veritabani.baglanti import db
+from afet.veritabani.depo import AfetDeposu
+from afet.yollar import CN_DOSYASI, MODEL_DIR, SENARYO, SENARYO_OZETI
 from hesap import sel_senaryo_yollar
-from hesap.build_road_network import load_boundary
-from database import db
-from hesap.dem_hidroloji import (DIRMAP, VERI_DIR, akis_agi, cukurlar, dem_mozaik, hand_hesapla,
+from hesap.dem_hidroloji import (DIRMAP, akis_agi, cukurlar, dem_mozaik, hand_hesapla,
                            kopru_tunel, raster_ornekle, yakin_mi, yol_noktalari)
-from harita_yardim import hucre_merkezleri, sinira_degen
-from sel_riski import MODEL_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("senaryo")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
-SENARYO_FILE = os.path.join(MODEL_DIR, "senaryo.npz")
-OZET_FILE = os.path.join(MODEL_DIR, "senaryo_ozet.json")
-CN_FILE = os.path.join(VERI_DIR, "cn_60m_v3.npz")
-MAHALLE_DIR = os.path.join(BASE_DIR, "sinir_veri", "tkgm", "mahalle")
 
 YAGIS_MM = [10, 25, 50, 75, 100, 150, 200, 250]
 SURE_SA = [1, 6, 24]
@@ -89,11 +85,10 @@ YATAK_SENARYO = [(25, 1), (60, 24)]
 ARF_KADEME = [1.0, 0.9, 0.8, 0.7, 0.6]   # alan azaltma katsayısı için ara hesap kademeleri
 DUZ_OVA_KM2 = 1.0            # bundan büyük, içinden dere geçen DEM düzlüğü "belirsiz" gösterilir
 DUZ_ISLAK_PAY = 0.1          # düzlüğün bu kadarı ıslaksa tamamı "su gelir" sayılır
-BELIRSIZ = 255               # derinlik dizisinde "düz ova, derinlik belirsiz" kodu
 SETLI_KM2 = 5000.0           # bundan büyük havzalı nehir (Gediz): baraj + DSİ seddesi, taşmaz
 CUKUR_MIN_M = 0.1
 CUKUR_MAX_M = 10.0           # daha derin çukurlar baraj gölü / taş ocağı / SRTM hatası sayılır
-YOL_KAPALI_M = 0.3           # araçlar için geçilmez derinlik
+YOL_KAPALI_M = AfetDeposu.SENARYO_KAPALI_M   # araçlar için geçilmez derinlik (0.3 m)
 DERIN_SINIF = [0.1, 0.3, 1.0]   # sığ / diz / derin (m)
 
 # ESA WorldCover sınıfı → CN (toprak grubu C, TR-55 tabloları)
@@ -174,8 +169,8 @@ def havuz_doldur(etiket, taban, tasma, alan, hacim_giren):
 
 def worldcover_cn(tr, shape):
     """60 m ızgarada alan ağırlıklı CN (doğal ve kent ayrı) ve yapılaşma payı."""
-    if os.path.exists(CN_FILE):
-        v = np.load(CN_FILE)
+    if os.path.exists(CN_DOSYASI):
+        v = np.load(CN_DOSYASI)
         return v["cn_dogal"], v["cn_kent"], v["kent"], v["su"]
     h, w = shape
     b = (tr.c, tr.f + h * tr.e, tr.c + w * tr.a, tr.f)
@@ -219,7 +214,7 @@ def worldcover_cn(tr, shape):
     # WorldCover'ın kapsamadığı (deniz) hücreler de su sayılır
     su = np.where(toplam > 0, su_t / np.maximum(toplam, 1), 1).astype(np.float32)
     cn_kent = np.full(shape, CN_TABLO[50], np.float32)
-    np.savez_compressed(CN_FILE, cn_dogal=cn_dogal, cn_kent=cn_kent, kent=kent, su=su)
+    np.savez_compressed(CN_DOSYASI, cn_dogal=cn_dogal, cn_kent=cn_kent, kent=kent, su=su)
     return cn_dogal, cn_kent, kent, su
 
 
@@ -349,33 +344,26 @@ def derinlik(hd, qp, v, qbf):
 def mahalle_izgara(tr, shape):
     """TKGM mahalle poligonlarını ızgaraya basar: (kimlik ızgarası, [(ilçe, mahalle)])."""
     adlar, sekiller = [], []
-    ilceler = {f["properties"]["id"]: f["properties"]["text"] for f in
-               json.load(open(os.path.join(BASE_DIR, "sinir_veri", "tkgm", "izmir_ilce.json")))["features"]}
-    for yol in sorted(glob.glob(os.path.join(MAHALLE_DIR, "*.json"))):
-        ilce = ilceler.get(int(os.path.basename(yol)[:-5]), "?")
-        for f in json.load(open(yol, encoding="utf-8"))["features"]:
-            if f["geometry"]:
-                adlar.append((ilce, f["properties"]["text"]))
-                sekiller.append((f["geometry"], len(adlar)))
+    ilceler = {kimlik: ad for kimlik, ad, _ in tkgm_ilceler()}
+    for ilce_kimlik, mahalle, geom in tkgm_mahalleler():
+        adlar.append((ilceler.get(ilce_kimlik, "?"), mahalle))
+        sekiller.append((geom, len(adlar)))
     return rasterize(sekiller, out_shape=shape, transform=tr, fill=0, dtype="int32"), adlar
 
 
 async def yol_ornekleri():
     """Araç yol ağını ~25 m'de bir örnekler: (x, y, kenar no, kenar uzunluğu °)."""
-    await db.connect()
-    try:
-        async with db.read_pool.acquire() as conn:
+    async with db.oturum():
+        async with db.baglan() as conn:
             rows = await conn.fetch("SELECT id, ST_AsBinary(the_geom) AS wkb FROM izmir_roads_noded")
             alanlar = await conn.fetch("SELECT id, adi, ilce, ST_X(konum) AS lon, ST_Y(konum) AS lat "
                                        "FROM toplanma_alanlari")
-    finally:
-        await db.disconnect()
     geoms, x, y, ki = yol_noktalari([r["wkb"] for r in rows])
     return x, y, ki, shapely.length(geoms), [dict(a) for a in alanlar]
 
 
 def main():
-    sinir = load_boundary()
+    sinir = il_poligonu()
     dem_mozaik(sinir)
     t0 = time.time()
     hd = hidroloji()
@@ -458,10 +446,9 @@ def main():
                      p, sure, alan_km2["0.3"], ozet["senaryolar"][f"{p}_{sure}"]["yol_kapali_km"],
                      ozet["senaryolar"][f"{p}_{sure}"]["toplanma_etkilenen_sayi"], ag_dolu, time.time() - t)
     os.makedirs(MODEL_DIR, exist_ok=True)
-    np.savez_compressed(SENARYO_FILE, **sonuc)
-    with open(OZET_FILE, "w", encoding="utf-8") as f:
-        json.dump(ozet, f, ensure_ascii=False, indent=1)
-    log.info("Yazıldı: %s (%d senaryo) — toplam %.0f dk", SENARYO_FILE, len(sonuc), (time.time() - t0) / 60)
+    np.savez_compressed(SENARYO, **sonuc)
+    json_yaz(SENARYO_OZETI, ozet, okunur=True)
+    log.info("Yazıldı: %s (%d senaryo) — toplam %.0f dk", SENARYO, len(sonuc), (time.time() - t0) / 60)
     # tahliye rotası senaryodaki suyu kullanır: yollar ve toplanma alanları tazelenir
     try:
         asyncio.run(sel_senaryo_yollar.yaz())

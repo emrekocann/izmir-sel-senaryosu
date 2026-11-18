@@ -6,20 +6,19 @@
             ve servis yolları dahil — OSM'deki yürünebilir her yol)
 
 Akış:
-  1. static/izmir_sinir.geojson poligonu içindeki ağ osmnx ile
+  1. sinir/izmir_sinir.geojson poligonu içindeki ağ osmnx ile
      Overpass'tan indirilir (kavşaklarda düğümlenmiş gelir).
   2. Düğüm yükseklikleri AWS terrain-tiles (SRTM, kimlik doğrulamasız)
      HGT karolarından örneklenir; kenar eğimi (%) hesaplanır.
   3. Kenarlar <tablo>, düğümler <tablo>_vertices_pgr tablolarına yazılır —
-     repository.get_smart_routes'un beklediği şema.
+     afet.veritabani.depo.AfetDeposu.akilli_rota'un beklediği şema.
 
-Çalıştırma: venv/bin/python -m hesap.build_road_network [drive|walk|all] [--pbf dosya]
+Çalıştırma: venv/bin/python -m hesap.yol_agi_kur [drive|walk|all] [--pbf dosya]
   --pbf: Overpass yoğunken Geofabrik il/ülke dosyasından (ör. turkey-latest.osm.pbf)
          aynı filtre ve osmnx adımlarıyla kurar.
 Varsayılan: all. Yeniden çalıştırmak tabloları baştan kurar (idempotent).
 """
 import gzip
-import json
 import logging
 import math
 import os
@@ -28,36 +27,27 @@ import time
 
 import osmnx as ox
 import rasterio
-from shapely.geometry import shape
-from shapely.ops import unary_union
 
-import ag
-from database import db  # asyncpg havuzu .env'den bağlanır
+from afet import ag
+from afet.sinir import il_poligonu
+from afet.veritabani.baglanti import db
+from afet.yollar import DEM_KARO_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("yol_agi")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # proje kökü
-BOUNDARY_FILE = os.path.join(BASE_DIR, "static", "izmir_sinir.geojson")
-DEM_DIR = os.path.join(BASE_DIR, "dem_cache")
 OVERPASS_URLS = [u.rsplit("/", 1)[0] for u in ag.OVERPASS_URLS]   # osmnx kök adresi ister
 TERRAIN_URL = "https://s3.amazonaws.com/elevation-tiles-prod/skadi/{lat_dir}/{name}.hgt.gz"
 
 
-def load_boundary():
-    with open(BOUNDARY_FILE, encoding="utf-8") as f:
-        gj = json.load(f)
-    return unary_union([shape(ft["geometry"]) for ft in gj["features"]])
-
-
 # mod → (osmnx network_type, kenar tablosu). Düğüm tablosu "<kenar>_vertices_pgr".
-NETWORKS = {
+AGLAR = {
     "drive": ("drive", "izmir_roads_noded"),
     "walk": ("walk", "izmir_yaya_noded"),
 }
 
 
-def download_graph(polygon, network_type):
+def graf_indir(polygon, network_type):
     log.info("OSM '%s' ağı indiriliyor (Overpass, dakikalar sürebilir)...",
              network_type)
     ox.settings.log_console = False
@@ -84,15 +74,15 @@ def download_graph(polygon, network_type):
     return graph
 
 
-def fetch_dem_tiles(polygon):
+def dem_karolari(polygon):
     """Sınırı kapsayan 1°x1° SRTM karolarını indirir, yolları döner."""
-    os.makedirs(DEM_DIR, exist_ok=True)
+    os.makedirs(DEM_KARO_DIR, exist_ok=True)
     min_lon, min_lat, max_lon, max_lat = polygon.bounds
     paths = []
     for lat in range(math.floor(min_lat), math.floor(max_lat) + 1):
         for lon in range(math.floor(min_lon), math.floor(max_lon) + 1):
             name = f"N{lat:02d}E{lon:03d}"
-            hgt = os.path.join(DEM_DIR, f"{name}.hgt")
+            hgt = os.path.join(DEM_KARO_DIR, f"{name}.hgt")
             if not os.path.exists(hgt):
                 log.info("DEM karosu indiriliyor: %s", name)
                 gz = ag.getir(TERRAIN_URL.format(lat_dir=f"N{lat:02d}", name=name),
@@ -104,7 +94,7 @@ def fetch_dem_tiles(polygon):
     return paths
 
 
-def sample_elevations(graph, dem_paths):
+def yukseklik_ornekle(graph, dem_paths):
     """Her düğüme metre cinsinden yükseklik atar (karo başına toplu okuma)."""
     datasets = [rasterio.open(p) for p in dem_paths]
     coords = {n: (d["x"], d["y"]) for n, d in graph.nodes(data=True)}
@@ -127,10 +117,10 @@ def sample_elevations(graph, dem_paths):
     return elev
 
 
-async def write_tables(graph, elev, edge_table):
+async def tablolari_yaz(graph, elev, edge_table):
     vertex_table = f"{edge_table}_vertices_pgr"
     node_ids = {osmid: i + 1 for i, osmid in enumerate(graph.nodes)}
-    async with db.write_pool.acquire() as conn:
+    async with db.baglan(yazma=True) as conn:
         async with conn.transaction():
             # Geometri, asyncpg binary COPY'de kodlanamadığı için önce EWKT
             # metni olarak yüklenir, sonra SQL ile geometry tipine çevrilir.
@@ -300,24 +290,21 @@ def pbf_grafi(yanit, tampon, polygon, network_type):
 
 
 async def main(modes, pbf=None):
-    polygon = load_boundary()
-    dem_paths = fetch_dem_tiles(polygon)
-    pbf_veri = pbf_okuma(pbf, polygon, [NETWORKS[m][0] for m in modes]) if pbf else None
-    await db.connect()
-    try:
+    polygon = il_poligonu()
+    dem_paths = dem_karolari(polygon)
+    pbf_veri = pbf_okuma(pbf, polygon, [AGLAR[m][0] for m in modes]) if pbf else None
+    async with db.oturum():
         for mode in modes:
-            network_type, edge_table = NETWORKS[mode]
+            network_type, edge_table = AGLAR[mode]
             if pbf_veri:
                 yanit, tampon = pbf_veri.pop(network_type)
                 graph = pbf_grafi(yanit, tampon, polygon, network_type)
                 del yanit
             else:
-                graph = download_graph(polygon, network_type)
-            elev = sample_elevations(graph, dem_paths)
-            await write_tables(graph, elev, edge_table)
+                graph = graf_indir(polygon, network_type)
+            elev = yukseklik_ornekle(graph, dem_paths)
+            await tablolari_yaz(graph, elev, edge_table)
             del graph, elev  # il geneli graf birkaç GB RAM tutar
-    finally:
-        await db.disconnect()
 
 
 if __name__ == "__main__":
@@ -331,6 +318,6 @@ if __name__ == "__main__":
         pbf = args[i + 1]
         del args[i:i + 2]
     arg = args[0] if args else "all"
-    if arg not in ("all", *NETWORKS):
-        raise SystemExit(f"Kullanım: hesap/build_road_network.py [{'|'.join(NETWORKS)}|all] [--pbf dosya.osm.pbf]")
-    asyncio.run(main(list(NETWORKS) if arg == "all" else [arg], pbf))
+    if arg not in ("all", *AGLAR):
+        raise SystemExit(f"Kullanım: hesap/yol_agi_kur.py [{'|'.join(AGLAR)}|all] [--pbf dosya.osm.pbf]")
+    asyncio.run(main(list(AGLAR) if arg == "all" else [arg], pbf))

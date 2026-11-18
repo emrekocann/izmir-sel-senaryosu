@@ -3,9 +3,9 @@
 
 const DOSYALAR = { vitrin: 'veri/vitrin.json', denetim: 'veri/denetim.json' };
 
-async function oku(yol) {
-  // 'no-cache': tarayıcı dosyayı saklar ama her açılışta sunucuya sorar;
-  // veri yeniden üretildiğinde eski kopya gösterilmez
+/** JSON dosyası. 'no-cache': tarayıcı dosyayı saklar ama her açılışta
+ *  sunucuya sorar; veri yeniden üretildiğinde eski kopya gösterilmez. */
+export async function jsonOku(yol) {
   const yanit = await fetch(yol, { cache: 'no-cache' });
   if (!yanit.ok) throw new Error(`${yol}: ${yanit.status}`);
   return yanit.json();
@@ -14,7 +14,7 @@ async function oku(yol) {
 /** { vitrin, denetim } — ikisi birlikte yüklenir. */
 export async function veriYukle() {
   const adlar = Object.keys(DOSYALAR);
-  const sonuclar = await Promise.all(adlar.map((ad) => oku(DOSYALAR[ad])));
+  const sonuclar = await Promise.all(adlar.map((ad) => jsonOku(DOSYALAR[ad])));
   return Object.fromEntries(adlar.map((ad, i) => [ad, sonuclar[i]]));
 }
 
