@@ -69,12 +69,14 @@ static/       Canlı uygulamanın ön yüzü (Leaflet): index.html, css/, js/
 sel_model/    Hesaplanmış sel sonuçları (senaryo.npz, duyarlilik.npz)
 dogrulama/    2 Şubat 2021 olay verisi ve karşılaştırma sonucu
 denetim/      Toplanma alanı denetim listesi (CSV)
+egitim/       İtfaiye çağrısı × yağış ilçe-gün eğitim veri seti (CSV)
 *.py (kök)    Canlı sunucu: main, repository, ingestion, database, sel_senaryo, sel_riski…
 
 Depoda olmayan, yerelde üretilen / indirilen klasörler (.gitignore):
 osm_indirme/  Geofabrik OSM dosyası        sel_veri/    DEM, arazi örtüsü, OSM önbellekleri
 dem_cache/    SRTM karoları                sinir_veri/  TKGM ve OSM sınır önbellekleri
 cache/        osmnx / Overpass önbelleği   logs/        sunucu günlükleri
+itfaiye_veri/ İBB itfaiye Excel'leri, yağış arşivi önbelleği
 ```
 
 ### Kod düzeni
@@ -252,6 +254,27 @@ venv/bin/python -m hesap.sel_dogrulama   # ilk çalıştırmada OSM'den adlı yo
 venv/bin/python -m hesap.toplanma_denetimi   # ilk çalıştırmada OSM dereleri çıkarılır (~1 dk)
 ```
 
+### 🚒 İtfaiye çağrıları: ilçe-gün eğitim veri seti (`hesap/ilce_gun.py`, `egitim/`)
+
+Gözetimli bir regresyon modelinin (OLS, sonra coğrafi ağırlıklı regresyon) eğitim verisi. Soru: **"Bir ilçede bir günde X mm yağış düşerse itfaiyeye kaç su baskını çağrısı gelir?"** Model bu verinin üstüne ayrı betikte kurulacak.
+
+- **Çağrılar:** İBB Açık Veri, "İzmir İtfaiyesi Kontrol, Emniyet, Tedbir ve Vatandaşa Verilen Hizmetlerin İstatistiği" (Haziran 2019 – Eylül 2026). "SU BASKINI (kontrol/emniyet/tetkik)" ve "SU ÇEKME (pompa)" hizmetleri sayılır; arazözle su verme sayılmaz. Toplam 18.623 su çağrısı. Kayıtlarda **mahalle ve adres yoktur**, bu yüzden birim ilçedir.
+- **Yağış:** Open-Meteo geçmiş arşivi (ERA5 yeniden analizi, saatlik). Her ilçe için tek nokta: ilçedeki yapılaşmış alanın ağırlık merkezi. Kolonlar: günlük toplam, en yoğun 1 ve 3 saat, önceki gün, önceki 3 ve 7 gün.
+- **İlçe özellikleri** (`egitim/ilce.csv`): nüfus (İBB / TÜİK, 2023), yapılaşmış alan ve payı (ESA WorldCover).
+- **Çıktı:** `egitim/ilce_gun.csv` — 30 ilçe × 2.676 gün = 80.280 satır; çağrı olmayan günler 0 olarak durur.
+
+**İlk bakış:** 100 bin kişi başına günlük çağrı yağışla düzenli artar: kuru günde 0.06, 10–20 mm'de 0.8, 40–80 mm'de 3.9. 2 Şubat 2021'de 545 çağrı var (Konak 132, Foça 87, Bayraklı 66).
+
+**Bilinen sınırlar:**
+- **Arşiv yağışı yerel sağanağı yumuşatır.** 2 Şubat 2021'de merkezde ölçülen ~128 mm'nin ~65 mm'sini verir. Konak, Bayraklı ve Karşıyaka aynı hücreye düşer (30 ilçede 24 farklı yağış serisi). Bazı günlerde şüphelidir: 11 Kasım 2023'te Torbalı için 148 mm verir, o gün çağrı yoktur. MGM istasyon verisi bunu düzeltir.
+- **Çağrılar olaydan sonra günlerce sürer.** 4–9 Şubat 2021'de yağış yokken günde 460–850 çağrı var (bodrum boşaltma, kontrol). Önceki günlerin yağışı bu yüzden kolondur.
+- **Kayıt pratiği yıldan yıla değişir.** "Su baskını kontrol" kaydı 2019'da 76, 2021'de 5.184'tür. Model yıl etkisini ayrıca hesaba katmalıdır.
+- **Su çağrılarının %15'i iki gündür kuru günlerde gelir** (boru patlağı, kapalı alan). Bu, yağıştan bağımsız bir taban değerdir.
+
+```bash
+venv/bin/python -m hesap.ilce_gun   # ilk çalıştırmada itfaiye_veri/ önbelleğine ~10 MB indirir (~1 dk)
+```
+
 ### 🧭 Rota ve yağış senaryosu (`hesap/sel_senaryo_yollar.py`, `migrations/011`)
 
 Sel panelinde "Yağış senaryosu" açıkken tahliye rotası haritada görünen senaryoya göre çizilir; kaydırıcı ya da süre değişince rota yeniden hesaplanır.
@@ -292,7 +315,7 @@ pytest
 
 ## 📚 Veri kaynakları ve lisanslar
 
-Kod **MIT** lisanslıdır (`LICENSE`). Veriler kendi koşullarına tabidir; depodaki türetilmiş dosyalar (`sel_model/`, `static/*.geojson`, `docs/veri/`, `dogrulama/`) bu kaynaklardan üretilmiştir:
+Kod **MIT** lisanslıdır (`LICENSE`). Veriler kendi koşullarına tabidir; depodaki türetilmiş dosyalar (`sel_model/`, `static/*.geojson`, `docs/veri/`, `dogrulama/`, `egitim/`) bu kaynaklardan üretilmiştir:
 
 | Veri | Kaynak | Koşul |
 |---|---|---|
@@ -303,6 +326,9 @@ Kod **MIT** lisanslıdır (`LICENSE`). Veriler kendi koşullarına tabidir; depo
 | İlçe ve mahalle sınırları | TKGM (MEGSİS idari yapı servisi) | Açık bir veri lisansı yayımlanmamıştır; yalnız görselleştirme ve analiz için, atıfla kullanılmıştır |
 | Deprem (canlı, rota maliyeti) | Boğaziçi Üniversitesi Kandilli Rasathanesi (KRDAE), api.orhanaydogdu.com.tr aracılığıyla | Atıf zorunlu; ticari kullanım izne bağlı; veri depoda tutulmaz |
 | Yağış tahmini | Open-Meteo | CC BY 4.0 |
+| Geçmiş yağış (eğitim verisi) | Open-Meteo Historical Weather API (Copernicus ERA5 / ERA5-Land) | CC BY 4.0; ERA5 için Copernicus atfı |
+| İtfaiye hizmet kayıtları | İzmir Büyükşehir Belediyesi Açık Veri Portalı | İBB Açık Veri Lisansı — atıf |
+| İlçe nüfusu | İzmir Büyükşehir Belediyesi Açık Veri Portalı (TÜİK ADNKS) | İBB Açık Veri Lisansı — atıf |
 | Trafik olayları (isteğe bağlı) | TomTom Traffic API | TomTom kullanım koşulları; veri depoda tutulmaz |
 | Harita altlığı | Esri (Light Gray Canvas vb.), OpenTopoMap | Sağlayıcı koşulları; haritada atıf gösterilir |
 | 2 Şubat 2021 olay yerleri | Anadolu Ajansı, Cumhuriyet, İnşaport, İBB haberleri | Yalnız yer adları ve kısa özet; her kayıtta kaynak bağlantısı |
