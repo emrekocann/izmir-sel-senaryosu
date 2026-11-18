@@ -2,7 +2,7 @@
 
 Tek bir soruyu yanıtlayan, PostGIS + pgRouting tabanlı bir karar destek haritası: **"X mm yağış Y saatte düşerse İzmir'de nereyi su basar, hangi yollar kapanır, hangi toplanma alanları etkilenir ve insanlar en güvenli toplanma alanına hangi yoldan gider?"**
 
-**Yayın sitesi:** [docs/](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Harita merkezli, Türkçe / İngilizce, sunucusuz çalışan site (GitHub Pages: Settings → Pages → dal + `/docs`). Dört sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tahliye rotası örneği, toplanma alanı denetimi; yöntem ve doğrulama "Hakkında" penceresinde. Sitedeki bütün sayılar `docs/veri/` dosyalarından gelir; bunları `venv/bin/python -m hesap.vitrin_hazirla` ve `-m hesap.toplanma_denetimi` üretir. Yerelde: `python -m http.server --directory docs`. Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
+**Yayın sitesi:** [docs/](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Harita merkezli, Türkçe / İngilizce, sunucusuz çalışan site (GitHub Pages: Settings → Pages → dal + `/docs`). Dört sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tarayıcıda hesaplanan tahliye rotası, toplanma alanı denetimi; yöntem ve doğrulama "Hakkında" penceresinde. Sitedeki bütün sayılar `docs/veri/` dosyalarından gelir; bunları `venv/bin/python -m hesap.vitrin_hazirla`, `-m hesap.rota_agi_hazirla` ve `-m hesap.toplanma_denetimi` üretir. Yerelde: `python -m http.server --directory docs`. Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
 
 ## 🚀 Neler var
 
@@ -332,6 +332,20 @@ Sel panelinde "Yağış senaryosu" açıkken tahliye rotası haritada görünen 
 ```bash
 psql -h localhost -p $DB_PORT -U $DB_USER -d $DB_NAME -f migrations/011_sel_senaryo_su.sql
 venv/bin/python -m hesap.sel_senaryo_yollar   # yol ağı ya da toplanma alanları yenilenirse tekrar
+```
+
+### 🗺️ Sunucusuz sitede rota: tarayıcıda Dijkstra (`hesap/rota_agi_hazirla.py`, `docs/js/cekirdek/rota_motoru.js`)
+
+Yayın sitesinin Rota sekmesinde kullanıcı haritada istediği yere tıklar ya da işaretçiyi sürükler, yağışı ve süresini değiştirir. Rota her değişiklikte **tarayıcıda** yeniden hesaplanır (1–3 ms); sunucu ya da veritabanı gerekmez.
+
+- **Ağ:** merkezdeki 11 ilçenin (Balçova, Bayraklı, Bornova, Buca, Çiğli, Gaziemir, Güzelbahçe, Karabağlar, Karşıyaka, Konak, Narlıdere) araç yolu ağı. OSM iki yönlü yolu iki kenar olarak verir; rota yönsüz hesaplandığı için ikizler atılır (152 bin → 82 bin yol parçası). Kavşak olmayan düğümler zincir halinde birleştirilir, geometri ~3 m'de sadeleştirilir, koordinatlar 1e-5° tamsayı farkları olarak yazılır: `docs/veri/rota/ag.json` 2.5 MB (gzip ~0.8 MB), 54 bin düğüm, 873 toplanma alanı.
+- **Su:** her senaryo için ayrı küçük dosya (`su_<mm>_<saat>.json`, gzip 2–60 kB): ıslak kenarın ek maliyeti, en derin noktası, kapalı toplanma alanları. Yalnız seçilen senaryonun dosyası indirilir.
+- **Maliyet:** sunucudaki pgRouting sorgusunun senaryo kısmıyla aynı (yukarıda): uzunluk × (1 + eğim × 0.05); sığ su / düz ova ×5; 30 cm+ su ve dolu alt geçit +100 km. Canlı deprem ve trafik cezası sayfada yoktur.
+- **Hedef:** sunucu kuş uçuşu en yakın 8 alanı aday alıyordu; tarayıcıdaki çok hedefli Dijkstra, açık alanların **hepsi** arasından en düşük maliyetle ulaşılanı bulur (ilk ulaşılan açık alan düğümünde durur).
+- **Karşılaştırma:** yağış seçiliyken aynı başlangıçtan yağışsız günün rotası da hesaplanır ve kesikli gri çizilir. Panel rotanın ne kadar uzadığını, hedefin değişip değişmediğini ve hangi sudan geçtiğini söyler.
+
+```bash
+venv/bin/python -m hesap.rota_agi_hazirla   # DB açık; ~10 sn
 ```
 
 ## 🚦 Trafik (isteğe bağlı, TomTom API anahtarı gerektirir)

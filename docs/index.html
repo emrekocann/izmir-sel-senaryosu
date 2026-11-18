@@ -69,8 +69,8 @@
     </div>
   </div>
 
-    <p class="tr">Bu bir uyarı sistemi değil. Açık veriyle nereye kadar gidilebildiğini ve kurum verisinin nerede şart olduğunu gösteren bir çalışma. Haritadaki dört sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tahliye rotası örneği ve toplanma alanı denetimi.</p>
-    <p class="en">This is not a warning system. It shows how far open data can go and where institutional data becomes necessary. The map has four tabs: rainfall scenarios, comparison with the 2021 flood, an evacuation route example and the assembly-area audit.</p>
+    <p class="tr">Bu bir uyarı sistemi değil. Açık veriyle nereye kadar gidilebildiğini ve kurum verisinin nerede şart olduğunu gösteren bir çalışma. Haritadaki dört sekme: yağış senaryoları, 2021 seliyle karşılaştırma, haritada seçilen noktadan anında hesaplanan tahliye rotası ve toplanma alanı denetimi.</p>
+    <p class="en">This is not a warning system. It shows how far open data can go and where institutional data becomes necessary. The map has four tabs: rainfall scenarios, comparison with the 2021 flood, an evacuation route computed on the spot from any point you pick on the map, and the assembly-area audit.</p>
 
     <h2 id="hk-olay"><span class="tr">Olay: 2 Şubat 2021</span><span class="en">The event: 2 February 2021</span></h2>
 <p class="tr">2 Şubat 2021 gecesi İzmir merkezine, şubat ayı ortalamasından fazla yağmur birkaç saatte düştü. İki kişi hayatını kaybetti; dereler taştı, kıyı mahallelerinde ev ve iş yerlerini su bastı, ana yollar kapandı.</p>
@@ -163,7 +163,7 @@
 <ul class="tr">
   <li><b>Mekânsal veri hattı:</b> OSM'den yol ağı kurma, yükseklik verisinden eğim, TKGM sınırlarıyla il ve mahalle maskeleri.</li>
   <li><b>Hidrolojik modelleme:</b> yüzey akışı, akış yönü ve birikimi, dere taşkını, kapalı çukurların dolması.</li>
-  <li><b>Ağ analizi:</b> pgRouting ile eğim, deprem, trafik ve sel cezalı rota; 920 bin yol parçasında yaklaşık 1 saniyede yanıt.</li>
+  <li><b>Ağ analizi:</b> pgRouting ile eğim, deprem, trafik ve sel cezalı rota; 920 bin yol parçasında yaklaşık 1 saniyede yanıt. Sunucusuz sitede aynı maliyetle tarayıcıda çalışan Dijkstra: merkezdeki 11 ilçenin 82 bin yol parçasında birkaç milisaniye.</li>
   <li><b>Web uygulaması:</b> FastAPI ve PostGIS arka uç, Leaflet harita, mobil uyumlu arayüz.</li>
   <li><b>Doğrulama ve test:</b> gerçek olayla karşılaştırma betiği, otomatik testler, tekrar üretilebilir kurulum.</li>
   <li><b>Açık raporlama:</b> varsayımlar, sınırlar ve işe yaramayan deneme yazılı.</li>

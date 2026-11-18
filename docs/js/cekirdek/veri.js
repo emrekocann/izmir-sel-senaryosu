@@ -20,4 +20,6 @@ export async function veriYukle() {
 
 export const senaryoGorseli = (anahtar) => `veri/senaryo/${anahtar}.png`;
 export const IL_SINIRI = 'veri/izmir_sinir.geojson';
+export const ROTA_AGI = 'veri/rota/ag.json';
+export const rotaSuyu = (anahtar) => `veri/rota/su_${anahtar}.json`;
 export const DENETIM_CSV = 'veri/toplanma_denetimi.csv';

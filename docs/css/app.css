@@ -119,6 +119,11 @@ td.s, th.s { text-align: right; font-variant-numeric: tabular-nums; white-space:
   background: linear-gradient(var(--renk), var(--renk)), #eef1f4; }
 .lej i.daire { border-radius: 50%; }
 .lej i.cizgi { height: 4px; border: 0; border-radius: 2px; width: 20px; }
+/* rota sekmesi: sürüklenebilir başlangıç işaretçisi, haritaya tıklayarak seçim */
+.rota-baslangic { background: #4f46e5; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 1px 6px rgba(0, 0, 0, .45); cursor: grab; }
+.rota-baslangic:active { cursor: grabbing; }
+.rota-secimi.leaflet-container { cursor: crosshair; }
+.bosluk-ust { margin-top: 10px; }
 .leaflet-popup-content { font: 13.5px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 11px 14px; color: #16202e; }
 .leaflet-popup-content .soluk { color: #5b6777; }
 

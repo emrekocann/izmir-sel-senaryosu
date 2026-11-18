@@ -69,6 +69,7 @@ async function baslat() {
   window.addEventListener('hashchange', () => ac(location.hash.slice(1)));
   // paneldeki bir seçim lejantı değiştirebilir (ör. rota: yağış yok → su katmanı yok)
   govde.addEventListener('click', () => queueMicrotask(lejantCiz));
+  govde.addEventListener('input', () => queueMicrotask(lejantCiz));
 
   oge('panel-kapat').addEventListener('click', () => panel.classList.toggle('kapali'));
   oge('dil').addEventListener('click', () => dilAyarla(aktifDil() === 'tr' ? 'en' : 'tr'));

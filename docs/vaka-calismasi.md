@@ -96,8 +96,10 @@ Kısa ve yoğun senaryoda (6 saat) ayrıca 34 km²'lik düz kıyı kesimi ve iç
 
 **Tahliye rotası örneği (Bornova, 38.452 K, 27.205 D, araç):**
 - Senaryo yokken en yakın toplanma alanına 1.0 km.
-- 100 mm / 6 saatte bu yol su altında kaldığı için rota başka bir alana gidiyor: 2.6 km, yalnız iki yerde 10 cm'lik sığ su.
-- 150 mm / 24 saatte 3.5 km.
+- 100 mm / 6 saatte bu yol su altında kaldığı için rota başka bir alana gidiyor: 2.1 km, yalnız iki yol parçasında sığ su.
+- 150 mm / 24 saatte 2.1 km, sudan geçmeden.
+
+Sitede başlangıç noktası sabit değil: haritada herhangi bir yere tıklanır ya da işaretçi sürüklenir, yağış değiştirilir, rota tarayıcıda birkaç milisaniyede yeniden hesaplanır. Yağışsız günün rotası da kesikli çizgiyle yanında gösterilir.
 
 Rota hesabı, 30 cm'den derin su olan yolu kapalı sayar ve su altındaki toplanma alanını hedef seçmez. Kuru yol yoksa bunu açıkça söyler.
 
@@ -135,7 +137,7 @@ Tam liste: `denetim/toplanma_denetimi.csv` (ilçe, mahalle, alan adı, koordinat
 
 - **Mekânsal veri hattı:** OSM'den yol ağı kurma, yükseklik verisinden eğim, TKGM sınırlarıyla il ve mahalle maskeleri.
 - **Hidrolojik modelleme:** yüzey akışı, akış yönü ve birikimi, dere taşkını, kapalı çukurların dolması.
-- **Ağ analizi:** pgRouting ile eğim, deprem, trafik ve sel cezalı tahliye rotası; 920 bin yol parçasında ~1 saniyede yanıt.
+- **Ağ analizi:** pgRouting ile eğim, deprem, trafik ve sel cezalı tahliye rotası; 920 bin yol parçasında ~1 saniyede yanıt. Sunucusuz sitede aynı maliyetle tarayıcıda çalışan Dijkstra (82 bin yol parçası, birkaç ms).
 - **Web uygulaması:** FastAPI + PostGIS arka uç, Leaflet harita, mobil uyumlu arayüz.
 - **Doğrulama ve test:** gerçek olayla karşılaştırma betiği, 47 otomatik test, tekrar üretilebilir kurulum adımları.
 - **Dürüst raporlama:** varsayımlar, sınırlar ve işe yaramayan deneme açıkça yazılı.

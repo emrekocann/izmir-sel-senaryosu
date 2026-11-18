@@ -49,6 +49,22 @@ const SuKatmani = L.GridLayer.extend({
   },
 });
 
+/* İl sınırı poligon değil, kenar ÇİZGİSİ olarak çizilir. Leaflet poligonu
+   ekranın biraz dışından kırpar ve kırpma kutusunun kenarlarını da poligonun
+   parçası olarak çizer; içi boş poligonda bu kenarlar çizgi olarak görünür.
+   Durağan hâlde ekran dışında kalırlar, ama uzaklaştırma ve kaydırma sırasında
+   ekrana girer: haritada kayan düz "sınır" çizgileri. Çizgi kırpılınca yalnız
+   kesilir, kutu kenarı eklenmez. */
+export function kenarCizgileri(geo) {
+  const halkalar = [];
+  for (const oge of geo.features) {
+    const g = oge.geometry;
+    const poligonlar = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : [];
+    for (const p of poligonlar) halkalar.push(...p);
+  }
+  return { type: 'Feature', properties: {}, geometry: { type: 'MultiLineString', coordinates: halkalar } };
+}
+
 /**
  * Haritayı kurar. Dönüş:
  *   harita            Leaflet haritası (sekmeler kendi katmanlarını ekler)
@@ -70,7 +86,7 @@ export function haritaKur(kapsayici, panel, vitrin) {
 
   const ilSiniri = L.latLngBounds(vitrin.bounds);
   fetch(IL_SINIRI).then((yanit) => yanit.json()).then((geo) =>
-    L.geoJSON(geo, { style: { color: '#475569', weight: 1.2, fill: false }, interactive: false }).addTo(harita))
+    L.geoJSON(kenarCizgileri(geo), { style: { color: '#475569', weight: 1.2 }, interactive: false }).addTo(harita))
     .catch((hata) => console.warn('İl sınırı yüklenemedi:', hata));
 
   const su = new SuKatmani(vitrin.bounds, { opacity: 0.85, zIndex: 2, updateWhenZooming: false, keepBuffer: 1 });
