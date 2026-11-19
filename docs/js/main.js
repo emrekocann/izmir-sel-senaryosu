@@ -16,8 +16,9 @@ import { senaryoSekmesi } from './sekmeler/senaryo.js';
 import { olaySekmesi } from './sekmeler/olay.js';
 import { rotaSekmesi } from './sekmeler/rota.js';
 import { denetimSekmesi } from './sekmeler/denetim.js';
+import { uyariSekmesi } from './sekmeler/uyari.js';
 
-const SEKMELER = [senaryoSekmesi, olaySekmesi, rotaSekmesi, denetimSekmesi];
+const SEKMELER = [senaryoSekmesi, olaySekmesi, rotaSekmesi, denetimSekmesi, uyariSekmesi];
 
 const oge = (kimlik) => document.getElementById(kimlik);
 
@@ -70,6 +71,8 @@ async function baslat() {
     panel.classList.remove('kapali');
     aktif.goster(icerik);
     sekmeDugmeleri();
+    // dar ekranda sekme çubuğu kayar: seçili sekme görünür kalsın
+    sekmeCubugu.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     lejantCiz();
     history.replaceState(null, '', `#${aktif.id}`);
   }

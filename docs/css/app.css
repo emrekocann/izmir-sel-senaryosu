@@ -126,6 +126,9 @@ td.s, th.s { text-align: right; font-variant-numeric: tabular-nums; white-space:
   background: linear-gradient(var(--renk), var(--renk)), #eef1f4; }
 .lej i.daire { border-radius: 50%; }
 .lej i.cizgi { height: 4px; border: 0; border-radius: 2px; width: 20px; }
+/* uyarı sekmesi: listedeki olasılık rengi */
+.olcek-kare { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px;
+  background: var(--renk); border: 1px solid rgba(0, 0, 0, .15); }
 /* rota sekmesi: sürüklenebilir başlangıç işaretçisi, haritaya tıklayarak seçim */
 .rota-baslangic { background: #4f46e5; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 1px 6px rgba(0, 0, 0, .45); cursor: grab; }
 .rota-baslangic:active { cursor: grabbing; }
@@ -164,7 +167,8 @@ dialog#hakkinda::backdrop { background: rgba(15, 23, 42, .5); }
   .ust { flex-wrap: wrap; gap: 0 10px; padding: 8px 12px 0; align-content: flex-start; }
   .marka { flex: 1; min-width: 0; } .marka > span { display: none; }
   #sekmeler { order: 3; flex: 0 0 100%; justify-content: flex-start; padding: 6px 0; }
-  #sekmeler button { padding: 6px 12px; }
+  #sekmeler { gap: 2px; }
+  #sekmeler button { padding: 6px 9px; font-size: 14px; }
   #panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: 46%; border-radius: 16px 16px 0 0; border-bottom: 0; }
   #panel.kapali { transform: translateY(calc(100% - 34px)); }
   #panel-govde { padding: 4px 16px 20px; }

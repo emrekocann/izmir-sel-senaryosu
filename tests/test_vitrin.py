@@ -40,3 +40,31 @@ def test_site_verisi_sozlesmesi():
     assert len(d["noktalar"]) == d["toplam"]
     assert len(d["liste"]) == d["sayim"]["1"] + d["sayim"]["2"]
     assert os.path.exists(os.path.join(kok, "toplanma_denetimi.csv"))
+
+
+def test_uyari_verisi_sozlesmesi():
+    """docs/js/sekmeler/uyari.js'in okuduğu alanlar (hesap/uyari_hazirla.py)."""
+    import json
+    import os
+    yol = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "veri", "uyari.json")
+    u = json.load(open(yol, encoding="utf-8"))
+    assert {"ad", "aciklama", "esik", "egitim_yillari"} <= set(u["model"])
+    assert {"ilce_cagri", "il_cagri"} <= set(u["olay_tanimi"]) and "yillar" in u["veri"]
+    adlar = {i["ad"] for i in u["ilceler"]}
+    assert len(adlar) == 30 and all({"olay_gunu", "geometri"} <= set(i) for i in u["ilceler"])
+    for k in ("kuru", "islak"):
+        kosul = u["kosullar"][k]
+        assert {"yagis_onceki3g_mm", "yagis_onceki7g_mm"} <= set(kosul["onceki"])
+        assert set(kosul["olasilik"]) == adlar
+        for p in kosul["olasilik"].values():
+            assert len(p) == len(u["yagis_mm"]) and all(0 <= x <= 1 for x in p)
+            if u["model"]["ad"] == "gb":                      # yağışa monoton
+                assert all(a <= b + 1e-9 for a, b in zip(p, p[1:]))
+    for k in ("tum_yillar", "oglen_tahmin", "tahminsiz"):
+        s = u["sinama"][k]
+        assert {"atak", "atak_ilk_gun", "duyarlilik", "kesinlik", "yillar", "aralik_95"} <= set(s)
+        assert {"duyarlilik", "kesinlik"} <= set(s["aralik_95"])
+    assert all({"yil", "buyuk_gun", "buyuk_gun_alarmli"} <= set(y) for y in u["sinama"]["yillar"])
+    o = u["ornek"]
+    assert {"ilce", "gun", "haber_mm", "haber_saat", "arsiv_mm", "tahmin_mm", "cagri", "cagri_gun_sayisi",
+            "kaynaklar"} <= set(o) and o["ilce"] in adlar

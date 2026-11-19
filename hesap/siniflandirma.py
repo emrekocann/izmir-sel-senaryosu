@@ -217,9 +217,14 @@ def onem(m, test, kolonlar, n=5):
                   key=lambda x: -x["ap_dususu"])
 
 
-def olasilik_tablosu(t, m, kolonlar):
-    """İlçe × günlük yağış → olay olasılığı. Önceki günler kuru; en yoğun 1 / 3
-    saat, yağışlı günlerde (≥ 10 mm) gözlenen ortanca oranla türetilir."""
+KURU = {"yagis_dun_mm": 0.0, "yagis_onceki3g_mm": 0.0, "yagis_onceki7g_mm": 0.0}
+
+
+def olasilik_tablosu(t, m, kolonlar, onceki=None):
+    """İlçe × günlük yağış → olay olasılığı. onceki: önceki günlerin yağışı
+    (varsayılan kuru); en yoğun 1 / 3 saat, yağışlı günlerde (≥ 10 mm)
+    gözlenen ortanca oranla türetilir."""
+    onceki = onceki or KURU
     yagisli = t[t.yagis_mm >= 10]
     o1 = float((yagisli.yagis_max1s_mm / yagisli.yagis_mm).median())
     o3 = float((yagisli.yagis_max3s_mm / yagisli.yagis_mm).median())
@@ -228,12 +233,11 @@ def olasilik_tablosu(t, m, kolonlar):
     for ilce, r in ilceler.iterrows():
         for mm in TABLO_YAGIS:
             satir.append({"ilce": ilce, "yagis_mm": mm, "yagis_max1s_mm": mm * o1, "yagis_max3s_mm": mm * o3,
-                          "yagis_dun_mm": 0.0, "yagis_onceki3g_mm": 0.0, "yagis_onceki7g_mm": 0.0,
-                          "nufus": r.nufus, "kent_payi": r.kent_payi})
+                          **onceki, "nufus": r.nufus, "kent_payi": r.kent_payi})
     g = om.hazirla(pd.DataFrame(satir).assign(yil=om.ILK_YIL, cagri_su=0, gun="-"))
     g["p"] = m.predict_proba(g[kolonlar])[:, 1]
     return {"yagis_mm": TABLO_YAGIS, "max1s_orani": round(o1, 3), "max3s_orani": round(o3, 3),
-            "varsayim": "önceki günler kuru; en yoğun saatler yağışlı günlerin ortanca oranıyla",
+            "varsayim": "en yoğun saatler yağışlı günlerin ortanca oranıyla", "onceki": onceki,
             "ilce": {k: [round(float(v), 3) for v in x.sort_values("yagis_mm").p]
                      for k, x in g.groupby("ilce")}}
 

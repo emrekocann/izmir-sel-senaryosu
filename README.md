@@ -4,7 +4,7 @@ Tek bir soruyu yanıtlayan, PostGIS + pgRouting tabanlı bir karar destek harita
 
 **🔗 Canlı site: [emrekocann.github.io/izmir-sel-senaryosu](https://emrekocann.github.io/izmir-sel-senaryosu/)** · Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md)
 
-**Yayın sitesi:** [docs/](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Harita merkezli, Türkçe / İngilizce, sunucusuz çalışan site (GitHub Pages: Settings → Pages → dal + `/docs`). Dört sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tarayıcıda hesaplanan tahliye rotası, toplanma alanı denetimi; yöntem ve doğrulama "Hakkında" penceresinde. Sitedeki bütün sayılar `docs/veri/` dosyalarından gelir; bunları `venv/bin/python -m hesap.vitrin_hazirla`, `-m hesap.rota_agi_hazirla` ve `-m hesap.toplanma_denetimi` üretir. Yerelde: `python -m http.server --directory docs`. Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
+**Yayın sitesi:** [docs/](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Harita merkezli, Türkçe / İngilizce, sunucusuz çalışan site (GitHub Pages: Settings → Pages → dal + `/docs`). Beş sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tarayıcıda hesaplanan tahliye rotası, toplanma alanı denetimi, itfaiye kayıtlarıyla eğitilmiş erken uyarı modeli; yöntem ve doğrulama "Hakkında" penceresinde. Sitedeki bütün sayılar `docs/veri/` dosyalarından gelir; bunları `venv/bin/python -m hesap.vitrin_hazirla`, `-m hesap.rota_agi_hazirla`, `-m hesap.toplanma_denetimi` ve `-m hesap.uyari_hazirla` üretir (sonuncusu `hesap.siniflandirma` ve `hesap.guvenilirlik` çıktılarını okur). Yerelde: `python -m http.server --directory docs`. Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
 
 ## 🚀 Neler var
 
@@ -61,7 +61,7 @@ docs/         Yayın sitesi (GitHub Pages), derleme adımı yok:
                 css/app.css       düzen ve tema
                 js/main.js        giriş: veri, harita, sekme yönetimi
                 js/cekirdek/      dil, biçim, veri, harita, arayüz yardımcıları
-                js/sekmeler/      her sekme bir modül (senaryo, olay, rota, denetim)
+                js/sekmeler/      her sekme bir modül (senaryo, olay, rota, denetim, uyari)
                 veri/             önceden hesaplanmış veri (JSON, PNG, CSV)
 hesap/        Çevrimdışı hesap betikleri — kökten "python -m hesap.<betik>" ile çalışır
               (yol ağı, sınır, sel duyarlılığı, senaryolar, doğrulama, yayın verisi)
@@ -418,6 +418,8 @@ Tahminli sınamada uyarı **önceki gün saat 12:00'de** verilir ve o anda elde 
 ```bash
 venv/bin/python -m hesap.guvenilirlik   # ~10 dk; sonuç egitim/guvenilirlik.json
 ```
+
+**Sitede:** "Uyarı" sekmesi (`docs/js/sekmeler/uyari.js`). Seçilen günlük yağış ve önceki hafta (kuru / ıslak) için her ilçenin olay olasılığını haritada gösterir; alarm eşiğini geçen ilçeler kalın çerçeveli. Seçili model bütün verilerle (2020–26) yeniden eğitilir. "Islak" geçmiş, olay günlerinde gözlenen önceki gün yağışlarının ortancasıdır (önceki 7 günde ~44 mm). Panelde yıl yıl sınama sonuçları ve Foça örneği de var. Veri: `venv/bin/python -m hesap.uyari_hazirla` → `docs/veri/uyari.json`.
 
 ### 🧭 Rota ve yağış senaryosu (`hesap/sel_senaryo_yollar.py`, `migrations/011`)
 
