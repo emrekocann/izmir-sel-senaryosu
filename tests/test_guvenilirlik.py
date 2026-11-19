@@ -51,6 +51,25 @@ def test_bootstrap_gun_blogu_ve_aralik():
     assert a["ap"][0] > 0.5                                # güçlü ayırıcı
 
 
+def test_ataklar_ardisik_gunleri_birlestirir():
+    gun = ["2025-01-01", "2025-01-02", "2025-01-04", "2025-01-10", "2025-01-11"]
+    g = pd.DataFrame({"c": [60, 80, 70, 90, 10], "a": [False, True, True, True, True]}, index=gun)
+    at = gv.ataklar(g)
+    assert [(a["ilk"], a["son"], a["gun"]) for a in at] == [("2025-01-01", "2025-01-04", 3), ("2025-01-10", "2025-01-10", 1)]
+    assert [a["ilk_gun_alarm"] for a in at] == [False, True]
+    assert [a["herhangi_alarm"] for a in at] == [True, True]
+
+
+def test_hafta_blogu_ile_bootstrap():
+    r = np.random.default_rng(1)
+    gun = pd.date_range("2025-01-01", periods=140).strftime("%Y-%m-%d").repeat(4)
+    olay = (r.random(len(gun)) < 0.1).astype(int)
+    x = pd.DataFrame({"gun": gun, "olay": olay, "p": olay * 0.5 + r.random(len(gun)) * 0.5, "cagri_su": olay * 60})
+    x["hafta"] = pd.to_datetime(x.gun).dt.strftime("%G-%V")
+    a = gv.bootstrap(x, x.p.values >= 0.5, n=100, blok="hafta")
+    assert all(0 <= a[k][0] <= a[k][1] <= 1 for k in a)
+
+
 def test_calistir_yillar_ve_tahminli_donem():
     t = _sentetik()
     sifir = lambda x: x.assign(**{k: 0.0 for k in ("yagis_mm", "yagis_max1s_mm", "yagis_max3s_mm")}).pipe(
@@ -76,5 +95,6 @@ def test_sonuc_dosyasi_sozlesmesi():
             for k in ("ap", "duyarlilik", "kesinlik"):
                 alt, ust = o["aralik_95"][k]
                 assert alt <= o[k] + 0.02 and o[k] - 0.02 <= ust, (ad, k)
+        assert s["tum_yillar"]["atak"]["ilk_gun_alarmli"] <= s["tum_yillar"]["atak"]["herhangi_alarmli"]
         olaylar = {o["olay"] for o in s["tahminli_donem"].values()}
         assert len(olaylar) == 1                          # tahminli kıyas aynı satırlarda

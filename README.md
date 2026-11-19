@@ -378,30 +378,42 @@ Yukarıdaki sınama o günün **gerçekte yağan** yağmurunu kullanır; bu say�
 venv/bin/python -m hesap.tahmin_sinamasi   # ~15 sn (ilk çalıştırmada tahmin arşivi iner); sonuç egitim/tahmin_sinamasi.json
 ```
 
-### 📏 Güvenilirlik: yıl yıl sınama ve güven aralığı (`hesap/guvenilirlik.py`)
+### 📏 Güvenilirlik: yıl yıl sınama, ataklar ve güven aralığı (`hesap/guvenilirlik.py`)
 
-Yukarıdaki iki sınama tek bir test dönemine (2025–26) dayanır. Burada her yıl, yalnız kendinden önceki yıllarla eğitilen modelle tahmin edilir (2020–21 → 2022, …, 2020–25 → 2026). Izgara araması ve alarm eşiği her yıl yeniden, yalnız o yılın eğitim verisiyle seçilir. %95 aralıklar güne göre bootstrap'la hesaplanır: aynı gün 30 ilçe aynı fırtınayı yaşadığı için satırlar değil günler yeniden çekilir. Tahminli sınamada uyarı **önceki gün saat 12:00'de** verilir ve o anda elde olmayan hiçbir bilgi kullanılmaz: o günün öğleden sonrası 2 gün önceki koşudan, önceki günün öğleden sonrası da gözlem yerine tahminden alınır.
+Yukarıdaki iki sınama tek bir test dönemine (2025–26) dayanır. Burada her yıl, yalnız kendinden önceki yıllarla eğitilen modelle tahmin edilir (2020–21 → 2022, …, 2020–25 → 2026). Izgara araması ve alarm eşiği her yıl yeniden, yalnız o yılın eğitim verisiyle seçilir.
+
+Büyük olay günleri (il genelinde ≥ 50 çağrı) bağımsız değildir: yağışlı dönemler günlerce sürer. 2026'nın 19 büyük günü aslında iki uzun dönemdir (29 Ocak – 18 Şubat). Bu yüzden arka arkaya günler tek **atak** sayılır ve asıl erken uyarı sorusu sorulur: **atağın ilk gününde alarm var mıydı?** %95 aralıklar **hafta** bloklarıyla bootstrap'la hesaplanır.
+
+Tahminli sınamada uyarı **önceki gün saat 12:00'de** verilir ve o anda elde olmayan hiçbir bilgi kullanılmaz: o günün öğleden sonrası 2 gün önceki koşudan, önceki günün öğleden sonrası da gözlem yerine tahminden alınır.
 
 | Gradient boosting, gerçek yağış | 2022 | 2023 | 2024 | 2025 | 2026 | **2022–26** |
 |---|---|---|---|---|---|---|
-| AP | 0.10 | 0.15 | 0.05 | 0.06 | 0.38 | **0.19** [0.15–0.24] |
-| Duyarlılık | 0.15 | 0.34 | 0.24 | 0.25 | 0.49 | **0.36** [0.30–0.43] |
-| Kesinlik | 0.11 | 0.16 | 0.07 | 0.10 | 0.37 | **0.19** [0.15–0.24] |
-| Büyük olay günü alarmlı | 4/7 | 15/18 | 2/4 | 3/9 | 19/19 | **43/57** (%75) [%64–86] |
+| AP | 0.10 | 0.15 | 0.05 | 0.06 | 0.38 | **0.19** [0.12–0.26] |
+| Duyarlılık (ilçe olayları) | 0.15 | 0.34 | 0.24 | 0.25 | 0.49 | **0.36** [0.26–0.44] |
+| Kesinlik (isabetli alarm) | 0.11 | 0.16 | 0.07 | 0.10 | 0.37 | **0.19** [0.13–0.26] |
+| Büyük olay günü alarmlı | 4/7 | 15/18 | 2/4 | 3/9 | 19/19 | **43/57** [%57–89] |
+| **Atak, ilk gününde alarmlı** | | | | | | **17/23** |
 
-| 2024–26, aynı satırlar | AP | Duyarlılık | Büyük olay günü alarmlı |
+| 2024–26, aynı satırlar | AP | Duyarlılık | Atak, ilk gün alarmlı |
 |---|---|---|---|
-| gerçek yağış | 0.24 | 0.41 | 23/31 |
-| ECMWF, önceki gün sonu | 0.22 | 0.37 | 23/31 |
-| **ECMWF, önceki gün öğlen** | **0.21** | **0.37** | **24/31** [%61–91] |
-| tahminsiz | 0.17 | 0.10 | 15/31 |
+| gerçek yağış | 0.24 | 0.41 | 6/8 |
+| ECMWF, önceki gün sonu | 0.22 | 0.37 | 6/8 |
+| **ECMWF, önceki gün öğlen** | **0.21** | **0.37** | **6/8** |
+| tahminsiz | 0.17 | 0.10 | 2/8 |
 
 **Bulgular:**
-- **2025–26 sonucu iyimserdi.** Başarının çoğu 2026'dan geliyor (AP 0.38, 19/19). 2024 ve 2025 zayıf (AP 0.05–0.06). Beş yılın bileşiminde büyük olay günlerinin **%75'i** (43/57) alarmlı, ilçe olaylarının **~%36'sı** yakalanıyor ve **alarmların ~5'te 1'i** isabetli.
-- **Zamanlama iyimserliği önemsiz.** Uyarı öğlen verilince sonuç neredeyse değişmiyor (24/31, AP 0.21).
-- **Tahminin katkısı tutarlı.** Tahmin olmadan duyarlılık 0.37'den 0.10'a düşüyor.
-- **Gradient boosting lojistik regresyondan anlamlı biçimde iyi değil.** Beş yılda AP 0.19 ile 0.18, aralıklar örtüşüyor. Basit model yeterli.
-- **Yıldan yıla oynaklık büyük.** Bir yılın sonucu tek başına raporlanmamalı. 2024–25'in neden zayıf olduğu henüz incelenmedi (az olay, yerel sağanaklar ya da kayıt pratiği olabilir).
+- **Atakların dörtte üçü ilk gününde yakalanıyor** (gerçek yağışla 17/23; öğlen tahminiyle 2024–26'da 6/8). Rakam bu kadar az atakla kaba bir rakam.
+- **Zamanlama iyimserliği önemsiz.** Uyarı öğlen verilince sonuç neredeyse değişmiyor.
+- **Tahminin katkısı tutarlı.** Tahmin olmadan duyarlılık 0.37'den 0.10'a, ilk gün alarmlı ataklar 6/8'den 2/8'e düşüyor.
+- **Gradient boosting lojistik regresyondan anlamlı biçimde iyi değil.** Beş yılda AP 0.19 ile 0.18, aralıklar örtüşüyor.
+- **İlçe düzeyi zayıf.** İlçe olaylarının ~%36'sı yakalanıyor, alarmların ~5'te 1'i isabetli.
+
+**2024–25 neden zayıf, 2026 neden güçlü:**
+- **2025'in 9 büyük gününün 7'si tek bir yerel sağanak: Foça, 23 Ekim 2025.** Valiliğe göre 1,5 saatte ~144 mm yağdı ([Sabah](https://www.sabah.com.tr/gundem/2025/10/24/son-dakika-focadaki-sel-felaketinde-son-durum), [CNN Türk](https://www.cnnturk.com/turkiye/focayi-sel-aldi-izmir-valiligi-selde-kaybolan-1-kisi-araniyor-2351207)). Yağış arşivi o gün Foça için 7 mm diyor, 9 km çözünürlüklü ECMWF analizi en çok 16 mm, bir gün önceki tahminler 9–18 mm. Model değil veri kör. Sonraki 4 günün ~450 çağrısı yağışsız günlerde yapılan kontrol ve temizlik.
+- **Kaçırılan atakların çoğu tek günlük, dar alanlı yaz ve sonbahar sağanakları** (ör. 12 Temmuz 2024: il ortalaması 0.7 mm yağış, 51 çağrı). Yalnız Foça haberle doğrulandı.
+- **2024'te yağış vardı ama sel az oldu.** ≥ 20 mm yağışlı ilçe-günlerin %6.5'inde olay var, 2026'da %27'sinde. Olay günlerinden önceki 7 günün ortalama yağışı 2024'te 16 mm, 2026'da 89 mm. Toprak kuru olunca aynı yağış daha az çağrı getiriyor ve model fazla alarm veriyor.
+- **2026'yı uzun ve çok yağışlı bir kış kolaylaştırdı.** Atağın ortasındaki günleri yakalamak kolay, çünkü önceki günlerin yağışı zaten çok yüksek. Bu yüzden başarıyı gün sayısıyla değil atakla ölçmek gerekiyor.
+- **İl geneli alarm ölçüsünün bir zaafı:** atağın ilk gününde *herhangi bir* ilçede alarm varsa atak yakalanmış sayılıyor. Öğlen tahminiyle Foça atağı "yakalandı" görünüyor, ama alarm Foça'da değil başka bir ilçede verildi. İlçe düzeyi ölçüler (duyarlılık, kesinlik) bu yüzden ayrıca raporlanıyor.
 
 ```bash
 venv/bin/python -m hesap.guvenilirlik   # ~10 dk; sonuç egitim/guvenilirlik.json

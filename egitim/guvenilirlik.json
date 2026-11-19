@@ -7,7 +7,8 @@
   2025,
   2026
  ],
- "bootstrap": "günler yerine koyarak, 1000 tekrar, %95 yüzdelik",
+ "bootstrap": "haftalar yerine koyarak, 1000 tekrar, %95 yüzdelik",
+ "atak": "il genelinde ≥ 50 çağrılı günler, aralarında ≤ 1 gün boşlukla tek atak",
  "oglen_uyarisi": "D 00–11: 1 gün önceki koşu; D 12–23: 2 gün önceki koşu; D-1 12–23: gözlem yerine 1 gün önceki koşu",
  "sonuclar": {
   "lojistik": {
@@ -165,22 +166,190 @@
      "alarm_gunu": 199,
      "gun": 1733
     },
+    "atak": {
+     "atak": 23,
+     "ilk_gun_alarmli": 17,
+     "herhangi_alarmli": 17,
+     "liste": [
+      {
+       "ilk": "2022-02-02",
+       "son": "2022-02-03",
+       "gun": 2,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2022-08-24",
+       "son": "2022-08-25",
+       "gun": 2,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": false
+      },
+      {
+       "ilk": "2022-11-18",
+       "son": "2022-11-18",
+       "gun": 1,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": false
+      },
+      {
+       "ilk": "2022-11-21",
+       "son": "2022-11-21",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2022-12-13",
+       "son": "2022-12-13",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-01-10",
+       "son": "2023-01-10",
+       "gun": 1,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": false
+      },
+      {
+       "ilk": "2023-01-27",
+       "son": "2023-01-27",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-05-18",
+       "son": "2023-05-18",
+       "gun": 1,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": false
+      },
+      {
+       "ilk": "2023-05-31",
+       "son": "2023-06-02",
+       "gun": 2,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-11-05",
+       "son": "2023-11-05",
+       "gun": 1,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": false
+      },
+      {
+       "ilk": "2023-11-13",
+       "son": "2023-11-13",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-11-18",
+       "son": "2023-11-18",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-11-26",
+       "son": "2023-12-05",
+       "gun": 9,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-12-21",
+       "son": "2023-12-21",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2024-01-16",
+       "son": "2024-01-16",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2024-07-12",
+       "son": "2024-07-12",
+       "gun": 1,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": false
+      },
+      {
+       "ilk": "2024-09-11",
+       "son": "2024-09-12",
+       "gun": 2,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2025-10-07",
+       "son": "2025-10-07",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2025-10-23",
+       "son": "2025-10-30",
+       "gun": 7,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2025-11-29",
+       "son": "2025-11-29",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2026-01-29",
+       "son": "2026-02-09",
+       "gun": 11,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2026-02-12",
+       "son": "2026-02-18",
+       "gun": 7,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2026-04-04",
+       "son": "2026-04-04",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      }
+     ]
+    },
     "aralik_95": {
      "ap": [
-      0.134,
-      0.235
+      0.113,
+      0.244
      ],
      "kesinlik": [
-      0.155,
-      0.248
+      0.132,
+      0.258
      ],
      "duyarlilik": [
-      0.322,
-      0.478
+      0.284,
+      0.484
      ],
      "buyuk_gun_yakalama": [
-      0.644,
-      0.86
+      0.584,
+      0.886
      ]
     },
     "yillar": [
@@ -209,22 +378,85 @@
       "alarm_gunu": 107,
       "gun": 968
      },
+     "atak": {
+      "atak": 8,
+      "ilk_gun_alarmli": 7,
+      "herhangi_alarmli": 7,
+      "liste": [
+       {
+        "ilk": "2024-07-12",
+        "son": "2024-07-12",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2024-09-11",
+        "son": "2024-09-12",
+        "gun": 2,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-10-07",
+        "son": "2025-10-07",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-10-23",
+        "son": "2025-10-30",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-11-29",
+        "son": "2025-11-29",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-01-29",
+        "son": "2026-02-09",
+        "gun": 11,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-02-12",
+        "son": "2026-02-18",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-04-04",
+        "son": "2026-04-04",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       }
+      ]
+     },
      "aralik_95": {
       "ap": [
-       0.12,
-       0.272
+       0.077,
+       0.283
       ],
       "kesinlik": [
-       0.155,
-       0.278
+       0.112,
+       0.295
       ],
       "duyarlilik": [
-       0.34,
-       0.553
+       0.275,
+       0.56
       ],
       "buyuk_gun_yakalama": [
-       0.583,
-       0.889
+       0.5,
+       0.941
       ]
      },
      "yillar": [
@@ -250,22 +482,85 @@
       "alarm_gunu": 123,
       "gun": 968
      },
+     "atak": {
+      "atak": 8,
+      "ilk_gun_alarmli": 6,
+      "herhangi_alarmli": 6,
+      "liste": [
+       {
+        "ilk": "2024-07-12",
+        "son": "2024-07-12",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2024-09-11",
+        "son": "2024-09-12",
+        "gun": 2,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2025-10-07",
+        "son": "2025-10-07",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-10-23",
+        "son": "2025-10-30",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-11-29",
+        "son": "2025-11-29",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-01-29",
+        "son": "2026-02-09",
+        "gun": 11,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-02-12",
+        "son": "2026-02-18",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-04-04",
+        "son": "2026-04-04",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       }
+      ]
+     },
      "aralik_95": {
       "ap": [
-       0.108,
-       0.246
+       0.072,
+       0.252
       ],
       "kesinlik": [
-       0.133,
-       0.253
+       0.092,
+       0.266
       ],
       "duyarlilik": [
-       0.298,
-       0.531
+       0.244,
+       0.517
       ],
       "buyuk_gun_yakalama": [
-       0.609,
-       0.912
+       0.5,
+       0.973
       ]
      },
      "yillar": [
@@ -291,22 +586,85 @@
       "alarm_gunu": 127,
       "gun": 968
      },
+     "atak": {
+      "atak": 8,
+      "ilk_gun_alarmli": 6,
+      "herhangi_alarmli": 6,
+      "liste": [
+       {
+        "ilk": "2024-07-12",
+        "son": "2024-07-12",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2024-09-11",
+        "son": "2024-09-12",
+        "gun": 2,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2025-10-07",
+        "son": "2025-10-07",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-10-23",
+        "son": "2025-10-30",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-11-29",
+        "son": "2025-11-29",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-01-29",
+        "son": "2026-02-09",
+        "gun": 11,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-02-12",
+        "son": "2026-02-18",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-04-04",
+        "son": "2026-04-04",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       }
+      ]
+     },
      "aralik_95": {
       "ap": [
-       0.102,
-       0.238
+       0.07,
+       0.245
       ],
       "kesinlik": [
-       0.136,
-       0.257
+       0.093,
+       0.272
       ],
       "duyarlilik": [
-       0.298,
-       0.528
+       0.249,
+       0.513
       ],
       "buyuk_gun_yakalama": [
-       0.609,
-       0.912
+       0.5,
+       0.973
       ]
      },
      "yillar": [
@@ -332,22 +690,85 @@
       "alarm_gunu": 13,
       "gun": 968
      },
+     "atak": {
+      "atak": 8,
+      "ilk_gun_alarmli": 0,
+      "herhangi_alarmli": 2,
+      "liste": [
+       {
+        "ilk": "2024-07-12",
+        "son": "2024-07-12",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2024-09-11",
+        "son": "2024-09-12",
+        "gun": 2,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2025-10-07",
+        "son": "2025-10-07",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2025-10-23",
+        "son": "2025-10-30",
+        "gun": 7,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2025-11-29",
+        "son": "2025-11-29",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2026-01-29",
+        "son": "2026-02-09",
+        "gun": 11,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-02-12",
+        "son": "2026-02-18",
+        "gun": 7,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-04-04",
+        "son": "2026-04-04",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       }
+      ]
+     },
      "aralik_95": {
       "ap": [
-       0.047,
-       0.106
+       0.025,
+       0.131
       ],
       "kesinlik": [
-       0.333,
-       0.875
+       0.2,
+       1.0
       ],
       "duyarlilik": [
-       0.009,
+       0.004,
        0.034
       ],
       "buyuk_gun_yakalama": [
-       0.138,
-       0.455
+       0.05,
+       0.533
       ]
      },
      "yillar": [
@@ -523,22 +944,190 @@
      "alarm_gunu": 212,
      "gun": 1733
     },
+    "atak": {
+     "atak": 23,
+     "ilk_gun_alarmli": 17,
+     "herhangi_alarmli": 18,
+     "liste": [
+      {
+       "ilk": "2022-02-02",
+       "son": "2022-02-03",
+       "gun": 2,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2022-08-24",
+       "son": "2022-08-25",
+       "gun": 2,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": false
+      },
+      {
+       "ilk": "2022-11-18",
+       "son": "2022-11-18",
+       "gun": 1,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": false
+      },
+      {
+       "ilk": "2022-11-21",
+       "son": "2022-11-21",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2022-12-13",
+       "son": "2022-12-13",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-01-10",
+       "son": "2023-01-10",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-01-27",
+       "son": "2023-01-27",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-05-18",
+       "son": "2023-05-18",
+       "gun": 1,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": false
+      },
+      {
+       "ilk": "2023-05-31",
+       "son": "2023-06-02",
+       "gun": 2,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-11-05",
+       "son": "2023-11-05",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-11-13",
+       "son": "2023-11-13",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-11-18",
+       "son": "2023-11-18",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-11-26",
+       "son": "2023-12-05",
+       "gun": 9,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2023-12-21",
+       "son": "2023-12-21",
+       "gun": 1,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": false
+      },
+      {
+       "ilk": "2024-01-16",
+       "son": "2024-01-16",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2024-07-12",
+       "son": "2024-07-12",
+       "gun": 1,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": false
+      },
+      {
+       "ilk": "2024-09-11",
+       "son": "2024-09-12",
+       "gun": 2,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2025-10-07",
+       "son": "2025-10-07",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2025-10-23",
+       "son": "2025-10-30",
+       "gun": 7,
+       "ilk_gun_alarm": false,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2025-11-29",
+       "son": "2025-11-29",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2026-01-29",
+       "son": "2026-02-09",
+       "gun": 11,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2026-02-12",
+       "son": "2026-02-18",
+       "gun": 7,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      },
+      {
+       "ilk": "2026-04-04",
+       "son": "2026-04-04",
+       "gun": 1,
+       "ilk_gun_alarm": true,
+       "herhangi_alarm": true
+      }
+     ]
+    },
     "aralik_95": {
      "ap": [
-      0.146,
-      0.241
+      0.115,
+      0.258
      ],
      "kesinlik": [
-      0.151,
-      0.238
+      0.128,
+      0.257
      ],
      "duyarlilik": [
-      0.295,
-      0.43
+      0.261,
+      0.437
      ],
      "buyuk_gun_yakalama": [
-      0.64,
-      0.86
+      0.571,
+      0.894
      ]
     },
     "yillar": [
@@ -567,22 +1156,85 @@
       "alarm_gunu": 123,
       "gun": 968
      },
+     "atak": {
+      "atak": 8,
+      "ilk_gun_alarmli": 6,
+      "herhangi_alarmli": 7,
+      "liste": [
+       {
+        "ilk": "2024-07-12",
+        "son": "2024-07-12",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2024-09-11",
+        "son": "2024-09-12",
+        "gun": 2,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-10-07",
+        "son": "2025-10-07",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-10-23",
+        "son": "2025-10-30",
+        "gun": 7,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-11-29",
+        "son": "2025-11-29",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-01-29",
+        "son": "2026-02-09",
+        "gun": 11,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-02-12",
+        "son": "2026-02-18",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-04-04",
+        "son": "2026-04-04",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       }
+      ]
+     },
      "aralik_95": {
       "ap": [
-       0.166,
-       0.323
+       0.109,
+       0.342
       ],
       "kesinlik": [
-       0.155,
-       0.284
+       0.107,
+       0.306
       ],
       "duyarlilik": [
-       0.313,
-       0.5
+       0.266,
+       0.488
       ],
       "buyuk_gun_yakalama": [
-       0.583,
-       0.893
+       0.429,
+       0.974
       ]
      },
      "yillar": [
@@ -608,22 +1260,85 @@
       "alarm_gunu": 118,
       "gun": 968
      },
+     "atak": {
+      "atak": 8,
+      "ilk_gun_alarmli": 6,
+      "herhangi_alarmli": 6,
+      "liste": [
+       {
+        "ilk": "2024-07-12",
+        "son": "2024-07-12",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2024-09-11",
+        "son": "2024-09-12",
+        "gun": 2,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2025-10-07",
+        "son": "2025-10-07",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-10-23",
+        "son": "2025-10-30",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-11-29",
+        "son": "2025-11-29",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-01-29",
+        "son": "2026-02-09",
+        "gun": 11,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-02-12",
+        "son": "2026-02-18",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-04-04",
+        "son": "2026-04-04",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       }
+      ]
+     },
      "aralik_95": {
       "ap": [
-       0.148,
-       0.298
+       0.107,
+       0.31
       ],
       "kesinlik": [
-       0.16,
-       0.288
+       0.114,
+       0.299
       ],
       "duyarlilik": [
-       0.284,
+       0.236,
        0.454
       ],
       "buyuk_gun_yakalama": [
-       0.571,
-       0.889
+       0.444,
+       0.973
       ]
      },
      "yillar": [
@@ -649,22 +1364,85 @@
       "alarm_gunu": 121,
       "gun": 968
      },
+     "atak": {
+      "atak": 8,
+      "ilk_gun_alarmli": 6,
+      "herhangi_alarmli": 6,
+      "liste": [
+       {
+        "ilk": "2024-07-12",
+        "son": "2024-07-12",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2024-09-11",
+        "son": "2024-09-12",
+        "gun": 2,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2025-10-07",
+        "son": "2025-10-07",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-10-23",
+        "son": "2025-10-30",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2025-11-29",
+        "son": "2025-11-29",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-01-29",
+        "son": "2026-02-09",
+        "gun": 11,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-02-12",
+        "son": "2026-02-18",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-04-04",
+        "son": "2026-04-04",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       }
+      ]
+     },
      "aralik_95": {
       "ap": [
-       0.141,
-       0.29
+       0.093,
+       0.308
       ],
       "kesinlik": [
-       0.155,
-       0.286
+       0.109,
+       0.306
       ],
       "duyarlilik": [
-       0.28,
-       0.451
+       0.23,
+       0.448
       ],
       "buyuk_gun_yakalama": [
-       0.609,
-       0.912
+       0.5,
+       0.973
       ]
      },
      "yillar": [
@@ -690,22 +1468,85 @@
       "alarm_gunu": 39,
       "gun": 968
      },
+     "atak": {
+      "atak": 8,
+      "ilk_gun_alarmli": 2,
+      "herhangi_alarmli": 3,
+      "liste": [
+       {
+        "ilk": "2024-07-12",
+        "son": "2024-07-12",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2024-09-11",
+        "son": "2024-09-12",
+        "gun": 2,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2025-10-07",
+        "son": "2025-10-07",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2025-10-23",
+        "son": "2025-10-30",
+        "gun": 7,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2025-11-29",
+        "son": "2025-11-29",
+        "gun": 1,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": false
+       },
+       {
+        "ilk": "2026-01-29",
+        "son": "2026-02-09",
+        "gun": 11,
+        "ilk_gun_alarm": false,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-02-12",
+        "son": "2026-02-18",
+        "gun": 7,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       },
+       {
+        "ilk": "2026-04-04",
+        "son": "2026-04-04",
+        "gun": 1,
+        "ilk_gun_alarm": true,
+        "herhangi_alarm": true
+       }
+      ]
+     },
      "aralik_95": {
       "ap": [
-       0.116,
-       0.235
+       0.058,
+       0.264
       ],
       "kesinlik": [
-       0.187,
-       0.384
+       0.164,
+       0.359
       ],
       "duyarlilik": [
-       0.056,
-       0.138
+       0.034,
+       0.141
       ],
       "buyuk_gun_yakalama": [
-       0.318,
-       0.667
+       0.117,
+       0.781
       ]
      },
      "yillar": [

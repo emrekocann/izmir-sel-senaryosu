@@ -13,10 +13,15 @@ hesap/siniflandirma.py ve hesap/tahmin_sinamasi.py tek bir test dönemine
    seçildi. Bu yüzden lojistik regresyon (ayarı neredeyse yok) yanında
    raporlanır.
 
-2. Güven aralığı. Aynı gün 30 ilçe aynı fırtınayı yaşar; satırlar bağımsız
-   değildir. Bu yüzden bootstrap satır değil GÜN üzerinden yapılır: günler
-   yerine koyarak yeniden çekilir, ölçü yeniden hesaplanır (BOOTSTRAP kez);
-   %2.5 ve %97.5 yüzdelikler %95 aralığıdır.
+2. Güven aralığı ve ataklar. Aynı gün 30 ilçe aynı fırtınayı yaşar, yağışlı
+   dönemler de günlerce sürer (2026: 29 Ocak – 18 Şubat arası 18 büyük olay
+   günü). Satırlar da günler de bağımsız değildir. Bu yüzden bootstrap HAFTA
+   blokları üzerinden yapılır: haftalar yerine koyarak yeniden çekilir, ölçü
+   yeniden hesaplanır (BOOTSTRAP kez); %2.5 ve %97.5 yüzdelikler %95 aralığıdır.
+   Büyük olay günleri ayrıca "atak"lara toplanır (arka arkaya günler tek
+   atak) ve asıl erken uyarı sorusu atak başına sorulur: atağın İLK gününde
+   alarm var mıydı? Atağın ortasındaki günleri yakalamak kolaydır; önceki
+   günlerin yağışı zaten yüksektir.
 
 3. Katı zamanlama — öğlen uyarısı. tahmin_sinamasi uyarının D-1 sonunda
    verildiğini varsayar (D-1'in yağışı gözlenmiş). Burada uyarı D-1 saat
@@ -56,6 +61,7 @@ MODELLER = ["lojistik", "gb"]
 BOOTSTRAP = 1000
 TOHUM = 0
 OGLEN = 12
+ATAK_BOSLUK = 1                       # büyük olay günleri arasında ≤ 1 gün boşluk → aynı atak
 ONCEKI = ["yagis_dun_mm", "yagis_onceki3g_mm", "yagis_onceki7g_mm"]   # hepsi D-1'i içerir
 ARSIV_ARALIGI = (dt.date(2019, 6, 3), dt.date(2026, 9, 29))           # ilce_gun önbelleğinin aralığı
 
@@ -94,22 +100,46 @@ def oglen_degistir(test, girdi):
     return ts.tahminle_degistir(t.drop(columns="duzeltme_mm"), girdi.drop(columns="duzeltme_mm"))
 
 
-# ── 2. Güne göre bootstrap ──────────────────────────────────────────────────
+# ── 2. Blok bootstrap ve ataklar ────────────────────────────────────────────
 
-def bootstrap(x, alarm, n=BOOTSTRAP, tohum=TOHUM):
-    """x: DataFrame(gun, olay, p, cagri_su); alarm: bool dizi. Günler yerine
-    koyarak çekilir. Döner: {ölçü: [alt, üst]} (%95)."""
+def ataklar(gunluk, bosluk=ATAK_BOSLUK):
+    """İl geneli günlük tablo (index gün, c = çağrı, a = alarm var mı) →
+    ataklar: arka arkaya büyük olay günleri (aralarında en çok `bosluk` gün)
+    tek atak sayılır. Döner: [{"ilk", "son", "gun", "ilk_gun_alarm", "herhangi_alarm"}]."""
+    b = gunluk[gunluk.c >= om.OLAY_CAGRI]
+    out = []
+    for g, r in b.iterrows():
+        g = pd.Timestamp(g)
+        if out and (g - out[-1]["_son"]).days <= bosluk + 1:
+            a = out[-1]
+            a.update(_son=g, gun=a["gun"] + 1, herhangi_alarm=a["herhangi_alarm"] or bool(r.a))
+        else:
+            out.append({"_ilk": g, "_son": g, "gun": 1, "ilk_gun_alarm": bool(r.a), "herhangi_alarm": bool(r.a)})
+    return [{"ilk": str(a.pop("_ilk").date()), "son": str(a.pop("_son").date()), **a} for a in out]
+
+
+def atak_ozeti(x, alarm):
+    gunluk = x.assign(a=np.asarray(alarm)).groupby("gun").agg(c=("cagri_su", "sum"), a=("a", "any"))
+    at = ataklar(gunluk)
+    return {"atak": len(at), "ilk_gun_alarmli": sum(a["ilk_gun_alarm"] for a in at),
+            "herhangi_alarmli": sum(a["herhangi_alarm"] for a in at), "liste": at}
+
+
+def bootstrap(x, alarm, n=BOOTSTRAP, tohum=TOHUM, blok="gun"):
+    """x: DataFrame(gun, olay, p, cagri_su, [blok]); alarm: bool dizi. Bloklar
+    (gün ya da hafta) yerine koyarak çekilir. Döner: {ölçü: [alt, üst]} (%95)."""
     x = x.reset_index(drop=True).assign(a=np.asarray(alarm))
-    gunler = x.gun.values
-    benzersiz, ters = np.unique(gunler, return_inverse=True)
-    satirlar = [np.flatnonzero(ters == i) for i in range(len(benzersiz))]
-    il = x.groupby("gun").agg(c=("cagri_su", "sum"), a=("a", "any")).reindex(benzersiz)
-    buyuk, il_alarm = (il.c >= om.OLAY_CAGRI).values, il.a.values
+    il = x.groupby("gun").agg(c=("cagri_su", "sum"), a=("a", "any"), b=(blok, "first"))
+    bloklar, ters = np.unique(x[blok].values, return_inverse=True)
+    satirlar = [np.flatnonzero(ters == i) for i in range(len(bloklar))]
+    il_ters = np.searchsorted(bloklar, il.b.values)
+    il_buyuk = [(il.c.values[il_ters == i] >= om.OLAY_CAGRI) for i in range(len(bloklar))]
+    il_alarm = [il.a.values[il_ters == i] for i in range(len(bloklar))]
     y, p, a = x.olay.values, x.p.values, x.a.values
     r = np.random.default_rng(tohum)
     olc = {"ap": [], "kesinlik": [], "duyarlilik": [], "buyuk_gun_yakalama": []}
     for _ in range(n):
-        sec = r.integers(0, len(benzersiz), len(benzersiz))
+        sec = r.integers(0, len(bloklar), len(bloklar))
         idx = np.concatenate([satirlar[i] for i in sec])
         yy, aa = y[idx], a[idx]
         if yy.sum() == 0:
@@ -117,9 +147,10 @@ def bootstrap(x, alarm, n=BOOTSTRAP, tohum=TOHUM):
         olc["ap"].append(average_precision_score(yy, p[idx]))
         olc["kesinlik"].append((aa & (yy == 1)).sum() / max(aa.sum(), 1))
         olc["duyarlilik"].append((aa & (yy == 1)).sum() / yy.sum())
-        b = buyuk[sec]
-        if b.sum():
-            olc["buyuk_gun_yakalama"].append((il_alarm[sec] & b).sum() / b.sum())
+        bb = np.concatenate([il_buyuk[i] for i in sec])
+        if bb.sum():
+            ia = np.concatenate([il_alarm[i] for i in sec])
+            olc["buyuk_gun_yakalama"].append((ia & bb).sum() / bb.sum())
     return {k: [round(float(np.percentile(v, 2.5)), 3), round(float(np.percentile(v, 97.5)), 3)]
             for k, v in olc.items() if v}
 
@@ -149,7 +180,8 @@ def ozet(x, n=BOOTSTRAP):
     dp, yp, yn = int((alarm & y).sum()), int((alarm & ~y).sum()), int((~alarm & y).sum())
     return {**sn.olculer(x.olay, x.p), "dogru_alarm": dp, "yanlis_alarm": yp, "kacirilan": yn,
             "kesinlik": round(dp / max(dp + yp, 1), 3), "duyarlilik": round(dp / max(dp + yn, 1), 3),
-            "il": sn.il_gunleri(x, alarm.astype(float), 0.5), "aralik_95": bootstrap(x, alarm, n),
+            "il": sn.il_gunleri(x, alarm.astype(float), 0.5), "atak": atak_ozeti(x, alarm),
+            "aralik_95": bootstrap(x.assign(hafta=pd.to_datetime(x.gun).dt.strftime("%G-%V")), alarm, n, blok="hafta"),
             "yillar": sorted({int(g[:4]) for g in x.gun})}
 
 
@@ -183,7 +215,8 @@ def calistir(t, girdiler=None, test_yillari=TEST_YILLARI, modeller=MODELLER, n=B
         sonuc[ad] = {"katmanlar": katmanlar, "tum_yillar": ozet(birlesik["gozlem"], n), "tahminli_donem": tahminli}
     return {
         "yontem": "her test yılı yalnız önceki yıllarla eğitilir; ızgara araması ve eşik her katmanda yeniden",
-        "test_yillari": test_yillari, "bootstrap": f"günler yerine koyarak, {n} tekrar, %95 yüzdelik",
+        "test_yillari": test_yillari, "bootstrap": f"haftalar yerine koyarak, {n} tekrar, %95 yüzdelik",
+        "atak": f"il genelinde ≥ {om.OLAY_CAGRI} çağrılı günler, aralarında ≤ {ATAK_BOSLUK} gün boşlukla tek atak",
         "oglen_uyarisi": "D 00–11: 1 gün önceki koşu; D 12–23: 2 gün önceki koşu; D-1 12–23: gözlem yerine 1 gün önceki koşu",
         "sonuclar": sonuc,
     }
@@ -202,7 +235,8 @@ def yazdir(r):
             print(f"  {kaynak:14} {o['yillar'][0]}–{o['yillar'][-1]}  AP {o['ap']:.3f} {a['ap']}  "
                   f"duyarlılık {o['duyarlilik']:.2f} {a['duyarlilik']}  kesinlik {o['kesinlik']:.2f} {a['kesinlik']}  "
                   f"büyük gün {o['il']['alarmli']}/{o['il']['buyuk_olay_gunu']} {a.get('buyuk_gun_yakalama')}  "
-                  f"alarm günü {o['il']['alarm_gunu']}/{o['il']['gun']}")
+                  f"alarm günü {o['il']['alarm_gunu']}/{o['il']['gun']}  "
+                  f"atak ilk gün {o['atak']['ilk_gun_alarmli']}/{o['atak']['atak']}")
 
 
 def main():
