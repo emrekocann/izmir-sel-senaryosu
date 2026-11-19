@@ -325,6 +325,88 @@ Olay günü: il genelinde ≥ 50 çağrı.
 venv/bin/python -m hesap.ols_model   # ~5 sn; sonuç egitim/ols_sonuc.json
 ```
 
+### 🚨 Sınıflandırma: "bu yağışta bu ilçede olay olur mu?" (`hesap/siniflandirma.py`)
+
+OLS kaç çağrı geleceğini tahmin eder; kurumun sorusu ise bir eşiktir. Olay: bir ilçede bir günde **≥ 3 su baskını çağrısı** (73.920 ilçe-günün 964'ü, %1.3). Beş model aynı veriyle karşılaştırılır: yağışsız lojistik regresyon (temel), lojistik regresyon (OLS değişkenleri), karar ağacı, Random Forest ve gradient boosting (yağış değişkenlerine monoton kısıtlı: daha çok yağış olasılığı düşüremez). Hiperparametreler yalnız 2020–24'te, her yıl sırayla dışarıda bırakılarak ızgara aramasıyla seçilir; model seçimi de bu iç sınamaya göre yapılır (seçilen: gradient boosting). Alarm eşiği eğitim yıllarında F1'i en yükselten olasılıktır.
+
+| Model | Zaman (2025–26) AUC | AP | Kesinlik | Duyarlılık | İlçe dışarıda AP | Rastgele 5-katlı AP |
+|---|---|---|---|---|---|---|
+| yağışsız temel | 0.55 | 0.02 | 0.04 | 0.08 | 0.02 | 0.03 |
+| lojistik | 0.89 | 0.25 | 0.26 | 0.44 | 0.17 | 0.20 |
+| karar ağacı | 0.89 | 0.21 | 0.23 | 0.35 | 0.18 | 0.21 |
+| Random Forest | 0.92 | 0.27 | 0.25 | 0.39 | **0.21** | 0.24 |
+| **gradient boosting** | **0.92** | **0.29** | 0.27 | **0.49** | 0.19 | 0.25 |
+
+AP (PR eğrisinin altı): rastgele tahminde olay oranına (~0.017) eşittir.
+
+**Bulgular:**
+- **Yağış olayları ayırt ediyor:** görülmemiş yıllarda AP 0.29, rastgelenin ~17 katı. 2025–26'nın 28 büyük olay gününün (il genelinde ≥ 50 çağrı) 22'sinde en az bir ilçede alarm verildi; alarm 637 günün 89'unda çaldı.
+- **Karmaşık model az fark yaratıyor:** gradient boosting lojistik regresyonu AP'de 0.25 → 0.29 geçiyor. Basit, okunabilir model işin çoğunu yapıyor.
+- **Rastgele k-katlı sınama iyimser:** aynı fırtına 30 ilçeye birden düştüğü için rastgele bölmede model fırtınayı "ezberliyor" (gradient boosting: ilçe dışarıda AP 0.19, rastgele 0.25). Raporlanan başarı zaman ve mekân sınamasıdır.
+- **En önemli değişken önceki 7 günün yağışı** (permütasyon önemi); sonra nüfus, o günün yağışı ve kent payı. Toprağın doygunluğu ve fırtına sonrası artçı çağrılar.
+- **Sınıf dengeleme kullanılmadı:** `class_weight="balanced"` AP'yi değiştirmedi, olasılıkları ~8 kat şişirdi (Brier 0.015 → 0.13). Çıktı olasılık olduğu için kalibrasyon korundu.
+
+**Sınırlar:**
+- **Olasılıklar düşük kalıyor:** kuru geçmiş günlerle en yüksek olasılık Konak'ta 80 mm'de ~%26. Arşiv yağışı (ERA5) yerel sağanağı yumuşatır; ağaç modelleri gözlenmemiş yağışa (> ~80 mm) genelleyemez, tablo orada düzleşir.
+- **Yanlış alarm çok:** test yıllarında 162 doğru alarma 442 yanlış alarm, 166 kaçırılan olay. Bu bir ön uyarı sinyali, karar değil.
+- **İlçeler arası fark:** Seferihisar ve Dikili olaylarının çoğu kaçırılıyor, Karşıyaka'da yanlış alarm fazla. Tek global modelin ilçelere eşit uymadığının işareti (GWR / coğrafi random forest'ın konusu).
+
+```bash
+venv/bin/python -m hesap.siniflandirma   # ~4 dk; sonuç egitim/siniflandirma_sonuc.json
+```
+
+### 🌦️ Hava tahminiyle sınama: bir gün önceden uyarı (`hesap/tahmin_sinamasi.py`)
+
+Yukarıdaki sınama o günün **gerçekte yağan** yağmurunu kullanır; bu sayı gün bitince bilinir. Gerçek bir uyarıda elde olan önceki günün hava tahminidir. Aynı modeller, hiç değiştirilmeden, 2025–26'da o günün yağışı yerine **bir gün önceki tahmin** konarak sınanır (Open-Meteo "previous runs" arşivi). Önceki günlerin yağışı gözlenmiş kalır: uyarı önceki günün sonunda verilir. Kontrol olarak "tahminsiz" girdi de sınanır: o günün yağışı hiç bilinmiyor (0).
+
+| Gradient boosting, girdi | AP | Duyarlılık | Büyük olay günü (≥ 50 çağrı) alarmlı | Alarm günü (637 günde) |
+|---|---|---|---|---|
+| gerçek yağış (arşiv) | 0.29 | 0.49 | 22 / 28 | 89 |
+| **ECMWF tahmini (1 gün önce)** | **0.26** | **0.43** | **23 / 28** | **87** |
+| GFS tahmini | 0.27 | 0.48 | 22 / 28 | 72 |
+| Open-Meteo karma tahmini | 0.26 | 0.37 | 23 / 28 | 64 |
+| tahminsiz (yalnız geçmiş günler) | 0.21 | 0.10 | 15 / 28 | 26 |
+
+**Bulgular:**
+- **Model bir gün önceden de çalışıyor.** ECMWF tahminiyle başarı gerçek yağışla neredeyse aynı: AP 0.29 → 0.26, büyük olay günleri 22 → 23 / 28.
+- **Başarıyı tahmin taşıyor, geçmiş günler değil.** Tahmin olmadan duyarlılık 0.43'ten 0.10'a, büyük olay günleri 23'ten 15'e düşüyor.
+- **Tahminler kuvvetli yağışı düşük veriyor:** ≥ 20 mm günlerde ECMWF ve GFS arşivin ~%80'ini, karma tahmin ~%50'sini veriyor (günlük korelasyon 0.76–0.83). Model ERA5 ile eğitildiği ve ERA5 de sağanağı yumuşattığı için bu fark başarıyı az etkiliyor.
+
+**Sınırlar:** geçmiş tahmin arşivi eğitim yıllarını kapsamadığı için modeller tahminle yeniden eğitilmedi. Önceki günün son saatleri uyarı anında henüz tam gözlenmemiş olabilir (küçük bir iyimserlik). Test dönemi 21 ay; 28 büyük olay günü güven aralığı geniş bir örnektir.
+
+```bash
+venv/bin/python -m hesap.tahmin_sinamasi   # ~15 sn (ilk çalıştırmada tahmin arşivi iner); sonuç egitim/tahmin_sinamasi.json
+```
+
+### 📏 Güvenilirlik: yıl yıl sınama ve güven aralığı (`hesap/guvenilirlik.py`)
+
+Yukarıdaki iki sınama tek bir test dönemine (2025–26) dayanır. Burada her yıl, yalnız kendinden önceki yıllarla eğitilen modelle tahmin edilir (2020–21 → 2022, …, 2020–25 → 2026). Izgara araması ve alarm eşiği her yıl yeniden, yalnız o yılın eğitim verisiyle seçilir. %95 aralıklar güne göre bootstrap'la hesaplanır: aynı gün 30 ilçe aynı fırtınayı yaşadığı için satırlar değil günler yeniden çekilir. Tahminli sınamada uyarı **önceki gün saat 12:00'de** verilir ve o anda elde olmayan hiçbir bilgi kullanılmaz: o günün öğleden sonrası 2 gün önceki koşudan, önceki günün öğleden sonrası da gözlem yerine tahminden alınır.
+
+| Gradient boosting, gerçek yağış | 2022 | 2023 | 2024 | 2025 | 2026 | **2022–26** |
+|---|---|---|---|---|---|---|
+| AP | 0.10 | 0.15 | 0.05 | 0.06 | 0.38 | **0.19** [0.15–0.24] |
+| Duyarlılık | 0.15 | 0.34 | 0.24 | 0.25 | 0.49 | **0.36** [0.30–0.43] |
+| Kesinlik | 0.11 | 0.16 | 0.07 | 0.10 | 0.37 | **0.19** [0.15–0.24] |
+| Büyük olay günü alarmlı | 4/7 | 15/18 | 2/4 | 3/9 | 19/19 | **43/57** (%75) [%64–86] |
+
+| 2024–26, aynı satırlar | AP | Duyarlılık | Büyük olay günü alarmlı |
+|---|---|---|---|
+| gerçek yağış | 0.24 | 0.41 | 23/31 |
+| ECMWF, önceki gün sonu | 0.22 | 0.37 | 23/31 |
+| **ECMWF, önceki gün öğlen** | **0.21** | **0.37** | **24/31** [%61–91] |
+| tahminsiz | 0.17 | 0.10 | 15/31 |
+
+**Bulgular:**
+- **2025–26 sonucu iyimserdi.** Başarının çoğu 2026'dan geliyor (AP 0.38, 19/19). 2024 ve 2025 zayıf (AP 0.05–0.06). Beş yılın bileşiminde büyük olay günlerinin **%75'i** (43/57) alarmlı, ilçe olaylarının **~%36'sı** yakalanıyor ve **alarmların ~5'te 1'i** isabetli.
+- **Zamanlama iyimserliği önemsiz.** Uyarı öğlen verilince sonuç neredeyse değişmiyor (24/31, AP 0.21).
+- **Tahminin katkısı tutarlı.** Tahmin olmadan duyarlılık 0.37'den 0.10'a düşüyor.
+- **Gradient boosting lojistik regresyondan anlamlı biçimde iyi değil.** Beş yılda AP 0.19 ile 0.18, aralıklar örtüşüyor. Basit model yeterli.
+- **Yıldan yıla oynaklık büyük.** Bir yılın sonucu tek başına raporlanmamalı. 2024–25'in neden zayıf olduğu henüz incelenmedi (az olay, yerel sağanaklar ya da kayıt pratiği olabilir).
+
+```bash
+venv/bin/python -m hesap.guvenilirlik   # ~10 dk; sonuç egitim/guvenilirlik.json
+```
+
 ### 🧭 Rota ve yağış senaryosu (`hesap/sel_senaryo_yollar.py`, `migrations/011`)
 
 Sel panelinde "Yağış senaryosu" açıkken tahliye rotası haritada görünen senaryoya göre çizilir; kaydırıcı ya da süre değişince rota yeniden hesaplanır.

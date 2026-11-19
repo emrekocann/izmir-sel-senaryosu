@@ -1,0 +1,720 @@
+{
+ "yontem": "her test yılı yalnız önceki yıllarla eğitilir; ızgara araması ve eşik her katmanda yeniden",
+ "test_yillari": [
+  2022,
+  2023,
+  2024,
+  2025,
+  2026
+ ],
+ "bootstrap": "günler yerine koyarak, 1000 tekrar, %95 yüzdelik",
+ "oglen_uyarisi": "D 00–11: 1 gün önceki koşu; D 12–23: 2 gün önceki koşu; D-1 12–23: gözlem yerine 1 gün önceki koşu",
+ "sonuclar": {
+  "lojistik": {
+   "katmanlar": [
+    {
+     "test_yili": 2022,
+     "egitim": [
+      2020,
+      2021
+     ],
+     "parametreler": {
+      "C": 0.1
+     },
+     "esik": 0.147,
+     "auc": 0.91,
+     "ap": 0.115,
+     "brier": 0.0053,
+     "olay": 61,
+     "olay_orani": 0.0056,
+     "dogru_alarm": 12,
+     "yanlis_alarm": 61,
+     "kacirilan": 49,
+     "kesinlik": 0.164,
+     "duyarlilik": 0.197,
+     "il": {
+      "buyuk_olay_gunu": 7,
+      "alarmli": 4,
+      "alarm_gunu": 27,
+      "gun": 365
+     }
+    },
+    {
+     "test_yili": 2023,
+     "egitim": [
+      2020,
+      2022
+     ],
+     "parametreler": {
+      "C": 1
+     },
+     "esik": 0.124,
+     "auc": 0.909,
+     "ap": 0.193,
+     "brier": 0.0132,
+     "olay": 162,
+     "olay_orani": 0.0148,
+     "dogru_alarm": 60,
+     "yanlis_alarm": 277,
+     "kacirilan": 102,
+     "kesinlik": 0.178,
+     "duyarlilik": 0.37,
+     "il": {
+      "buyuk_olay_gunu": 18,
+      "alarmli": 15,
+      "alarm_gunu": 57,
+      "gun": 365
+     }
+    },
+    {
+     "test_yili": 2024,
+     "egitim": [
+      2020,
+      2023
+     ],
+     "parametreler": {
+      "C": 10
+     },
+     "esik": 0.122,
+     "auc": 0.857,
+     "ap": 0.047,
+     "brier": 0.0061,
+     "olay": 63,
+     "olay_orani": 0.0057,
+     "dogru_alarm": 14,
+     "yanlis_alarm": 158,
+     "kacirilan": 49,
+     "kesinlik": 0.081,
+     "duyarlilik": 0.222,
+     "il": {
+      "buyuk_olay_gunu": 4,
+      "alarmli": 2,
+      "alarm_gunu": 33,
+      "gun": 366
+     }
+    },
+    {
+     "test_yili": 2025,
+     "egitim": [
+      2020,
+      2024
+     ],
+     "parametreler": {
+      "C": 1
+     },
+     "esik": 0.101,
+     "auc": 0.766,
+     "ap": 0.055,
+     "brier": 0.0063,
+     "olay": 69,
+     "olay_orani": 0.0063,
+     "dogru_alarm": 15,
+     "yanlis_alarm": 135,
+     "kacirilan": 54,
+     "kesinlik": 0.1,
+     "duyarlilik": 0.217,
+     "il": {
+      "buyuk_olay_gunu": 9,
+      "alarmli": 4,
+      "alarm_gunu": 33,
+      "gun": 365
+     }
+    },
+    {
+     "test_yili": 2026,
+     "egitim": [
+      2020,
+      2025
+     ],
+     "parametreler": {
+      "C": 10
+     },
+     "esik": 0.087,
+     "auc": 0.926,
+     "ap": 0.332,
+     "brier": 0.0257,
+     "olay": 259,
+     "olay_orani": 0.0317,
+     "dogru_alarm": 145,
+     "yanlis_alarm": 352,
+     "kacirilan": 114,
+     "kesinlik": 0.292,
+     "duyarlilik": 0.56,
+     "il": {
+      "buyuk_olay_gunu": 19,
+      "alarmli": 18,
+      "alarm_gunu": 49,
+      "gun": 272
+     }
+    }
+   ],
+   "tum_yillar": {
+    "auc": 0.899,
+    "ap": 0.178,
+    "brier": 0.0106,
+    "olay": 614,
+    "olay_orani": 0.0118,
+    "dogru_alarm": 246,
+    "yanlis_alarm": 983,
+    "kacirilan": 368,
+    "kesinlik": 0.2,
+    "duyarlilik": 0.401,
+    "il": {
+     "buyuk_olay_gunu": 57,
+     "alarmli": 43,
+     "alarm_gunu": 199,
+     "gun": 1733
+    },
+    "aralik_95": {
+     "ap": [
+      0.134,
+      0.235
+     ],
+     "kesinlik": [
+      0.155,
+      0.248
+     ],
+     "duyarlilik": [
+      0.322,
+      0.478
+     ],
+     "buyuk_gun_yakalama": [
+      0.644,
+      0.86
+     ]
+    },
+    "yillar": [
+     2022,
+     2023,
+     2024,
+     2025,
+     2026
+    ]
+   },
+   "tahminli_donem": {
+    "gozlem": {
+     "auc": 0.896,
+     "ap": 0.192,
+     "brier": 0.0115,
+     "olay": 377,
+     "olay_orani": 0.013,
+     "dogru_alarm": 169,
+     "yanlis_alarm": 612,
+     "kacirilan": 208,
+     "kesinlik": 0.216,
+     "duyarlilik": 0.448,
+     "il": {
+      "buyuk_olay_gunu": 31,
+      "alarmli": 23,
+      "alarm_gunu": 107,
+      "gun": 968
+     },
+     "aralik_95": {
+      "ap": [
+       0.12,
+       0.272
+      ],
+      "kesinlik": [
+       0.155,
+       0.278
+      ],
+      "duyarlilik": [
+       0.34,
+       0.553
+      ],
+      "buyuk_gun_yakalama": [
+       0.583,
+       0.889
+      ]
+     },
+     "yillar": [
+      2024,
+      2025,
+      2026
+     ]
+    },
+    "ecmwf_aksam": {
+     "auc": 0.899,
+     "ap": 0.171,
+     "brier": 0.0117,
+     "olay": 377,
+     "olay_orani": 0.013,
+     "dogru_alarm": 157,
+     "yanlis_alarm": 660,
+     "kacirilan": 220,
+     "kesinlik": 0.192,
+     "duyarlilik": 0.416,
+     "il": {
+      "buyuk_olay_gunu": 31,
+      "alarmli": 24,
+      "alarm_gunu": 123,
+      "gun": 968
+     },
+     "aralik_95": {
+      "ap": [
+       0.108,
+       0.246
+      ],
+      "kesinlik": [
+       0.133,
+       0.253
+      ],
+      "duyarlilik": [
+       0.298,
+       0.531
+      ],
+      "buyuk_gun_yakalama": [
+       0.609,
+       0.912
+      ]
+     },
+     "yillar": [
+      2024,
+      2025,
+      2026
+     ]
+    },
+    "ecmwf_oglen": {
+     "auc": 0.894,
+     "ap": 0.163,
+     "brier": 0.0117,
+     "olay": 377,
+     "olay_orani": 0.013,
+     "dogru_alarm": 157,
+     "yanlis_alarm": 644,
+     "kacirilan": 220,
+     "kesinlik": 0.196,
+     "duyarlilik": 0.416,
+     "il": {
+      "buyuk_olay_gunu": 31,
+      "alarmli": 24,
+      "alarm_gunu": 127,
+      "gun": 968
+     },
+     "aralik_95": {
+      "ap": [
+       0.102,
+       0.238
+      ],
+      "kesinlik": [
+       0.136,
+       0.257
+      ],
+      "duyarlilik": [
+       0.298,
+       0.528
+      ],
+      "buyuk_gun_yakalama": [
+       0.609,
+       0.912
+      ]
+     },
+     "yillar": [
+      2024,
+      2025,
+      2026
+     ]
+    },
+    "tahminsiz": {
+     "auc": 0.831,
+     "ap": 0.072,
+     "brier": 0.0126,
+     "olay": 377,
+     "olay_orani": 0.013,
+     "dogru_alarm": 8,
+     "yanlis_alarm": 5,
+     "kacirilan": 369,
+     "kesinlik": 0.615,
+     "duyarlilik": 0.021,
+     "il": {
+      "buyuk_olay_gunu": 31,
+      "alarmli": 9,
+      "alarm_gunu": 13,
+      "gun": 968
+     },
+     "aralik_95": {
+      "ap": [
+       0.047,
+       0.106
+      ],
+      "kesinlik": [
+       0.333,
+       0.875
+      ],
+      "duyarlilik": [
+       0.009,
+       0.034
+      ],
+      "buyuk_gun_yakalama": [
+       0.138,
+       0.455
+      ]
+     },
+     "yillar": [
+      2024,
+      2025,
+      2026
+     ]
+    }
+   }
+  },
+  "gb": {
+   "katmanlar": [
+    {
+     "test_yili": 2022,
+     "egitim": [
+      2020,
+      2021
+     ],
+     "parametreler": {
+      "learning_rate": 0.03,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 100
+     },
+     "esik": 0.188,
+     "auc": 0.928,
+     "ap": 0.1,
+     "brier": 0.0056,
+     "olay": 61,
+     "olay_orani": 0.0056,
+     "dogru_alarm": 9,
+     "yanlis_alarm": 70,
+     "kacirilan": 52,
+     "kesinlik": 0.114,
+     "duyarlilik": 0.148,
+     "il": {
+      "buyuk_olay_gunu": 7,
+      "alarmli": 4,
+      "alarm_gunu": 22,
+      "gun": 365
+     }
+    },
+    {
+     "test_yili": 2023,
+     "egitim": [
+      2020,
+      2022
+     ],
+     "parametreler": {
+      "learning_rate": 0.1,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 100
+     },
+     "esik": 0.175,
+     "auc": 0.908,
+     "ap": 0.154,
+     "brier": 0.0162,
+     "olay": 162,
+     "olay_orani": 0.0148,
+     "dogru_alarm": 55,
+     "yanlis_alarm": 285,
+     "kacirilan": 107,
+     "kesinlik": 0.162,
+     "duyarlilik": 0.34,
+     "il": {
+      "buyuk_olay_gunu": 18,
+      "alarmli": 15,
+      "alarm_gunu": 59,
+      "gun": 365
+     }
+    },
+    {
+     "test_yili": 2024,
+     "egitim": [
+      2020,
+      2023
+     ],
+     "parametreler": {
+      "learning_rate": 0.03,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 20
+     },
+     "esik": 0.099,
+     "auc": 0.854,
+     "ap": 0.054,
+     "brier": 0.0062,
+     "olay": 63,
+     "olay_orani": 0.0057,
+     "dogru_alarm": 15,
+     "yanlis_alarm": 215,
+     "kacirilan": 48,
+     "kesinlik": 0.065,
+     "duyarlilik": 0.238,
+     "il": {
+      "buyuk_olay_gunu": 4,
+      "alarmli": 2,
+      "alarm_gunu": 47,
+      "gun": 366
+     }
+    },
+    {
+     "test_yili": 2025,
+     "egitim": [
+      2020,
+      2024
+     ],
+     "parametreler": {
+      "learning_rate": 0.03,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 20
+     },
+     "esik": 0.114,
+     "auc": 0.791,
+     "ap": 0.062,
+     "brier": 0.0066,
+     "olay": 69,
+     "olay_orani": 0.0063,
+     "dogru_alarm": 17,
+     "yanlis_alarm": 145,
+     "kacirilan": 52,
+     "kesinlik": 0.105,
+     "duyarlilik": 0.246,
+     "il": {
+      "buyuk_olay_gunu": 9,
+      "alarmli": 3,
+      "alarm_gunu": 35,
+      "gun": 365
+     }
+    },
+    {
+     "test_yili": 2026,
+     "egitim": [
+      2020,
+      2025
+     ],
+     "parametreler": {
+      "learning_rate": 0.03,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 100
+     },
+     "esik": 0.136,
+     "auc": 0.949,
+     "ap": 0.379,
+     "brier": 0.0248,
+     "olay": 259,
+     "olay_orani": 0.0317,
+     "dogru_alarm": 127,
+     "yanlis_alarm": 218,
+     "kacirilan": 132,
+     "kesinlik": 0.368,
+     "duyarlilik": 0.49,
+     "il": {
+      "buyuk_olay_gunu": 19,
+      "alarmli": 19,
+      "alarm_gunu": 49,
+      "gun": 272
+     }
+    }
+   ],
+   "tum_yillar": {
+    "auc": 0.913,
+    "ap": 0.188,
+    "brier": 0.0112,
+    "olay": 614,
+    "olay_orani": 0.0118,
+    "dogru_alarm": 223,
+    "yanlis_alarm": 933,
+    "kacirilan": 391,
+    "kesinlik": 0.193,
+    "duyarlilik": 0.363,
+    "il": {
+     "buyuk_olay_gunu": 57,
+     "alarmli": 43,
+     "alarm_gunu": 212,
+     "gun": 1733
+    },
+    "aralik_95": {
+     "ap": [
+      0.146,
+      0.241
+     ],
+     "kesinlik": [
+      0.151,
+      0.238
+     ],
+     "duyarlilik": [
+      0.295,
+      0.43
+     ],
+     "buyuk_gun_yakalama": [
+      0.64,
+      0.86
+     ]
+    },
+    "yillar": [
+     2022,
+     2023,
+     2024,
+     2025,
+     2026
+    ]
+   },
+   "tahminli_donem": {
+    "gozlem": {
+     "auc": 0.912,
+     "ap": 0.24,
+     "brier": 0.0113,
+     "olay": 377,
+     "olay_orani": 0.013,
+     "dogru_alarm": 154,
+     "yanlis_alarm": 546,
+     "kacirilan": 223,
+     "kesinlik": 0.22,
+     "duyarlilik": 0.408,
+     "il": {
+      "buyuk_olay_gunu": 31,
+      "alarmli": 23,
+      "alarm_gunu": 123,
+      "gun": 968
+     },
+     "aralik_95": {
+      "ap": [
+       0.166,
+       0.323
+      ],
+      "kesinlik": [
+       0.155,
+       0.284
+      ],
+      "duyarlilik": [
+       0.313,
+       0.5
+      ],
+      "buyuk_gun_yakalama": [
+       0.583,
+       0.893
+      ]
+     },
+     "yillar": [
+      2024,
+      2025,
+      2026
+     ]
+    },
+    "ecmwf_aksam": {
+     "auc": 0.91,
+     "ap": 0.222,
+     "brier": 0.0116,
+     "olay": 377,
+     "olay_orani": 0.013,
+     "dogru_alarm": 141,
+     "yanlis_alarm": 491,
+     "kacirilan": 236,
+     "kesinlik": 0.223,
+     "duyarlilik": 0.374,
+     "il": {
+      "buyuk_olay_gunu": 31,
+      "alarmli": 23,
+      "alarm_gunu": 118,
+      "gun": 968
+     },
+     "aralik_95": {
+      "ap": [
+       0.148,
+       0.298
+      ],
+      "kesinlik": [
+       0.16,
+       0.288
+      ],
+      "duyarlilik": [
+       0.284,
+       0.454
+      ],
+      "buyuk_gun_yakalama": [
+       0.571,
+       0.889
+      ]
+     },
+     "yillar": [
+      2024,
+      2025,
+      2026
+     ]
+    },
+    "ecmwf_oglen": {
+     "auc": 0.906,
+     "ap": 0.214,
+     "brier": 0.0116,
+     "olay": 377,
+     "olay_orani": 0.013,
+     "dogru_alarm": 139,
+     "yanlis_alarm": 496,
+     "kacirilan": 238,
+     "kesinlik": 0.219,
+     "duyarlilik": 0.369,
+     "il": {
+      "buyuk_olay_gunu": 31,
+      "alarmli": 24,
+      "alarm_gunu": 121,
+      "gun": 968
+     },
+     "aralik_95": {
+      "ap": [
+       0.141,
+       0.29
+      ],
+      "kesinlik": [
+       0.155,
+       0.286
+      ],
+      "duyarlilik": [
+       0.28,
+       0.451
+      ],
+      "buyuk_gun_yakalama": [
+       0.609,
+       0.912
+      ]
+     },
+     "yillar": [
+      2024,
+      2025,
+      2026
+     ]
+    },
+    "tahminsiz": {
+     "auc": 0.86,
+     "ap": 0.172,
+     "brier": 0.0121,
+     "olay": 377,
+     "olay_orani": 0.013,
+     "dogru_alarm": 37,
+     "yanlis_alarm": 92,
+     "kacirilan": 340,
+     "kesinlik": 0.287,
+     "duyarlilik": 0.098,
+     "il": {
+      "buyuk_olay_gunu": 31,
+      "alarmli": 15,
+      "alarm_gunu": 39,
+      "gun": 968
+     },
+     "aralik_95": {
+      "ap": [
+       0.116,
+       0.235
+      ],
+      "kesinlik": [
+       0.187,
+       0.384
+      ],
+      "duyarlilik": [
+       0.056,
+       0.138
+      ],
+      "buyuk_gun_yakalama": [
+       0.318,
+       0.667
+      ]
+     },
+     "yillar": [
+      2024,
+      2025,
+      2026
+     ]
+    }
+   }
+  }
+ }
+}

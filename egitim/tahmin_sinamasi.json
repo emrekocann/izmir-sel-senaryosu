@@ -1,0 +1,502 @@
+{
+ "senaryo": "uyarı D-1 sonunda: D'nin yağışı 1 gün önceki tahminden, önceki günler arşivden",
+ "test": {
+  "satir": 19110,
+  "gun": 637,
+  "olay": 328,
+  "ilk": "2025-01-01",
+  "son": "2026-09-29"
+ },
+ "tahmin_modelleri": {
+  "ecmwf_ifs025": "ECMWF IFS 0.25°",
+  "gfs_seamless": "GFS (NOAA)",
+  "best_match": "Open-Meteo karma"
+ },
+ "ana": "ecmwf_ifs025",
+ "secili": "gb",
+ "yagis_uyumu": {
+  "ecmwf_ifs025": {
+   "korelasyon": 0.83,
+   "ort_gozlem_mm": 2.03,
+   "ort_tahmin_mm": 2.11,
+   "yagisli_gun": 567,
+   "yagisli_gunde_tahmin_orani": 0.802
+  },
+  "gfs_seamless": {
+   "korelasyon": 0.79,
+   "ort_gozlem_mm": 2.03,
+   "ort_tahmin_mm": 1.91,
+   "yagisli_gun": 567,
+   "yagisli_gunde_tahmin_orani": 0.788
+  },
+  "best_match": {
+   "korelasyon": 0.758,
+   "ort_gozlem_mm": 2.03,
+   "ort_tahmin_mm": 1.19,
+   "yagisli_gun": 567,
+   "yagisli_gunde_tahmin_orani": 0.503
+  }
+ },
+ "sonuclar": {
+  "temel": {
+   "gozlem": {
+    "auc": 0.547,
+    "ap": 0.022,
+    "brier": 0.0169,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 27,
+    "yanlis_alarm": 610,
+    "kacirilan": 301,
+    "kesinlik": 0.042,
+    "duyarlilik": 0.082,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 28,
+     "alarm_gunu": 637,
+     "gun": 637
+    }
+   },
+   "ecmwf_ifs025": {
+    "auc": 0.547,
+    "ap": 0.022,
+    "brier": 0.0169,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 27,
+    "yanlis_alarm": 610,
+    "kacirilan": 301,
+    "kesinlik": 0.042,
+    "duyarlilik": 0.082,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 28,
+     "alarm_gunu": 637,
+     "gun": 637
+    }
+   },
+   "gfs_seamless": {
+    "auc": 0.547,
+    "ap": 0.022,
+    "brier": 0.0169,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 27,
+    "yanlis_alarm": 610,
+    "kacirilan": 301,
+    "kesinlik": 0.042,
+    "duyarlilik": 0.082,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 28,
+     "alarm_gunu": 637,
+     "gun": 637
+    }
+   },
+   "best_match": {
+    "auc": 0.547,
+    "ap": 0.022,
+    "brier": 0.0169,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 27,
+    "yanlis_alarm": 610,
+    "kacirilan": 301,
+    "kesinlik": 0.042,
+    "duyarlilik": 0.082,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 28,
+     "alarm_gunu": 637,
+     "gun": 637
+    }
+   },
+   "tahminsiz": {
+    "auc": 0.547,
+    "ap": 0.022,
+    "brier": 0.0169,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 27,
+    "yanlis_alarm": 610,
+    "kacirilan": 301,
+    "kesinlik": 0.042,
+    "duyarlilik": 0.082,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 28,
+     "alarm_gunu": 637,
+     "gun": 637
+    }
+   }
+  },
+  "lojistik": {
+   "gozlem": {
+    "auc": 0.894,
+    "ap": 0.247,
+    "brier": 0.0146,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 145,
+    "yanlis_alarm": 424,
+    "kacirilan": 183,
+    "kesinlik": 0.255,
+    "duyarlilik": 0.442,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 23,
+     "alarm_gunu": 83,
+     "gun": 637
+    }
+   },
+   "ecmwf_ifs025": {
+    "auc": 0.898,
+    "ap": 0.224,
+    "brier": 0.0149,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 133,
+    "yanlis_alarm": 472,
+    "kacirilan": 195,
+    "kesinlik": 0.22,
+    "duyarlilik": 0.405,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 24,
+     "alarm_gunu": 95,
+     "gun": 637
+    }
+   },
+   "gfs_seamless": {
+    "auc": 0.898,
+    "ap": 0.23,
+    "brier": 0.0148,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 142,
+    "yanlis_alarm": 424,
+    "kacirilan": 186,
+    "kesinlik": 0.251,
+    "duyarlilik": 0.433,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 22,
+     "alarm_gunu": 86,
+     "gun": 637
+    }
+   },
+   "best_match": {
+    "auc": 0.892,
+    "ap": 0.212,
+    "brier": 0.0152,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 109,
+    "yanlis_alarm": 271,
+    "kacirilan": 219,
+    "kesinlik": 0.287,
+    "duyarlilik": 0.332,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 23,
+     "alarm_gunu": 65,
+     "gun": 637
+    }
+   },
+   "tahminsiz": {
+    "auc": 0.828,
+    "ap": 0.119,
+    "brier": 0.0166,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 10,
+    "yanlis_alarm": 5,
+    "kacirilan": 318,
+    "kesinlik": 0.667,
+    "duyarlilik": 0.03,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 10,
+     "alarm_gunu": 15,
+     "gun": 637
+    }
+   }
+  },
+  "agac": {
+   "gozlem": {
+    "auc": 0.893,
+    "ap": 0.209,
+    "brier": 0.0151,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 114,
+    "yanlis_alarm": 386,
+    "kacirilan": 214,
+    "kesinlik": 0.228,
+    "duyarlilik": 0.348,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 23,
+     "alarm_gunu": 102,
+     "gun": 637
+    }
+   },
+   "ecmwf_ifs025": {
+    "auc": 0.898,
+    "ap": 0.186,
+    "brier": 0.0156,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 115,
+    "yanlis_alarm": 438,
+    "kacirilan": 213,
+    "kesinlik": 0.208,
+    "duyarlilik": 0.351,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 24,
+     "alarm_gunu": 113,
+     "gun": 637
+    }
+   },
+   "gfs_seamless": {
+    "auc": 0.897,
+    "ap": 0.203,
+    "brier": 0.0153,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 109,
+    "yanlis_alarm": 397,
+    "kacirilan": 219,
+    "kesinlik": 0.215,
+    "duyarlilik": 0.332,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 23,
+     "alarm_gunu": 98,
+     "gun": 637
+    }
+   },
+   "best_match": {
+    "auc": 0.888,
+    "ap": 0.184,
+    "brier": 0.0156,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 91,
+    "yanlis_alarm": 294,
+    "kacirilan": 237,
+    "kesinlik": 0.236,
+    "duyarlilik": 0.277,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 23,
+     "alarm_gunu": 93,
+     "gun": 637
+    }
+   },
+   "tahminsiz": {
+    "auc": 0.845,
+    "ap": 0.165,
+    "brier": 0.0161,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 64,
+    "yanlis_alarm": 124,
+    "kacirilan": 264,
+    "kesinlik": 0.34,
+    "duyarlilik": 0.195,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 16,
+     "alarm_gunu": 36,
+     "gun": 637
+    }
+   }
+  },
+  "rf": {
+   "gozlem": {
+    "auc": 0.921,
+    "ap": 0.265,
+    "brier": 0.0145,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 128,
+    "yanlis_alarm": 378,
+    "kacirilan": 200,
+    "kesinlik": 0.253,
+    "duyarlilik": 0.39,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 22,
+     "alarm_gunu": 78,
+     "gun": 637
+    }
+   },
+   "ecmwf_ifs025": {
+    "auc": 0.923,
+    "ap": 0.233,
+    "brier": 0.0147,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 120,
+    "yanlis_alarm": 342,
+    "kacirilan": 208,
+    "kesinlik": 0.26,
+    "duyarlilik": 0.366,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 23,
+     "alarm_gunu": 82,
+     "gun": 637
+    }
+   },
+   "gfs_seamless": {
+    "auc": 0.925,
+    "ap": 0.254,
+    "brier": 0.0145,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 137,
+    "yanlis_alarm": 342,
+    "kacirilan": 191,
+    "kesinlik": 0.286,
+    "duyarlilik": 0.418,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 22,
+     "alarm_gunu": 63,
+     "gun": 637
+    }
+   },
+   "best_match": {
+    "auc": 0.921,
+    "ap": 0.232,
+    "brier": 0.0149,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 97,
+    "yanlis_alarm": 220,
+    "kacirilan": 231,
+    "kesinlik": 0.306,
+    "duyarlilik": 0.296,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 22,
+     "alarm_gunu": 60,
+     "gun": 637
+    }
+   },
+   "tahminsiz": {
+    "auc": 0.895,
+    "ap": 0.208,
+    "brier": 0.0156,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 38,
+    "yanlis_alarm": 72,
+    "kacirilan": 290,
+    "kesinlik": 0.345,
+    "duyarlilik": 0.116,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 14,
+     "alarm_gunu": 25,
+     "gun": 637
+    }
+   }
+  },
+  "gb": {
+   "gozlem": {
+    "auc": 0.92,
+    "ap": 0.288,
+    "brier": 0.0145,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 162,
+    "yanlis_alarm": 440,
+    "kacirilan": 166,
+    "kesinlik": 0.269,
+    "duyarlilik": 0.494,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 22,
+     "alarm_gunu": 89,
+     "gun": 637
+    }
+   },
+   "ecmwf_ifs025": {
+    "auc": 0.92,
+    "ap": 0.263,
+    "brier": 0.015,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 141,
+    "yanlis_alarm": 370,
+    "kacirilan": 187,
+    "kesinlik": 0.276,
+    "duyarlilik": 0.43,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 23,
+     "alarm_gunu": 87,
+     "gun": 637
+    }
+   },
+   "gfs_seamless": {
+    "auc": 0.921,
+    "ap": 0.272,
+    "brier": 0.015,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 158,
+    "yanlis_alarm": 389,
+    "kacirilan": 170,
+    "kesinlik": 0.289,
+    "duyarlilik": 0.482,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 22,
+     "alarm_gunu": 72,
+     "gun": 637
+    }
+   },
+   "best_match": {
+    "auc": 0.918,
+    "ap": 0.261,
+    "brier": 0.0149,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 121,
+    "yanlis_alarm": 268,
+    "kacirilan": 207,
+    "kesinlik": 0.311,
+    "duyarlilik": 0.369,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 23,
+     "alarm_gunu": 64,
+     "gun": 637
+    }
+   },
+   "tahminsiz": {
+    "auc": 0.877,
+    "ap": 0.209,
+    "brier": 0.0158,
+    "olay": 328,
+    "olay_orani": 0.0172,
+    "dogru_alarm": 33,
+    "yanlis_alarm": 60,
+    "kacirilan": 295,
+    "kesinlik": 0.355,
+    "duyarlilik": 0.101,
+    "il": {
+     "buyuk_olay_gunu": 28,
+     "alarmli": 15,
+     "alarm_gunu": 26,
+     "gun": 637
+    }
+   }
+  }
+ }
+}

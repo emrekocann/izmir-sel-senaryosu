@@ -1,0 +1,940 @@
+{
+ "veri": {
+  "satir": 73920,
+  "ilce": 30,
+  "gun": 2464,
+  "yillar": [
+   2020,
+   2026
+  ],
+  "olay": 964,
+  "olay_orani": 0.013
+ },
+ "olay_tanimi": "ilçe-günde ≥ 3 su baskını çağrısı",
+ "modeller": {
+  "temel": {
+   "aciklama": "yağışsız lojistik regresyon (nüfus + kent payı)",
+   "degiskenler": [
+    "log_nufus",
+    "kent_payi"
+   ],
+   "parametreler": {},
+   "ic_ap": 0.027,
+   "esik": 0.04
+  },
+  "lojistik": {
+   "aciklama": "lojistik regresyon (OLS değişkenleri)",
+   "degiskenler": [
+    "log_yagis",
+    "log_dun",
+    "log_onceki7g",
+    "log_nufus",
+    "kent_payi",
+    "log_yagis_x_kent"
+   ],
+   "parametreler": {
+    "C": 1
+   },
+   "ic_ap": 0.172,
+   "esik": 0.101
+  },
+  "agac": {
+   "aciklama": "karar ağacı",
+   "degiskenler": [
+    "yagis_mm",
+    "yagis_max1s_mm",
+    "yagis_max3s_mm",
+    "yagis_dun_mm",
+    "yagis_onceki3g_mm",
+    "yagis_onceki7g_mm",
+    "log_nufus",
+    "kent_payi"
+   ],
+   "parametreler": {
+    "max_depth": 5,
+    "min_samples_leaf": 20
+   },
+   "ic_ap": 0.109,
+   "esik": 0.103
+  },
+  "rf": {
+   "aciklama": "Random Forest",
+   "degiskenler": [
+    "yagis_mm",
+    "yagis_max1s_mm",
+    "yagis_max3s_mm",
+    "yagis_dun_mm",
+    "yagis_onceki3g_mm",
+    "yagis_onceki7g_mm",
+    "log_nufus",
+    "kent_payi"
+   ],
+   "parametreler": {
+    "max_features": 0.33,
+    "min_samples_leaf": 50
+   },
+   "ic_ap": 0.154,
+   "esik": 0.133
+  },
+  "gb": {
+   "aciklama": "gradient boosting (yağışa monoton)",
+   "degiskenler": [
+    "yagis_mm",
+    "yagis_max1s_mm",
+    "yagis_max3s_mm",
+    "yagis_dun_mm",
+    "yagis_onceki3g_mm",
+    "yagis_onceki7g_mm",
+    "log_nufus",
+    "kent_payi"
+   ],
+   "parametreler": {
+    "learning_rate": 0.03,
+    "max_leaf_nodes": 31,
+    "min_samples_leaf": 20
+   },
+   "ic_ap": 0.176,
+   "esik": 0.114
+  }
+ },
+ "secili": "gb",
+ "secim": "yağışlı modeller içinde eğitim yıllarındaki yıl-dışarıda sınamanın AP'si en yüksek olan",
+ "zaman_sinamasi": {
+  "temel": {
+   "auc": 0.547,
+   "ap": 0.022,
+   "brier": 0.0169,
+   "olay": 328,
+   "olay_orani": 0.0172,
+   "dogru_alarm": 27,
+   "yanlis_alarm": 610,
+   "kacirilan": 301,
+   "kesinlik": 0.042,
+   "duyarlilik": 0.082,
+   "esik": 0.04,
+   "il": {
+    "buyuk_olay_gunu": 28,
+    "alarmli": 28,
+    "alarm_gunu": 637,
+    "gun": 637
+   }
+  },
+  "lojistik": {
+   "auc": 0.894,
+   "ap": 0.247,
+   "brier": 0.0146,
+   "olay": 328,
+   "olay_orani": 0.0172,
+   "dogru_alarm": 145,
+   "yanlis_alarm": 424,
+   "kacirilan": 183,
+   "kesinlik": 0.255,
+   "duyarlilik": 0.442,
+   "esik": 0.101,
+   "il": {
+    "buyuk_olay_gunu": 28,
+    "alarmli": 23,
+    "alarm_gunu": 83,
+    "gun": 637
+   }
+  },
+  "agac": {
+   "auc": 0.893,
+   "ap": 0.209,
+   "brier": 0.0151,
+   "olay": 328,
+   "olay_orani": 0.0172,
+   "dogru_alarm": 114,
+   "yanlis_alarm": 386,
+   "kacirilan": 214,
+   "kesinlik": 0.228,
+   "duyarlilik": 0.348,
+   "esik": 0.103,
+   "il": {
+    "buyuk_olay_gunu": 28,
+    "alarmli": 23,
+    "alarm_gunu": 102,
+    "gun": 637
+   }
+  },
+  "rf": {
+   "auc": 0.921,
+   "ap": 0.265,
+   "brier": 0.0145,
+   "olay": 328,
+   "olay_orani": 0.0172,
+   "dogru_alarm": 128,
+   "yanlis_alarm": 376,
+   "kacirilan": 200,
+   "kesinlik": 0.254,
+   "duyarlilik": 0.39,
+   "esik": 0.133,
+   "il": {
+    "buyuk_olay_gunu": 28,
+    "alarmli": 22,
+    "alarm_gunu": 77,
+    "gun": 637
+   }
+  },
+  "gb": {
+   "auc": 0.92,
+   "ap": 0.288,
+   "brier": 0.0145,
+   "olay": 328,
+   "olay_orani": 0.0172,
+   "dogru_alarm": 162,
+   "yanlis_alarm": 442,
+   "kacirilan": 166,
+   "kesinlik": 0.268,
+   "duyarlilik": 0.494,
+   "esik": 0.114,
+   "il": {
+    "buyuk_olay_gunu": 28,
+    "alarmli": 22,
+    "alarm_gunu": 89,
+    "gun": 637
+   }
+  }
+ },
+ "mekan_sinamasi": {
+  "temel": {
+   "ilce_disarida": {
+    "auc": 0.637,
+    "ap": 0.021,
+    "brier": 0.0128,
+    "olay": 964,
+    "olay_orani": 0.013,
+    "dogru_alarm": 0,
+    "yanlis_alarm": 0,
+    "kacirilan": 964,
+    "kesinlik": 0.0,
+    "duyarlilik": 0.0
+   },
+   "rastgele_5kat": {
+    "auc": 0.661,
+    "ap": 0.027,
+    "brier": 0.0128,
+    "olay": 964,
+    "olay_orani": 0.013,
+    "dogru_alarm": 97,
+    "yanlis_alarm": 1849,
+    "kacirilan": 867,
+    "kesinlik": 0.05,
+    "duyarlilik": 0.101
+   }
+  },
+  "lojistik": {
+   "ilce_disarida": {
+    "auc": 0.892,
+    "ap": 0.173,
+    "brier": 0.0116,
+    "olay": 964,
+    "olay_orani": 0.013,
+    "dogru_alarm": 342,
+    "yanlis_alarm": 1530,
+    "kacirilan": 622,
+    "kesinlik": 0.183,
+    "duyarlilik": 0.355
+   },
+   "rastgele_5kat": {
+    "auc": 0.902,
+    "ap": 0.196,
+    "brier": 0.0115,
+    "olay": 964,
+    "olay_orani": 0.013,
+    "dogru_alarm": 379,
+    "yanlis_alarm": 1621,
+    "kacirilan": 585,
+    "kesinlik": 0.19,
+    "duyarlilik": 0.393
+   }
+  },
+  "agac": {
+   "ilce_disarida": {
+    "auc": 0.861,
+    "ap": 0.175,
+    "brier": 0.0117,
+    "olay": 964,
+    "olay_orani": 0.013,
+    "dogru_alarm": 394,
+    "yanlis_alarm": 1788,
+    "kacirilan": 570,
+    "kesinlik": 0.181,
+    "duyarlilik": 0.409
+   },
+   "rastgele_5kat": {
+    "auc": 0.883,
+    "ap": 0.211,
+    "brier": 0.0113,
+    "olay": 964,
+    "olay_orani": 0.013,
+    "dogru_alarm": 403,
+    "yanlis_alarm": 1431,
+    "kacirilan": 561,
+    "kesinlik": 0.22,
+    "duyarlilik": 0.418
+   }
+  },
+  "rf": {
+   "ilce_disarida": {
+    "auc": 0.911,
+    "ap": 0.213,
+    "brier": 0.0113,
+    "olay": 964,
+    "olay_orani": 0.013,
+    "dogru_alarm": 410,
+    "yanlis_alarm": 1344,
+    "kacirilan": 554,
+    "kesinlik": 0.234,
+    "duyarlilik": 0.425
+   },
+   "rastgele_5kat": {
+    "auc": 0.934,
+    "ap": 0.239,
+    "brier": 0.0111,
+    "olay": 964,
+    "olay_orani": 0.013,
+    "dogru_alarm": 412,
+    "yanlis_alarm": 1302,
+    "kacirilan": 552,
+    "kesinlik": 0.24,
+    "duyarlilik": 0.427
+   }
+  },
+  "gb": {
+   "ilce_disarida": {
+    "auc": 0.902,
+    "ap": 0.193,
+    "brier": 0.0119,
+    "olay": 964,
+    "olay_orani": 0.013,
+    "dogru_alarm": 413,
+    "yanlis_alarm": 1425,
+    "kacirilan": 551,
+    "kesinlik": 0.225,
+    "duyarlilik": 0.428
+   },
+   "rastgele_5kat": {
+    "auc": 0.934,
+    "ap": 0.249,
+    "brier": 0.0112,
+    "olay": 964,
+    "olay_orani": 0.013,
+    "dogru_alarm": 427,
+    "yanlis_alarm": 1288,
+    "kacirilan": 537,
+    "kesinlik": 0.249,
+    "duyarlilik": 0.443
+   }
+  }
+ },
+ "ilce": [
+  {
+   "ilce": "Aliağa",
+   "olay": 18,
+   "yakalanan": 5,
+   "kacirilan": 13,
+   "yanlis_alarm": 18,
+   "ort_olasilik": 0.0083
+  },
+  {
+   "ilce": "Balçova",
+   "olay": 16,
+   "yakalanan": 4,
+   "kacirilan": 12,
+   "yanlis_alarm": 18,
+   "ort_olasilik": 0.0075
+  },
+  {
+   "ilce": "Bayindir",
+   "olay": 0,
+   "yakalanan": 0,
+   "kacirilan": 0,
+   "yanlis_alarm": 17,
+   "ort_olasilik": 0.0071
+  },
+  {
+   "ilce": "Bayrakli",
+   "olay": 37,
+   "yakalanan": 25,
+   "kacirilan": 12,
+   "yanlis_alarm": 213,
+   "ort_olasilik": 0.0417
+  },
+  {
+   "ilce": "Bergama",
+   "olay": 36,
+   "yakalanan": 6,
+   "kacirilan": 30,
+   "yanlis_alarm": 35,
+   "ort_olasilik": 0.0088
+  },
+  {
+   "ilce": "Beydağ",
+   "olay": 0,
+   "yakalanan": 0,
+   "kacirilan": 0,
+   "yanlis_alarm": 0,
+   "ort_olasilik": 0.0007
+  },
+  {
+   "ilce": "Bornova",
+   "olay": 57,
+   "yakalanan": 42,
+   "kacirilan": 15,
+   "yanlis_alarm": 125,
+   "ort_olasilik": 0.0286
+  },
+  {
+   "ilce": "Buca",
+   "olay": 70,
+   "yakalanan": 42,
+   "kacirilan": 28,
+   "yanlis_alarm": 117,
+   "ort_olasilik": 0.0275
+  },
+  {
+   "ilce": "Dikili",
+   "olay": 69,
+   "yakalanan": 24,
+   "kacirilan": 45,
+   "yanlis_alarm": 36,
+   "ort_olasilik": 0.0132
+  },
+  {
+   "ilce": "Foça",
+   "olay": 35,
+   "yakalanan": 10,
+   "kacirilan": 25,
+   "yanlis_alarm": 27,
+   "ort_olasilik": 0.0079
+  },
+  {
+   "ilce": "Gaziemir",
+   "olay": 24,
+   "yakalanan": 7,
+   "kacirilan": 17,
+   "yanlis_alarm": 20,
+   "ort_olasilik": 0.0079
+  },
+  {
+   "ilce": "Güzelbahçe",
+   "olay": 17,
+   "yakalanan": 7,
+   "kacirilan": 10,
+   "yanlis_alarm": 30,
+   "ort_olasilik": 0.0084
+  },
+  {
+   "ilce": "Karabağlar",
+   "olay": 72,
+   "yakalanan": 41,
+   "kacirilan": 31,
+   "yanlis_alarm": 102,
+   "ort_olasilik": 0.0238
+  },
+  {
+   "ilce": "Karaburun",
+   "olay": 9,
+   "yakalanan": 0,
+   "kacirilan": 9,
+   "yanlis_alarm": 0,
+   "ort_olasilik": 0.0027
+  },
+  {
+   "ilce": "Karşiyaka",
+   "olay": 71,
+   "yakalanan": 51,
+   "kacirilan": 20,
+   "yanlis_alarm": 171,
+   "ort_olasilik": 0.0394
+  },
+  {
+   "ilce": "Kemalpaşa",
+   "olay": 14,
+   "yakalanan": 7,
+   "kacirilan": 7,
+   "yanlis_alarm": 58,
+   "ort_olasilik": 0.0155
+  },
+  {
+   "ilce": "Kinik",
+   "olay": 4,
+   "yakalanan": 0,
+   "kacirilan": 4,
+   "yanlis_alarm": 1,
+   "ort_olasilik": 0.0029
+  },
+  {
+   "ilce": "Kiraz",
+   "olay": 0,
+   "yakalanan": 0,
+   "kacirilan": 0,
+   "yanlis_alarm": 0,
+   "ort_olasilik": 0.0005
+  },
+  {
+   "ilce": "Konak",
+   "olay": 135,
+   "yakalanan": 69,
+   "kacirilan": 66,
+   "yanlis_alarm": 97,
+   "ort_olasilik": 0.0262
+  },
+  {
+   "ilce": "Menderes",
+   "olay": 43,
+   "yakalanan": 18,
+   "kacirilan": 25,
+   "yanlis_alarm": 43,
+   "ort_olasilik": 0.0166
+  },
+  {
+   "ilce": "Menemen",
+   "olay": 33,
+   "yakalanan": 13,
+   "kacirilan": 20,
+   "yanlis_alarm": 25,
+   "ort_olasilik": 0.0132
+  },
+  {
+   "ilce": "Narlidere",
+   "olay": 8,
+   "yakalanan": 2,
+   "kacirilan": 6,
+   "yanlis_alarm": 27,
+   "ort_olasilik": 0.0087
+  },
+  {
+   "ilce": "Seferihisar",
+   "olay": 54,
+   "yakalanan": 12,
+   "kacirilan": 42,
+   "yanlis_alarm": 74,
+   "ort_olasilik": 0.0193
+  },
+  {
+   "ilce": "Selçuk",
+   "olay": 9,
+   "yakalanan": 1,
+   "kacirilan": 8,
+   "yanlis_alarm": 35,
+   "ort_olasilik": 0.0089
+  },
+  {
+   "ilce": "Tire",
+   "olay": 8,
+   "yakalanan": 4,
+   "kacirilan": 4,
+   "yanlis_alarm": 54,
+   "ort_olasilik": 0.0149
+  },
+  {
+   "ilce": "Torbali",
+   "olay": 32,
+   "yakalanan": 12,
+   "kacirilan": 20,
+   "yanlis_alarm": 36,
+   "ort_olasilik": 0.0149
+  },
+  {
+   "ilce": "Urla",
+   "olay": 30,
+   "yakalanan": 3,
+   "kacirilan": 27,
+   "yanlis_alarm": 2,
+   "ort_olasilik": 0.0028
+  },
+  {
+   "ilce": "Çeşme",
+   "olay": 22,
+   "yakalanan": 6,
+   "kacirilan": 16,
+   "yanlis_alarm": 26,
+   "ort_olasilik": 0.0077
+  },
+  {
+   "ilce": "Çiğli",
+   "olay": 21,
+   "yakalanan": 2,
+   "kacirilan": 19,
+   "yanlis_alarm": 18,
+   "ort_olasilik": 0.0077
+  },
+  {
+   "ilce": "Ödemiş",
+   "olay": 20,
+   "yakalanan": 0,
+   "kacirilan": 20,
+   "yanlis_alarm": 0,
+   "ort_olasilik": 0.0007
+  }
+ ],
+ "onem": [
+  {
+   "ad": "yagis_onceki7g_mm",
+   "aciklama": "önceki 7 gün (mm)",
+   "ap_dususu": 0.114,
+   "std": 0.0058
+  },
+  {
+   "ad": "log_nufus",
+   "aciklama": "ilçe nüfusu, log(kişi)",
+   "ap_dususu": 0.0606,
+   "std": 0.0131
+  },
+  {
+   "ad": "yagis_mm",
+   "aciklama": "o günün yağışı (mm)",
+   "ap_dususu": 0.0428,
+   "std": 0.0062
+  },
+  {
+   "ad": "kent_payi",
+   "aciklama": "yapılaşmış alan payı (0–1)",
+   "ap_dususu": 0.0422,
+   "std": 0.0041
+  },
+  {
+   "ad": "yagis_onceki3g_mm",
+   "aciklama": "önceki 3 gün (mm)",
+   "ap_dususu": 0.034,
+   "std": 0.0053
+  },
+  {
+   "ad": "yagis_max3s_mm",
+   "aciklama": "en yoğun 3 saat (mm)",
+   "ap_dususu": 0.0237,
+   "std": 0.0034
+  },
+  {
+   "ad": "yagis_dun_mm",
+   "aciklama": "dünkü yağış (mm)",
+   "ap_dususu": 0.0141,
+   "std": 0.0017
+  },
+  {
+   "ad": "yagis_max1s_mm",
+   "aciklama": "en yoğun 1 saat (mm)",
+   "ap_dususu": 0.0086,
+   "std": 0.0015
+  }
+ ],
+ "olasilik_tablosu": {
+  "yagis_mm": [
+   0,
+   10,
+   20,
+   30,
+   40,
+   60,
+   80,
+   120
+  ],
+  "max1s_orani": 0.252,
+  "max3s_orani": 0.497,
+  "varsayim": "önceki günler kuru; en yoğun saatler yağışlı günlerin ortanca oranıyla",
+  "ilce": {
+   "Aliağa": [
+    0.0,
+    0.006,
+    0.022,
+    0.077,
+    0.089,
+    0.108,
+    0.187,
+    0.187
+   ],
+   "Balçova": [
+    0.0,
+    0.007,
+    0.021,
+    0.035,
+    0.042,
+    0.053,
+    0.103,
+    0.103
+   ],
+   "Bayindir": [
+    0.0,
+    0.001,
+    0.001,
+    0.001,
+    0.002,
+    0.002,
+    0.002,
+    0.002
+   ],
+   "Bayrakli": [
+    0.001,
+    0.018,
+    0.032,
+    0.039,
+    0.045,
+    0.078,
+    0.146,
+    0.146
+   ],
+   "Bergama": [
+    0.0,
+    0.014,
+    0.024,
+    0.029,
+    0.041,
+    0.063,
+    0.063,
+    0.063
+   ],
+   "Beydağ": [
+    0.0,
+    0.0,
+    0.0,
+    0.001,
+    0.001,
+    0.001,
+    0.001,
+    0.001
+   ],
+   "Bornova": [
+    0.001,
+    0.018,
+    0.046,
+    0.055,
+    0.055,
+    0.095,
+    0.175,
+    0.175
+   ],
+   "Buca": [
+    0.001,
+    0.014,
+    0.036,
+    0.059,
+    0.059,
+    0.098,
+    0.169,
+    0.169
+   ],
+   "Dikili": [
+    0.001,
+    0.007,
+    0.012,
+    0.018,
+    0.023,
+    0.037,
+    0.082,
+    0.082
+   ],
+   "Foça": [
+    0.001,
+    0.011,
+    0.018,
+    0.038,
+    0.041,
+    0.047,
+    0.09,
+    0.09
+   ],
+   "Gaziemir": [
+    0.0,
+    0.009,
+    0.03,
+    0.038,
+    0.044,
+    0.068,
+    0.124,
+    0.124
+   ],
+   "Güzelbahçe": [
+    0.0,
+    0.004,
+    0.015,
+    0.052,
+    0.059,
+    0.073,
+    0.134,
+    0.134
+   ],
+   "Karabağlar": [
+    0.001,
+    0.014,
+    0.036,
+    0.056,
+    0.056,
+    0.094,
+    0.167,
+    0.167
+   ],
+   "Karaburun": [
+    0.0,
+    0.002,
+    0.006,
+    0.026,
+    0.029,
+    0.029,
+    0.029,
+    0.029
+   ],
+   "Karşiyaka": [
+    0.002,
+    0.02,
+    0.047,
+    0.049,
+    0.049,
+    0.1,
+    0.182,
+    0.182
+   ],
+   "Kemalpaşa": [
+    0.0,
+    0.009,
+    0.02,
+    0.027,
+    0.031,
+    0.037,
+    0.046,
+    0.046
+   ],
+   "Kinik": [
+    0.0,
+    0.002,
+    0.005,
+    0.006,
+    0.007,
+    0.007,
+    0.007,
+    0.007
+   ],
+   "Kiraz": [
+    0.0,
+    0.0,
+    0.0,
+    0.001,
+    0.001,
+    0.001,
+    0.001,
+    0.001
+   ],
+   "Konak": [
+    0.009,
+    0.057,
+    0.12,
+    0.12,
+    0.12,
+    0.148,
+    0.255,
+    0.255
+   ],
+   "Menderes": [
+    0.001,
+    0.012,
+    0.026,
+    0.033,
+    0.04,
+    0.052,
+    0.101,
+    0.101
+   ],
+   "Menemen": [
+    0.0,
+    0.012,
+    0.027,
+    0.035,
+    0.041,
+    0.056,
+    0.107,
+    0.107
+   ],
+   "Narlidere": [
+    0.0,
+    0.002,
+    0.026,
+    0.044,
+    0.053,
+    0.067,
+    0.12,
+    0.12
+   ],
+   "Seferihisar": [
+    0.004,
+    0.022,
+    0.034,
+    0.044,
+    0.052,
+    0.064,
+    0.109,
+    0.109
+   ],
+   "Selçuk": [
+    0.0,
+    0.004,
+    0.009,
+    0.031,
+    0.037,
+    0.039,
+    0.039,
+    0.039
+   ],
+   "Tire": [
+    0.0,
+    0.005,
+    0.009,
+    0.026,
+    0.053,
+    0.057,
+    0.057,
+    0.057
+   ],
+   "Torbali": [
+    0.0,
+    0.009,
+    0.024,
+    0.048,
+    0.056,
+    0.075,
+    0.14,
+    0.14
+   ],
+   "Urla": [
+    0.0,
+    0.007,
+    0.022,
+    0.048,
+    0.063,
+    0.07,
+    0.082,
+    0.082
+   ],
+   "Çeşme": [
+    0.0,
+    0.005,
+    0.023,
+    0.052,
+    0.066,
+    0.079,
+    0.133,
+    0.133
+   ],
+   "Çiğli": [
+    0.0,
+    0.012,
+    0.029,
+    0.036,
+    0.042,
+    0.06,
+    0.114,
+    0.114
+   ],
+   "Ödemiş": [
+    0.0,
+    0.015,
+    0.024,
+    0.058,
+    0.083,
+    0.113,
+    0.113,
+    0.113
+   ]
+  }
+ }
+}
