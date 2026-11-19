@@ -1,0 +1,1824 @@
+{
+ "degiskenler": [
+  "log_yagis",
+  "log_dun",
+  "log_onceki7g"
+ ],
+ "global_ek": [
+  "log_nufus",
+  "kent_payi"
+ ],
+ "bantlar": {
+  "1": 0.1435,
+  "2": 0.1447,
+  "3": 0.1448,
+  "4": 0.1424,
+  "5": 0.139,
+  "6": 0.1371,
+  "9": 0.1273,
+  "12": 0.115,
+  "16": 0.1093,
+  "20": 0.1034,
+  "25": 0.0956,
+  "30": 0.0917
+ },
+ "bant": 3,
+ "c": 1.0,
+ "sonuclar": {
+  "gwr": {
+   "auc": 0.896,
+   "ap": 0.184,
+   "brier": 0.0105,
+   "olay": 614,
+   "olay_orani": 0.0118,
+   "dogru_alarm": 241,
+   "yanlis_alarm": 988,
+   "kacirilan": 373,
+   "kesinlik": 0.196,
+   "duyarlilik": 0.393,
+   "il": {
+    "buyuk_olay_gunu": 57,
+    "alarmli": 44,
+    "alarm_gunu": 205,
+    "gun": 1733
+   },
+   "atak": {
+    "atak": 23,
+    "ilk_gun_alarmli": 19,
+    "herhangi_alarmli": 19
+   },
+   "aralik_95": {
+    "ap": [
+     0.114,
+     0.259
+    ],
+    "kesinlik": [
+     0.136,
+     0.258
+    ],
+    "duyarlilik": [
+     0.303,
+     0.46
+    ],
+    "buyuk_gun_yakalama": [
+     0.623,
+     0.897
+    ]
+   },
+   "yillar": [
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "kiyi": {
+    "olay": 264,
+    "yakalanan": 114
+   },
+   "ap_farki_globale_gore": [
+    0.008,
+    -0.009,
+    0.028
+   ]
+  },
+  "global": {
+   "auc": 0.9,
+   "ap": 0.176,
+   "brier": 0.0106,
+   "olay": 614,
+   "olay_orani": 0.0118,
+   "dogru_alarm": 255,
+   "yanlis_alarm": 1083,
+   "kacirilan": 359,
+   "kesinlik": 0.191,
+   "duyarlilik": 0.415,
+   "il": {
+    "buyuk_olay_gunu": 57,
+    "alarmli": 45,
+    "alarm_gunu": 209,
+    "gun": 1733
+   },
+   "atak": {
+    "atak": 23,
+    "ilk_gun_alarmli": 19,
+    "herhangi_alarmli": 19
+   },
+   "aralik_95": {
+    "ap": [
+     0.108,
+     0.241
+    ],
+    "kesinlik": [
+     0.126,
+     0.247
+    ],
+    "duyarlilik": [
+     0.303,
+     0.499
+    ],
+    "buyuk_gun_yakalama": [
+     0.629,
+     0.917
+    ]
+   },
+   "yillar": [
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "kiyi": {
+    "olay": 264,
+    "yakalanan": 100
+   }
+  },
+  "lojistik": {
+   "auc": 0.899,
+   "ap": 0.178,
+   "brier": 0.0106,
+   "olay": 614,
+   "olay_orani": 0.0118,
+   "dogru_alarm": 246,
+   "yanlis_alarm": 983,
+   "kacirilan": 368,
+   "kesinlik": 0.2,
+   "duyarlilik": 0.401,
+   "il": {
+    "buyuk_olay_gunu": 57,
+    "alarmli": 43,
+    "alarm_gunu": 199,
+    "gun": 1733
+   },
+   "atak": {
+    "atak": 23,
+    "ilk_gun_alarmli": 17,
+    "herhangi_alarmli": 17
+   },
+   "aralik_95": {
+    "ap": [
+     0.113,
+     0.244
+    ],
+    "kesinlik": [
+     0.132,
+     0.258
+    ],
+    "duyarlilik": [
+     0.284,
+     0.484
+    ],
+    "buyuk_gun_yakalama": [
+     0.584,
+     0.886
+    ]
+   },
+   "yillar": [
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "kiyi": {
+    "olay": 264,
+    "yakalanan": 95
+   },
+   "ap_farki_globale_gore": [
+    0.002,
+    -0.007,
+    0.016
+   ]
+  }
+ },
+ "katsayi_bootstrap": 100,
+ "ilceler": [
+  {
+   "ilce": "Aliağa",
+   "katsayi": {
+    "sabit": -6.091,
+    "log_yagis": 0.718,
+    "log_dun": 0.153,
+    "log_onceki7g": 1.149
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.494,
+     1.001
+    ],
+    "log_dun": [
+     -0.055,
+     0.357
+    ],
+    "log_onceki7g": [
+     0.496,
+     1.871
+    ]
+   },
+   "odds_orani_10_40": 3.0,
+   "p_10": 0.0033,
+   "p_40": 0.0099
+  },
+  {
+   "ilce": "Balçova",
+   "katsayi": {
+    "sabit": -5.631,
+    "log_yagis": 0.715,
+    "log_dun": 0.016,
+    "log_onceki7g": 0.954
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.459,
+     1.081
+    ],
+    "log_dun": [
+     -0.126,
+     0.213
+    ],
+    "log_onceki7g": [
+     0.226,
+     1.694
+    ]
+   },
+   "odds_orani_10_40": 2.98,
+   "p_10": 0.0068,
+   "p_40": 0.02
+  },
+  {
+   "ilce": "Bayindir",
+   "katsayi": {
+    "sabit": -7.482,
+    "log_yagis": 0.837,
+    "log_dun": 0.277,
+    "log_onceki7g": 0.262
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.637,
+     1.14
+    ],
+    "log_dun": [
+     0.008,
+     0.69
+    ],
+    "log_onceki7g": [
+     -0.461,
+     0.985
+    ]
+   },
+   "odds_orani_10_40": 3.59,
+   "p_10": 0.0026,
+   "p_40": 0.0092
+  },
+  {
+   "ilce": "Bayrakli",
+   "katsayi": {
+    "sabit": -4.834,
+    "log_yagis": 0.644,
+    "log_dun": -0.03,
+    "log_onceki7g": 0.854
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.436,
+     0.93
+    ],
+    "log_dun": [
+     -0.212,
+     0.127
+    ],
+    "log_onceki7g": [
+     0.279,
+     1.695
+    ]
+   },
+   "odds_orani_10_40": 2.68,
+   "p_10": 0.0144,
+   "p_40": 0.0377
+  },
+  {
+   "ilce": "Bergama",
+   "katsayi": {
+    "sabit": -6.559,
+    "log_yagis": 0.412,
+    "log_dun": 0.069,
+    "log_onceki7g": 1.965
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.27,
+     0.651
+    ],
+    "log_dun": [
+     -0.148,
+     0.202
+    ],
+    "log_onceki7g": [
+     1.263,
+     2.736
+    ]
+   },
+   "odds_orani_10_40": 1.88,
+   "p_10": 0.0005,
+   "p_40": 0.0009
+  },
+  {
+   "ilce": "Beydağ",
+   "katsayi": {
+    "sabit": -7.383,
+    "log_yagis": 0.967,
+    "log_dun": 0.271,
+    "log_onceki7g": 0.1
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.744,
+     1.294
+    ],
+    "log_dun": [
+     -0.255,
+     0.703
+    ],
+    "log_onceki7g": [
+     -0.399,
+     0.75
+    ]
+   },
+   "odds_orani_10_40": 4.38,
+   "p_10": 0.0045,
+   "p_40": 0.0195
+  },
+  {
+   "ilce": "Bornova",
+   "katsayi": {
+    "sabit": -5.008,
+    "log_yagis": 0.853,
+    "log_dun": 0.034,
+    "log_onceki7g": 0.89
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.631,
+     1.115
+    ],
+    "log_dun": [
+     -0.112,
+     0.192
+    ],
+    "log_onceki7g": [
+     0.391,
+     1.518
+    ]
+   },
+   "odds_orani_10_40": 3.68,
+   "p_10": 0.0183,
+   "p_40": 0.0642
+  },
+  {
+   "ilce": "Buca",
+   "katsayi": {
+    "sabit": -4.724,
+    "log_yagis": 0.868,
+    "log_dun": 0.105,
+    "log_onceki7g": 0.807
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.675,
+     1.192
+    ],
+    "log_dun": [
+     -0.109,
+     0.299
+    ],
+    "log_onceki7g": [
+     0.306,
+     1.441
+    ]
+   },
+   "odds_orani_10_40": 3.77,
+   "p_10": 0.0263,
+   "p_40": 0.0922
+  },
+  {
+   "ilce": "Dikili",
+   "katsayi": {
+    "sabit": -6.749,
+    "log_yagis": 0.382,
+    "log_dun": 0.101,
+    "log_onceki7g": 2.417
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.239,
+     0.548
+    ],
+    "log_dun": [
+     -0.094,
+     0.242
+    ],
+    "log_onceki7g": [
+     1.77,
+     3.235
+    ]
+   },
+   "odds_orani_10_40": 1.79,
+   "p_10": 0.0002,
+   "p_40": 0.0004
+  },
+  {
+   "ilce": "Foça",
+   "katsayi": {
+    "sabit": -5.465,
+    "log_yagis": 0.485,
+    "log_dun": 0.176,
+    "log_onceki7g": 1.131
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.317,
+     0.74
+    ],
+    "log_dun": [
+     -0.02,
+     0.432
+    ],
+    "log_onceki7g": [
+     0.499,
+     2.141
+    ]
+   },
+   "odds_orani_10_40": 2.1,
+   "p_10": 0.0037,
+   "p_40": 0.0077
+  },
+  {
+   "ilce": "Gaziemir",
+   "katsayi": {
+    "sabit": -5.207,
+    "log_yagis": 0.808,
+    "log_dun": 0.108,
+    "log_onceki7g": 0.794
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.609,
+     1.163
+    ],
+    "log_dun": [
+     -0.137,
+     0.325
+    ],
+    "log_onceki7g": [
+     0.061,
+     1.382
+    ]
+   },
+   "odds_orani_10_40": 3.44,
+   "p_10": 0.0144,
+   "p_40": 0.048
+  },
+  {
+   "ilce": "Güzelbahçe",
+   "katsayi": {
+    "sabit": -6.868,
+    "log_yagis": 0.998,
+    "log_dun": 0.333,
+    "log_onceki7g": 0.861
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.528,
+     1.472
+    ],
+    "log_dun": [
+     0.114,
+     0.609
+    ],
+    "log_onceki7g": [
+     0.117,
+     1.682
+    ]
+   },
+   "odds_orani_10_40": 4.6,
+   "p_10": 0.0036,
+   "p_40": 0.0163
+  },
+  {
+   "ilce": "Karabağlar",
+   "katsayi": {
+    "sabit": -4.572,
+    "log_yagis": 0.683,
+    "log_dun": 0.143,
+    "log_onceki7g": 0.873
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.458,
+     1.043
+    ],
+    "log_dun": [
+     -0.002,
+     0.328
+    ],
+    "log_onceki7g": [
+     0.172,
+     1.435
+    ]
+   },
+   "odds_orani_10_40": 2.84,
+   "p_10": 0.0184,
+   "p_40": 0.0507
+  },
+  {
+   "ilce": "Karaburun",
+   "katsayi": {
+    "sabit": -8.432,
+    "log_yagis": 0.875,
+    "log_dun": 0.508,
+    "log_onceki7g": 1.476
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.593,
+     1.477
+    ],
+    "log_dun": [
+     0.184,
+     0.834
+    ],
+    "log_onceki7g": [
+     0.536,
+     2.535
+    ]
+   },
+   "odds_orani_10_40": 3.81,
+   "p_10": 0.0003,
+   "p_40": 0.0011
+  },
+  {
+   "ilce": "Karşiyaka",
+   "katsayi": {
+    "sabit": -4.887,
+    "log_yagis": 0.642,
+    "log_dun": 0.047,
+    "log_onceki7g": 1.144
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.472,
+     0.839
+    ],
+    "log_dun": [
+     -0.094,
+     0.166
+    ],
+    "log_onceki7g": [
+     0.577,
+     1.874
+    ]
+   },
+   "odds_orani_10_40": 2.67,
+   "p_10": 0.0098,
+   "p_40": 0.0257
+  },
+  {
+   "ilce": "Kemalpaşa",
+   "katsayi": {
+    "sabit": -6.331,
+    "log_yagis": 0.845,
+    "log_dun": 0.011,
+    "log_onceki7g": 1.057
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.576,
+     1.105
+    ],
+    "log_dun": [
+     -0.25,
+     0.216
+    ],
+    "log_onceki7g": [
+     0.305,
+     1.813
+    ]
+   },
+   "odds_orani_10_40": 3.64,
+   "p_10": 0.0041,
+   "p_40": 0.0148
+  },
+  {
+   "ilce": "Kinik",
+   "katsayi": {
+    "sabit": -6.568,
+    "log_yagis": 0.462,
+    "log_dun": 0.083,
+    "log_onceki7g": 1.613
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.273,
+     0.877
+    ],
+    "log_dun": [
+     -0.204,
+     0.248
+    ],
+    "log_onceki7g": [
+     0.821,
+     2.569
+    ]
+   },
+   "odds_orani_10_40": 2.02,
+   "p_10": 0.0007,
+   "p_40": 0.0015
+  },
+  {
+   "ilce": "Kiraz",
+   "katsayi": {
+    "sabit": -7.376,
+    "log_yagis": 0.999,
+    "log_dun": 0.269,
+    "log_onceki7g": 0.164
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.769,
+     1.355
+    ],
+    "log_dun": [
+     -0.259,
+     0.716
+    ],
+    "log_onceki7g": [
+     -0.43,
+     0.804
+    ]
+   },
+   "odds_orani_10_40": 4.6,
+   "p_10": 0.0046,
+   "p_40": 0.0208
+  },
+  {
+   "ilce": "Konak",
+   "katsayi": {
+    "sabit": -3.647,
+    "log_yagis": 0.7,
+    "log_dun": 0.161,
+    "log_onceki7g": 0.666
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.528,
+     0.938
+    ],
+    "log_dun": [
+     -0.0,
+     0.306
+    ],
+    "log_onceki7g": [
+     0.219,
+     1.136
+    ]
+   },
+   "odds_orani_10_40": 2.91,
+   "p_10": 0.0571,
+   "p_40": 0.15
+  },
+  {
+   "ilce": "Menderes",
+   "katsayi": {
+    "sabit": -5.99,
+    "log_yagis": 0.639,
+    "log_dun": 0.224,
+    "log_onceki7g": 1.199
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.424,
+     1.003
+    ],
+    "log_dun": [
+     0.009,
+     0.525
+    ],
+    "log_onceki7g": [
+     0.158,
+     2.331
+    ]
+   },
+   "odds_orani_10_40": 2.66,
+   "p_10": 0.0028,
+   "p_40": 0.0074
+  },
+  {
+   "ilce": "Menemen",
+   "katsayi": {
+    "sabit": -6.062,
+    "log_yagis": 0.655,
+    "log_dun": 0.152,
+    "log_onceki7g": 1.252
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.467,
+     0.91
+    ],
+    "log_dun": [
+     -0.053,
+     0.322
+    ],
+    "log_onceki7g": [
+     0.552,
+     1.932
+    ]
+   },
+   "odds_orani_10_40": 2.72,
+   "p_10": 0.0027,
+   "p_40": 0.0072
+  },
+  {
+   "ilce": "Narlidere",
+   "katsayi": {
+    "sabit": -6.633,
+    "log_yagis": 0.901,
+    "log_dun": -0.185,
+    "log_onceki7g": 0.953
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.48,
+     1.411
+    ],
+    "log_dun": [
+     -0.389,
+     0.103
+    ],
+    "log_onceki7g": [
+     0.079,
+     2.004
+    ]
+   },
+   "odds_orani_10_40": 3.96,
+   "p_10": 0.0042,
+   "p_40": 0.0166
+  },
+  {
+   "ilce": "Seferihisar",
+   "katsayi": {
+    "sabit": -4.24,
+    "log_yagis": 0.287,
+    "log_dun": 0.138,
+    "log_onceki7g": 0.555
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.023,
+     0.526
+    ],
+    "log_dun": [
+     -0.082,
+     0.369
+    ],
+    "log_onceki7g": [
+     -0.304,
+     1.33
+    ]
+   },
+   "odds_orani_10_40": 1.55,
+   "p_10": 0.0144,
+   "p_40": 0.0222
+  },
+  {
+   "ilce": "Selçuk",
+   "katsayi": {
+    "sabit": -6.643,
+    "log_yagis": 1.086,
+    "log_dun": 0.078,
+    "log_onceki7g": 0.114
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.799,
+     1.482
+    ],
+    "log_dun": [
+     -0.361,
+     0.363
+    ],
+    "log_onceki7g": [
+     -0.424,
+     0.658
+    ]
+   },
+   "odds_orani_10_40": 5.25,
+   "p_10": 0.0134,
+   "p_40": 0.0666
+  },
+  {
+   "ilce": "Tire",
+   "katsayi": {
+    "sabit": -7.272,
+    "log_yagis": 0.972,
+    "log_dun": 0.265,
+    "log_onceki7g": -0.013
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.73,
+     1.247
+    ],
+    "log_dun": [
+     -0.244,
+     0.783
+    ],
+    "log_onceki7g": [
+     -0.799,
+     0.764
+    ]
+   },
+   "odds_orani_10_40": 4.42,
+   "p_10": 0.0058,
+   "p_40": 0.025
+  },
+  {
+   "ilce": "Torbali",
+   "katsayi": {
+    "sabit": -6.08,
+    "log_yagis": 0.762,
+    "log_dun": 0.284,
+    "log_onceki7g": 0.885
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.537,
+     1.152
+    ],
+    "log_dun": [
+     0.084,
+     0.573
+    ],
+    "log_onceki7g": [
+     0.072,
+     1.84
+    ]
+   },
+   "odds_orani_10_40": 3.2,
+   "p_10": 0.0046,
+   "p_40": 0.0145
+  },
+  {
+   "ilce": "Urla",
+   "katsayi": {
+    "sabit": -6.621,
+    "log_yagis": 1.022,
+    "log_dun": 0.399,
+    "log_onceki7g": 0.944
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.757,
+     1.354
+    ],
+    "log_dun": [
+     0.26,
+     0.623
+    ],
+    "log_onceki7g": [
+     0.083,
+     1.75
+    ]
+   },
+   "odds_orani_10_40": 4.76,
+   "p_10": 0.0043,
+   "p_40": 0.0203
+  },
+  {
+   "ilce": "Çeşme",
+   "katsayi": {
+    "sabit": -6.63,
+    "log_yagis": 0.759,
+    "log_dun": 0.513,
+    "log_onceki7g": 0.935
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.522,
+     1.036
+    ],
+    "log_dun": [
+     0.283,
+     0.87
+    ],
+    "log_onceki7g": [
+     0.257,
+     1.752
+    ]
+   },
+   "odds_orani_10_40": 3.19,
+   "p_10": 0.0022,
+   "p_40": 0.0071
+  },
+  {
+   "ilce": "Çiğli",
+   "katsayi": {
+    "sabit": -5.351,
+    "log_yagis": 0.663,
+    "log_dun": 0.025,
+    "log_onceki7g": 1.101
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.456,
+     0.887
+    ],
+    "log_dun": [
+     -0.11,
+     0.168
+    ],
+    "log_onceki7g": [
+     0.531,
+     1.611
+    ]
+   },
+   "odds_orani_10_40": 2.75,
+   "p_10": 0.0068,
+   "p_40": 0.0186
+  },
+  {
+   "ilce": "Ödemiş",
+   "katsayi": {
+    "sabit": -6.029,
+    "log_yagis": 1.018,
+    "log_dun": 0.295,
+    "log_onceki7g": 0.146
+   },
+   "aralik_95": {
+    "log_yagis": [
+     0.771,
+     1.462
+    ],
+    "log_dun": [
+     -0.226,
+     0.769
+    ],
+    "log_onceki7g": [
+     -0.525,
+     0.844
+    ]
+   },
+   "odds_orani_10_40": 4.73,
+   "p_10": 0.0183,
+   "p_40": 0.0812
+  }
+ ],
+ "cok_nokta": {
+  "degiskenler": [
+   "log_max_nokta",
+   "log_dun",
+   "log_onceki7g"
+  ],
+  "sonuc": {
+   "auc": 0.899,
+   "ap": 0.177,
+   "brier": 0.0106,
+   "olay": 614,
+   "olay_orani": 0.0118,
+   "dogru_alarm": 215,
+   "yanlis_alarm": 847,
+   "kacirilan": 399,
+   "kesinlik": 0.202,
+   "duyarlilik": 0.35,
+   "il": {
+    "buyuk_olay_gunu": 57,
+    "alarmli": 43,
+    "alarm_gunu": 202,
+    "gun": 1733
+   },
+   "atak": {
+    "atak": 23,
+    "ilk_gun_alarmli": 19,
+    "herhangi_alarmli": 19
+   },
+   "aralik_95": {
+    "ap": [
+     0.111,
+     0.249
+    ],
+    "kesinlik": [
+     0.137,
+     0.271
+    ],
+    "duyarlilik": [
+     0.27,
+     0.407
+    ],
+    "buyuk_gun_yakalama": [
+     0.612,
+     0.867
+    ]
+   },
+   "yillar": [
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+   ],
+   "kiyi": {
+    "olay": 264,
+    "yakalanan": 104
+   },
+   "ap_farki_tek_noktaya_gore": [
+    -0.007,
+    -0.011,
+    -0.001
+   ]
+  },
+  "ilceler": [
+   {
+    "ilce": "Aliağa",
+    "katsayi": {
+     "sabit": -6.123,
+     "log_max_nokta": 0.765,
+     "log_dun": 0.152,
+     "log_onceki7g": 1.144
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.527,
+      1.111
+     ],
+     "log_dun": [
+      -0.059,
+      0.341
+     ],
+     "log_onceki7g": [
+      0.489,
+      1.873
+     ]
+    },
+    "odds_orani_10_40": 2.82,
+    "p_10": 0.0027,
+    "p_40": 0.0075
+   },
+   {
+    "ilce": "Balçova",
+    "katsayi": {
+     "sabit": -5.575,
+     "log_max_nokta": 0.827,
+     "log_dun": -0.0,
+     "log_onceki7g": 0.963
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.543,
+      1.264
+     ],
+     "log_dun": [
+      -0.134,
+      0.204
+     ],
+     "log_onceki7g": [
+      0.229,
+      1.699
+     ]
+    },
+    "odds_orani_10_40": 3.07,
+    "p_10": 0.0067,
+    "p_40": 0.0204
+   },
+   {
+    "ilce": "Bayindir",
+    "katsayi": {
+     "sabit": -7.753,
+     "log_max_nokta": 1.081,
+     "log_dun": 0.243,
+     "log_onceki7g": 0.152
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.83,
+      1.405
+     ],
+     "log_dun": [
+      -0.029,
+      0.622
+     ],
+     "log_onceki7g": [
+      -0.546,
+      0.994
+     ]
+    },
+    "odds_orani_10_40": 4.34,
+    "p_10": 0.0026,
+    "p_40": 0.0111
+   },
+   {
+    "ilce": "Bayrakli",
+    "katsayi": {
+     "sabit": -4.75,
+     "log_max_nokta": 0.727,
+     "log_dun": -0.028,
+     "log_onceki7g": 0.849
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.485,
+      1.057
+     ],
+     "log_dun": [
+      -0.211,
+      0.128
+     ],
+     "log_onceki7g": [
+      0.279,
+      1.694
+     ]
+    },
+    "odds_orani_10_40": 2.68,
+    "p_10": 0.0144,
+    "p_40": 0.0377
+   },
+   {
+    "ilce": "Bergama",
+    "katsayi": {
+     "sabit": -6.698,
+     "log_max_nokta": 0.446,
+     "log_dun": 0.047,
+     "log_onceki7g": 1.984
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.275,
+      0.694
+     ],
+     "log_dun": [
+      -0.15,
+      0.184
+     ],
+     "log_onceki7g": [
+      1.287,
+      2.775
+     ]
+    },
+    "odds_orani_10_40": 1.83,
+    "p_10": 0.0004,
+    "p_40": 0.0007
+   },
+   {
+    "ilce": "Beydağ",
+    "katsayi": {
+     "sabit": -8.338,
+     "log_max_nokta": 1.381,
+     "log_dun": 0.246,
+     "log_onceki7g": 0.141
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      1.091,
+      1.735
+     ],
+     "log_dun": [
+      -0.314,
+      0.706
+     ],
+     "log_onceki7g": [
+      -0.414,
+      0.769
+     ]
+    },
+    "odds_orani_10_40": 6.51,
+    "p_10": 0.0026,
+    "p_40": 0.0165
+   },
+   {
+    "ilce": "Bornova",
+    "katsayi": {
+     "sabit": -5.04,
+     "log_max_nokta": 0.979,
+     "log_dun": 0.014,
+     "log_onceki7g": 0.911
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.716,
+      1.277
+     ],
+     "log_dun": [
+      -0.122,
+      0.17
+     ],
+     "log_onceki7g": [
+      0.391,
+      1.543
+     ]
+    },
+    "odds_orani_10_40": 3.77,
+    "p_10": 0.016,
+    "p_40": 0.0578
+   },
+   {
+    "ilce": "Buca",
+    "katsayi": {
+     "sabit": -4.699,
+     "log_max_nokta": 0.897,
+     "log_dun": 0.096,
+     "log_onceki7g": 0.825
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.674,
+      1.224
+     ],
+     "log_dun": [
+      -0.115,
+      0.288
+     ],
+     "log_onceki7g": [
+      0.307,
+      1.451
+     ]
+    },
+    "odds_orani_10_40": 3.38,
+    "p_10": 0.0201,
+    "p_40": 0.0647
+   },
+   {
+    "ilce": "Dikili",
+    "katsayi": {
+     "sabit": -6.805,
+     "log_max_nokta": 0.36,
+     "log_dun": 0.099,
+     "log_onceki7g": 2.453
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.203,
+      0.554
+     ],
+     "log_dun": [
+      -0.092,
+      0.237
+     ],
+     "log_onceki7g": [
+      1.791,
+      3.263
+     ]
+    },
+    "odds_orani_10_40": 1.63,
+    "p_10": 0.0002,
+    "p_40": 0.0003
+   },
+   {
+    "ilce": "Foça",
+    "katsayi": {
+     "sabit": -5.474,
+     "log_max_nokta": 0.514,
+     "log_dun": 0.171,
+     "log_onceki7g": 1.125
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.33,
+      0.822
+     ],
+     "log_dun": [
+      -0.026,
+      0.427
+     ],
+     "log_onceki7g": [
+      0.487,
+      2.14
+     ]
+    },
+    "odds_orani_10_40": 2.01,
+    "p_10": 0.0032,
+    "p_40": 0.0064
+   },
+   {
+    "ilce": "Gaziemir",
+    "katsayi": {
+     "sabit": -5.16,
+     "log_max_nokta": 0.912,
+     "log_dun": 0.101,
+     "log_onceki7g": 0.797
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.697,
+      1.296
+     ],
+     "log_dun": [
+      -0.145,
+      0.319
+     ],
+     "log_onceki7g": [
+      0.054,
+      1.394
+     ]
+    },
+    "odds_orani_10_40": 3.45,
+    "p_10": 0.0135,
+    "p_40": 0.0451
+   },
+   {
+    "ilce": "Güzelbahçe",
+    "katsayi": {
+     "sabit": -6.775,
+     "log_max_nokta": 1.121,
+     "log_dun": 0.338,
+     "log_onceki7g": 0.862
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.589,
+      1.659
+     ],
+     "log_dun": [
+      0.112,
+      0.619
+     ],
+     "log_onceki7g": [
+      0.12,
+      1.691
+     ]
+    },
+    "odds_orani_10_40": 4.58,
+    "p_10": 0.0034,
+    "p_40": 0.0152
+   },
+   {
+    "ilce": "Karabağlar",
+    "katsayi": {
+     "sabit": -4.557,
+     "log_max_nokta": 0.757,
+     "log_dun": 0.144,
+     "log_onceki7g": 0.873
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.517,
+      1.189
+     ],
+     "log_dun": [
+      -0.001,
+      0.33
+     ],
+     "log_onceki7g": [
+      0.182,
+      1.443
+     ]
+    },
+    "odds_orani_10_40": 2.79,
+    "p_10": 0.0165,
+    "p_40": 0.0449
+   },
+   {
+    "ilce": "Karaburun",
+    "katsayi": {
+     "sabit": -8.434,
+     "log_max_nokta": 0.876,
+     "log_dun": 0.535,
+     "log_onceki7g": 1.485
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.516,
+      1.4
+     ],
+     "log_dun": [
+      0.209,
+      0.877
+     ],
+     "log_onceki7g": [
+      0.45,
+      2.588
+     ]
+    },
+    "odds_orani_10_40": 3.29,
+    "p_10": 0.0002,
+    "p_40": 0.0006
+   },
+   {
+    "ilce": "Karşiyaka",
+    "katsayi": {
+     "sabit": -4.859,
+     "log_max_nokta": 0.722,
+     "log_dun": 0.049,
+     "log_onceki7g": 1.148
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.542,
+      0.947
+     ],
+     "log_dun": [
+      -0.089,
+      0.174
+     ],
+     "log_onceki7g": [
+      0.574,
+      1.884
+     ]
+    },
+    "odds_orani_10_40": 2.66,
+    "p_10": 0.0091,
+    "p_40": 0.0238
+   },
+   {
+    "ilce": "Kemalpaşa",
+    "katsayi": {
+     "sabit": -6.479,
+     "log_max_nokta": 0.883,
+     "log_dun": -0.003,
+     "log_onceki7g": 1.093
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.578,
+      1.244
+     ],
+     "log_dun": [
+      -0.26,
+      0.212
+     ],
+     "log_onceki7g": [
+      0.352,
+      1.865
+     ]
+    },
+    "odds_orani_10_40": 3.32,
+    "p_10": 0.0027,
+    "p_40": 0.0088
+   },
+   {
+    "ilce": "Kinik",
+    "katsayi": {
+     "sabit": -6.865,
+     "log_max_nokta": 0.581,
+     "log_dun": 0.035,
+     "log_onceki7g": 1.655
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.337,
+      1.156
+     ],
+     "log_dun": [
+      -0.237,
+      0.205
+     ],
+     "log_onceki7g": [
+      0.803,
+      2.577
+     ]
+    },
+    "odds_orani_10_40": 2.2,
+    "p_10": 0.0006,
+    "p_40": 0.0012
+   },
+   {
+    "ilce": "Kiraz",
+    "katsayi": {
+     "sabit": -8.201,
+     "log_max_nokta": 1.386,
+     "log_dun": 0.225,
+     "log_onceki7g": 0.145
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      1.101,
+      1.779
+     ],
+     "log_dun": [
+      -0.304,
+      0.697
+     ],
+     "log_onceki7g": [
+      -0.453,
+      0.801
+     ]
+    },
+    "odds_orani_10_40": 6.56,
+    "p_10": 0.003,
+    "p_40": 0.0193
+   },
+   {
+    "ilce": "Konak",
+    "katsayi": {
+     "sabit": -3.545,
+     "log_max_nokta": 0.783,
+     "log_dun": 0.161,
+     "log_onceki7g": 0.667
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.59,
+      1.048
+     ],
+     "log_dun": [
+      0.001,
+      0.306
+     ],
+     "log_onceki7g": [
+      0.221,
+      1.137
+     ]
+    },
+    "odds_orani_10_40": 2.89,
+    "p_10": 0.0564,
+    "p_40": 0.1474
+   },
+   {
+    "ilce": "Menderes",
+    "katsayi": {
+     "sabit": -6.042,
+     "log_max_nokta": 0.692,
+     "log_dun": 0.208,
+     "log_onceki7g": 1.201
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.417,
+      1.137
+     ],
+     "log_dun": [
+      -0.005,
+      0.507
+     ],
+     "log_onceki7g": [
+      0.197,
+      2.325
+     ]
+    },
+    "odds_orani_10_40": 2.56,
+    "p_10": 0.0023,
+    "p_40": 0.0059
+   },
+   {
+    "ilce": "Menemen",
+    "katsayi": {
+     "sabit": -6.09,
+     "log_max_nokta": 0.73,
+     "log_dun": 0.147,
+     "log_onceki7g": 1.264
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.535,
+      1.036
+     ],
+     "log_dun": [
+      -0.067,
+      0.32
+     ],
+     "log_onceki7g": [
+      0.545,
+      1.952
+     ]
+    },
+    "odds_orani_10_40": 2.69,
+    "p_10": 0.0023,
+    "p_40": 0.0061
+   },
+   {
+    "ilce": "Narlidere",
+    "katsayi": {
+     "sabit": -6.501,
+     "log_max_nokta": 1.018,
+     "log_dun": -0.188,
+     "log_onceki7g": 0.952
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.538,
+      1.59
+     ],
+     "log_dun": [
+      -0.387,
+      0.116
+     ],
+     "log_onceki7g": [
+      0.079,
+      2.016
+     ]
+    },
+    "odds_orani_10_40": 3.98,
+    "p_10": 0.0043,
+    "p_40": 0.0168
+   },
+   {
+    "ilce": "Seferihisar",
+    "katsayi": {
+     "sabit": -4.251,
+     "log_max_nokta": 0.331,
+     "log_dun": 0.123,
+     "log_onceki7g": 0.551
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.022,
+      0.635
+     ],
+     "log_dun": [
+      -0.096,
+      0.355
+     ],
+     "log_onceki7g": [
+      -0.311,
+      1.328
+     ]
+    },
+    "odds_orani_10_40": 1.57,
+    "p_10": 0.0141,
+    "p_40": 0.0219
+   },
+   {
+    "ilce": "Selçuk",
+    "katsayi": {
+     "sabit": -6.759,
+     "log_max_nokta": 1.284,
+     "log_dun": 0.044,
+     "log_onceki7g": 0.051
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.982,
+      1.719
+     ],
+     "log_dun": [
+      -0.387,
+      0.32
+     ],
+     "log_onceki7g": [
+      -0.464,
+      0.619
+     ]
+    },
+    "odds_orani_10_40": 5.71,
+    "p_10": 0.0124,
+    "p_40": 0.067
+   },
+   {
+    "ilce": "Tire",
+    "katsayi": {
+     "sabit": -7.848,
+     "log_max_nokta": 1.275,
+     "log_dun": 0.224,
+     "log_onceki7g": -0.042
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.883,
+      1.743
+     ],
+     "log_dun": [
+      -0.276,
+      0.763
+     ],
+     "log_onceki7g": [
+      -0.845,
+      0.784
+     ]
+    },
+    "odds_orani_10_40": 5.64,
+    "p_10": 0.0042,
+    "p_40": 0.0231
+   },
+   {
+    "ilce": "Torbali",
+    "katsayi": {
+     "sabit": -6.335,
+     "log_max_nokta": 0.918,
+     "log_dun": 0.243,
+     "log_onceki7g": 0.857
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.661,
+      1.418
+     ],
+     "log_dun": [
+      0.054,
+      0.519
+     ],
+     "log_onceki7g": [
+      0.109,
+      1.83
+     ]
+    },
+    "odds_orani_10_40": 3.48,
+    "p_10": 0.0037,
+    "p_40": 0.0129
+   },
+   {
+    "ilce": "Urla",
+    "katsayi": {
+     "sabit": -6.661,
+     "log_max_nokta": 1.113,
+     "log_dun": 0.383,
+     "log_onceki7g": 0.904
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.762,
+      1.51
+     ],
+     "log_dun": [
+      0.228,
+      0.596
+     ],
+     "log_onceki7g": [
+      0.089,
+      1.703
+     ]
+    },
+    "odds_orani_10_40": 4.53,
+    "p_10": 0.0035,
+    "p_40": 0.0156
+   },
+   {
+    "ilce": "Çeşme",
+    "katsayi": {
+     "sabit": -6.641,
+     "log_max_nokta": 0.836,
+     "log_dun": 0.497,
+     "log_onceki7g": 0.925
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.572,
+      1.152
+     ],
+     "log_dun": [
+      0.258,
+      0.848
+     ],
+     "log_onceki7g": [
+      0.231,
+      1.74
+     ]
+    },
+    "odds_orani_10_40": 3.11,
+    "p_10": 0.0019,
+    "p_40": 0.006
+   },
+   {
+    "ilce": "Çiğli",
+    "katsayi": {
+     "sabit": -5.266,
+     "log_max_nokta": 0.754,
+     "log_dun": 0.027,
+     "log_onceki7g": 1.08
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.535,
+      1.027
+     ],
+     "log_dun": [
+      -0.113,
+      0.165
+     ],
+     "log_onceki7g": [
+      0.537,
+      1.607
+     ]
+    },
+    "odds_orani_10_40": 2.78,
+    "p_10": 0.007,
+    "p_40": 0.0192
+   },
+   {
+    "ilce": "Ödemiş",
+    "katsayi": {
+     "sabit": -7.003,
+     "log_max_nokta": 1.276,
+     "log_dun": 0.257,
+     "log_onceki7g": 0.257
+    },
+    "aralik_95": {
+     "log_max_nokta": [
+      0.993,
+      1.761
+     ],
+     "log_dun": [
+      -0.271,
+      0.772
+     ],
+     "log_onceki7g": [
+      -0.38,
+      0.925
+     ]
+    },
+    "odds_orani_10_40": 5.65,
+    "p_10": 0.007,
+    "p_40": 0.0384
+   }
+  ]
+ }
+}

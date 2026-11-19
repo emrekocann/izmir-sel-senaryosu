@@ -349,7 +349,7 @@ AP (PR eğrisinin altı): rastgele tahminde olay oranına (~0.017) eşittir.
 **Sınırlar:**
 - **Olasılıklar düşük kalıyor:** kuru geçmiş günlerle en yüksek olasılık Konak'ta 80 mm'de ~%26. Arşiv yağışı (ERA5) yerel sağanağı yumuşatır; ağaç modelleri gözlenmemiş yağışa (> ~80 mm) genelleyemez, tablo orada düzleşir.
 - **Yanlış alarm çok:** test yıllarında 162 doğru alarma 442 yanlış alarm, 166 kaçırılan olay. Bu bir ön uyarı sinyali, karar değil.
-- **İlçeler arası fark:** Seferihisar ve Dikili olaylarının çoğu kaçırılıyor, Karşıyaka'da yanlış alarm fazla. Tek global modelin ilçelere eşit uymadığının işareti (GWR / coğrafi random forest'ın konusu).
+- **İlçeler arası fark:** Seferihisar ve Dikili olaylarının çoğu kaçırılıyor, Karşıyaka'da yanlış alarm fazla. Tek global modelin ilçelere eşit uymadığının işareti (aşağıda: GWR).
 
 ```bash
 venv/bin/python -m hesap.siniflandirma   # ~4 dk; sonuç egitim/siniflandirma_sonuc.json
@@ -420,6 +420,58 @@ venv/bin/python -m hesap.guvenilirlik   # ~10 dk; sonuç egitim/guvenilirlik.jso
 ```
 
 **Sitede:** "Uyarı" sekmesi (`docs/js/sekmeler/uyari.js`). Seçilen günlük yağış ve önceki hafta (kuru / ıslak) için her ilçenin olay olasılığını haritada gösterir; alarm eşiğini geçen ilçeler kalın çerçeveli. Seçili model bütün verilerle (2020–26) yeniden eğitilir. "Islak" geçmiş, olay günlerinde gözlenen önceki gün yağışlarının ortancasıdır (önceki 7 günde ~44 mm). Panelde yıl yıl sınama sonuçları ve Foça örneği de var. Veri: `venv/bin/python -m hesap.uyari_hazirla` → `docs/veri/uyari.json`.
+
+### 🌬️ Ek değişkenler: çok noktalı yağış ve lodos (`hesap/ek_degiskenler.py`)
+
+Güvenilirlik sınamasının gösterdiği iki eksik için iki yeni değişken denendi (kaynak yine Open-Meteo geçmiş arşivi):
+- **Çok noktalı yağış:** her ilçe için tek nokta yerine, ilçe sınırı içindeki 0.1° (~10 km) ızgara noktalarının en yağışlısı (30 ilçede 156 nokta). Sağanak ilçenin başka köşesine düşünce de görünsün diye.
+- **Lodos:** asıl noktada günün en kuvvetli rüzgârı, baskın yön güney–güneybatıysa (150–260°); değilse 0. Güneyli kuvvetli rüzgâr deniz suyunu kıyıya ve yağmur suyu kanallarına iter. Kıyı ilçelerinin olaylarının çoğu kaçırılıyordu.
+
+Sınama güvenilirlik ile aynı: 2022–26, yıl yıl. Fark, aynı hafta bloklarıyla eşleştirilmiş bootstrap'la ölçülür; %95 aralık sıfırı içeriyorsa fark kanıtlanmamıştır.
+
+| 2022–26, yıl yıl | Lojistik AP | Fark [%95] | Gradient boosting AP | Fark [%95] |
+|---|---|---|---|---|
+| temel (önceki değişkenler) | 0.178 | | 0.188 | |
+| + çok noktalı yağış | 0.177 | −0.001 [−0.004, +0.001] | 0.185 | −0.003 [−0.008, +0.002] |
+| + lodos | 0.181 | +0.004 [−0.003, +0.012] | 0.192 | +0.004 [−0.003, +0.012] |
+| + ikisi | 0.182 | +0.004 [−0.003, +0.012] | 0.190 | +0.002 [−0.006, +0.011] |
+
+**Bulgular:**
+- **İki değişken de başarıyı kanıtlanmış biçimde artırmıyor.** Bütün farkların %95 aralığı sıfırı içeriyor. Uyarı sekmesinin modeli değiştirilmedi.
+- **Kıyı ilçelerinde de tutarlı bir kazanç yok.** Lodosla yakalanan kıyı olayı gradient boosting'de 109'dan 115'e çıkıyor, lojistikte 95'ten 93'e iniyor (264 olayda).
+- **Çok noktalı yağış kör noktayı açmıyor.** Foça, 23 Ekim 2025: asıl noktada 7 mm, ilçenin en yağışlı noktasında 16 mm; haberlere göre ~144 mm. Arşivin kendisi (ERA5) yerel sağanağı görmüyor. Aynı arşivden daha çok nokta almak bunu düzeltmiyor.
+- **Lodos çoğunlukla yağışla birlikte geliyor.** Kuvvetli lodos (≥ 30 km/sa) kuru günlerin %1'inde, ≥ 10 mm yağışlı günlerin %10'unda var. Yağışlı kıyı günlerinde lodos olunca olay oranı değişmiyor (%13 / %14). Kuru günlerde lodosla olay oranı ikiye katlanıyor, ama bu yalnız 4 olay: öğrenecek kadar örnek yok.
+
+**Sınırlar:** Deniz seviyesi ve dalga verisi yok. Rüzgâr ERA5'in günlük en yüksek 10 m rüzgârı; kıyıdaki sert rüzgârı yumuşatır. Gradient boosting yeni değişkenlerle yeniden ayarlanmadı (maliyet yüzünden temel setin parametreleri kullanıldı); yeni değişkenler bu yüzden hafif dezavantajlı.
+
+```bash
+venv/bin/python -m hesap.ek_degiskenler   # ~5 dk (ilk seferde arşiv iner: Open-Meteo kotası yüzünden ~30 dk); sonuç egitim/ek_degiskenler.csv, egitim/ek_degiskenler_sonuc.json
+```
+
+### 🗺️ Coğrafi ağırlıklı lojistik regresyon (GWR): yağışın etkisi ilçeden ilçeye değişiyor mu? (`hesap/gwr.py`)
+
+Yukarıdaki modeller bütün ilçelere tek denklem uygular. GWR her ilçe için ayrı bir lojistik regresyon kurar: o ilçenin verisi tam ağırlıkla, en yakın komşularınınki uzaklıkla azalan ağırlıkla girer (uyarlanır bisquare çekirdeği). Değişkenler: o günün, önceki günün ve önceki 7 günün yağışı (log, standartlaştırılmış; katsayılar karşılaştırılabilir). Komşu sayısı (bant genişliği) 2020–24'te yıl dışarıda bırakılarak seçildi: **k = 3**, yani ilçenin kendisi ve en yakın iki komşusu. k = 1–4 arası neredeyse aynı sonucu veriyor, k büyüdükçe AP düşüyor. Sınama güvenilirlik ile aynı: 2022–26, yıl yıl.
+
+| 2022–26, yıl yıl | AP | Fark, global'e göre [%95] | Duyarlılık | Kesinlik | Atak, ilk gün alarmlı | Kıyı ilçe olayı yakalanan |
+|---|---|---|---|---|---|---|
+| global lojistik (aynı değişkenler + nüfus, kent payı) | 0.176 | | 0.42 | 0.19 | 19/23 | 100/264 |
+| sınıflandırmadaki lojistik | 0.178 | +0.002 [−0.007, +0.016] | 0.40 | 0.20 | 17/23 | 95/264 |
+| **GWR (k = 3)** | **0.184** | +0.008 [−0.009, +0.028] | 0.39 | 0.20 | 19/23 | **114/264** |
+
+**Bulgular:**
+- **Tahminde kazanç kanıtlanmadı.** GWR AP'yi 0.176'dan 0.184'e çıkarıyor, ama %95 aralık sıfırı içeriyor. Kıyı ilçelerinde biraz daha çok olay yakalanıyor (100 → 114 / 264).
+- **Yağışın etkisi ilçeden ilçeye gerçekten değişiyor.** Yerel katsayıların %95 aralıklarında (hafta bloklarıyla 100 bootstrap) Dikili ve Bergama doğu ilçeleriyle örtüşmüyor:
+  - **Doğu iç kesim (Kiraz, Beydağ, Ödemiş, Selçuk, Tire):** o günün yağışı güçlü belirleyici (standart katsayı ~1.0). Önceki 7 günün etkisi kanıtlanmamış (aralık sıfırı içeriyor). Sel o günün sağanağıyla geliyor.
+  - **Kuzey (Dikili, Bergama, Kınık):** o günün yağışının etkisi zayıf (~0.4). Önceki 7 günün etkisi en güçlü burada (Dikili 2.4 [1.8–3.2]). Sel ancak günlerce yağdıktan sonra geliyor.
+  - **Seferihisar:** iki etki de zayıf; olaylarının çoğu yağışla açıklanmıyor.
+- **Bu örüntü tek yağış noktasının yan etkisi değil.** Büyük ilçelerde sağanak asıl noktayı ıskalayabilir (28 Ekim 2025, Bergama: ilçe içindeki noktalarda 6–58 mm). Sağlamlık sınamasında o günün yağışı ilçedeki en yağışlı ızgara noktasından alındı (aynı bant). Kuzeyin katsayısı yine en düşükler arasında (Dikili 0.36 [0.20–0.55], Bergama 0.45); doğuyla arasındaki fark daha da açıldı (Kiraz 1.39 [1.10–1.78]). Tahmin ise biraz kötüleşti: AP 0.184 → 0.177, fark [−0.011, −0.001]. Muhtemel neden: çağrılar yerleşimden gelir, ilçenin en yağışlı köşesi çoğu zaman boş arazidir.
+- **Nedeni bu veriyle ayrılamıyor.** Kuzey ilçeleri Bakırçay havzasında, doğu ilçeleri Küçük Menderes vadisinde; havzanın biçimi ve toprağı yağışa farklı tepki verebilir. ERA5'in kuzeyde sağanağı daha çok yumuşatması da olası (sağlamlık sınaması aynı ERA5 ürününü kullanıyor, bunu dışlayamaz). İkisi de hipotez.
+
+**Sınırlar:** GWR'de nüfus ve kent payı yok (ilçenin yerel sabiti onları taşır). Olayı az ilçelerde katsayılar düzenlileştirmeyle küçülür. Katsayılar ilişkiyi gösterir, nedeni değil.
+
+```bash
+venv/bin/python -m hesap.gwr   # ~2 dk; sonuç egitim/gwr_sonuc.json (önce hesap.ek_degiskenler: sağlamlık sınaması için)
+```
 
 ### 🧭 Rota ve yağış senaryosu (`hesap/sel_senaryo_yollar.py`, `migrations/011`)
 
