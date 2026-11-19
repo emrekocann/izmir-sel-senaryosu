@@ -16,9 +16,13 @@ yükü biner?" Bütün sayılar buradan gelir; sitede elle yazılı sayı yoktur
   • İlçe sınırları: sinir/izmir_ilce.geojson, sadeleştirilmiş.
   • Örnek: 23 Ekim 2025 Foça sağanağı. Haberdeki yağış elle (kaynaklı);
     arşiv ve tahmin yağışı ile çağrılar veriden.
+  • Duyarlılık haritası: gwr_sonuc.json. Her ilçe için o günün ve önceki 7
+    günün yağışı 10 mm yerine 40 mm olunca olay olasılık oranı (çarpan), %95
+    aralığı ve etkinin kanıtlanıp kanıtlanmadığı (katsayı aralığı sıfırı
+    içermiyor); çok noktalı yağışla sağlamlık için sıra korelasyonu.
 
 Çalıştırma: venv/bin/python -m hesap.uyari_hazirla
-Önkoşul: hesap.siniflandirma, hesap.guvenilirlik (ve tahmin arşivi önbelleği).
+Önkoşul: hesap.siniflandirma, hesap.guvenilirlik (ve tahmin arşivi önbelleği), hesap.gwr.
 """
 import datetime as dt
 import logging
@@ -28,8 +32,9 @@ import pandas as pd
 import shapely
 
 from afet.dosya import json_oku, json_yaz
-from afet.yollar import SITE_VERI_DIR
+from afet.yollar import ILCE_SINIRLARI, SITE_VERI_DIR
 from hesap import guvenilirlik as gv
+from hesap import gwr
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
 from hesap import tahmin_sinamasi as ts
@@ -37,8 +42,8 @@ from hesap.ilce_gun import ILCE_CSV, ILCE_GUN_CSV, anahtar
 
 log = logging.getLogger("uyari")
 UYARI_JSON = os.path.join(SITE_VERI_DIR, "uyari.json")
-ILCE_GEOJSON = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sinir", "izmir_ilce.geojson")
 SADELESTIR = 0.002            # ~200 m: ilçe ölçeğinde yeterli, dosya küçük kalır
+GWR_GORUNUMLER = {"gunun_yagisi": "log_yagis", "onceki_hafta": "log_onceki7g"}   # sekmedeki görünüm → değişken
 ORNEK = {
     "ilce": "Foça", "gun": "2025-10-23", "sonraki_gun": 4,
     "haber_mm": 144, "haber_saat": 1.5,
@@ -57,7 +62,7 @@ def islak_gecmis(t):
 
 def ilce_geometrileri(adlar):
     """ilce_gun adı → sadeleştirilmiş GeoJSON geometrisi (TKGM adları anahtar() ile eşlenir)."""
-    geo = json_oku(ILCE_GEOJSON)
+    geo = json_oku(ILCE_SINIRLARI)
     harita = {anahtar(ad): ad for ad in adlar}
     out = {}
     for f in geo["features"]:
@@ -82,6 +87,27 @@ def sinama_ozeti(g, secili):
     return {"tum_yillar": al(tum), "oglen_tahmin": al(oglen), "tahminsiz": al(yok),
             "yillar": [{"yil": k["test_yili"], "ap": k["ap"], "buyuk_gun": k["il"]["buyuk_olay_gunu"],
                         "buyuk_gun_alarmli": k["il"]["alarmli"]} for k in s["katmanlar"]]}
+
+
+def gwr_ozeti(g, adlar):
+    """gwr_sonuc.json → duyarlılık haritası. kanitli: katsayının %95 aralığı
+    sıfırı içermiyor (çarpan aralığı 1'i içermiyor)."""
+    tek = {i["ilce"]: i for i in g["ilceler"]}
+    if set(tek) != set(adlar):
+        raise ValueError(f"GWR ilçeleri uyuşmuyor: {sorted(set(tek) ^ set(adlar))}")
+    c = g["cok_nokta"]
+    tek_y = pd.Series({ad: i["katsayi"]["log_yagis"] for ad, i in tek.items()})
+    cok_y = pd.Series({i["ilce"]: i["katsayi"][c["degiskenler"][0]] for i in c["ilceler"]})
+    kanitli = lambda a: bool(a[0] > 0 or a[1] < 0)
+    s = g["sonuclar"]
+    al = lambda o: {k: o[k] for k in ("ap", "duyarlilik", "kesinlik", "yillar")}
+    return {
+        "bant": g["bant"], "olcek_mm": list(gwr.DUYARLILIK_MM),
+        "sinama": {"gwr": al(s["gwr"]), "global": al(s["global"]), "ap_farki": s["gwr"]["ap_farki_globale_gore"]},
+        "cok_nokta_sira_korelasyonu": round(float(tek_y.corr(cok_y.reindex(tek_y.index), method="spearman")), 2),
+        "ilceler": {ad: {gor: {**tek[ad]["carpan_10_40"][v], "kanitli": kanitli(tek[ad]["aralik_95"][v])}
+                         for gor, v in GWR_GORUNUMLER.items()} for ad in adlar},
+    }
 
 
 def ornek_ozeti(t, ilce_df):
@@ -121,6 +147,7 @@ def hazirla():
         "sinama": sinama_ozeti(json_oku(gv.SONUC_JSON), secili),
         "onem": sonuc["onem"],
         "ornek": ornek_ozeti(t, ilce_df),
+        "gwr": gwr_ozeti(json_oku(gwr.SONUC_JSON), adlar),
     }
 
 

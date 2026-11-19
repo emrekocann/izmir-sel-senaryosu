@@ -63,7 +63,8 @@ def test_harita_ozeti_baska_yagis_kolonuyla():
     t = _veri().rename(columns={"log_yagis": "log_max_nokta"})
     h = {i["ilce"]: i for i in gwr.harita_ozeti(t, d, 4, 0, gwr.COK_NOKTA)}
     assert set(h["i0"]["katsayi"]) == {"sabit", *gwr.COK_NOKTA}
-    assert h["i0"]["odds_orani_10_40"] > h["i7"]["odds_orani_10_40"]
+    c = lambda i: h[i]["carpan_10_40"]["log_max_nokta"]["deger"]
+    assert c("i0") > c("i7") > 0
     assert h["i0"]["p_40"] > h["i0"]["p_10"]
 
 
@@ -74,7 +75,9 @@ def test_sonuc_dosyasi_sozlesmesi():
     assert {"gwr", "global", "lojistik"} == set(r["sonuclar"])
     assert len(r["ilceler"]) == 30
     for i in r["ilceler"]:
-        assert {"ilce", "katsayi", "aralik_95", "odds_orani_10_40", "p_10", "p_40"} <= set(i)
+        assert {"ilce", "katsayi", "aralik_95", "carpan_10_40", "p_10", "p_40"} <= set(i)
+        for c in i["carpan_10_40"].values():                  # çarpan aralığı katsayı aralığının dönüşümü
+            assert c["aralik_95"][0] <= c["deger"] <= c["aralik_95"][1]
     c = r["cok_nokta"]
     assert c["degiskenler"] == gwr.COK_NOKTA and len(c["ilceler"]) == 30
     assert len(c["sonuc"]["ap_farki_tek_noktaya_gore"]) == 3

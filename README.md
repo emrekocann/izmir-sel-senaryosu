@@ -4,7 +4,7 @@ Tek bir soruyu yanıtlayan, PostGIS + pgRouting tabanlı bir karar destek harita
 
 **🔗 Canlı site: [emrekocann.github.io/izmir-sel-senaryosu](https://emrekocann.github.io/izmir-sel-senaryosu/)** · Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md)
 
-**Yayın sitesi:** [docs/](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Harita merkezli, Türkçe / İngilizce, sunucusuz çalışan site (GitHub Pages: Settings → Pages → dal + `/docs`). Beş sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tarayıcıda hesaplanan tahliye rotası, toplanma alanı denetimi, itfaiye kayıtlarıyla eğitilmiş erken uyarı modeli; yöntem ve doğrulama "Hakkında" penceresinde. Sitedeki bütün sayılar `docs/veri/` dosyalarından gelir; bunları `venv/bin/python -m hesap.vitrin_hazirla`, `-m hesap.rota_agi_hazirla`, `-m hesap.toplanma_denetimi` ve `-m hesap.uyari_hazirla` üretir (sonuncusu `hesap.siniflandirma` ve `hesap.guvenilirlik` çıktılarını okur). Yerelde: `python -m http.server --directory docs`. Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
+**Yayın sitesi:** [docs/](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Harita merkezli, Türkçe / İngilizce, sunucusuz çalışan site (GitHub Pages: Settings → Pages → dal + `/docs`). Beş sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tarayıcıda hesaplanan tahliye rotası, toplanma alanı denetimi, itfaiye kayıtlarıyla eğitilmiş erken uyarı modeli ve ilçe ilçe yağışa duyarlılık haritası; yöntem ve doğrulama "Hakkında" penceresinde. Sitedeki bütün sayılar `docs/veri/` dosyalarından gelir; bunları `venv/bin/python -m hesap.vitrin_hazirla`, `-m hesap.rota_agi_hazirla`, `-m hesap.toplanma_denetimi` ve `-m hesap.uyari_hazirla` üretir (sonuncusu `hesap.siniflandirma`, `hesap.guvenilirlik` ve `hesap.gwr` çıktılarını okur). Yerelde: `python -m http.server --directory docs`. Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
 
 ## 🚀 Neler var
 
@@ -419,7 +419,7 @@ Tahminli sınamada uyarı **önceki gün saat 12:00'de** verilir ve o anda elde 
 venv/bin/python -m hesap.guvenilirlik   # ~10 dk; sonuç egitim/guvenilirlik.json
 ```
 
-**Sitede:** "Uyarı" sekmesi (`docs/js/sekmeler/uyari.js`). Seçilen günlük yağış ve önceki hafta (kuru / ıslak) için her ilçenin olay olasılığını haritada gösterir; alarm eşiğini geçen ilçeler kalın çerçeveli. Seçili model bütün verilerle (2020–26) yeniden eğitilir. "Islak" geçmiş, olay günlerinde gözlenen önceki gün yağışlarının ortancasıdır (önceki 7 günde ~44 mm). Panelde yıl yıl sınama sonuçları ve Foça örneği de var. Veri: `venv/bin/python -m hesap.uyari_hazirla` → `docs/veri/uyari.json`.
+**Sitede:** "Uyarı" sekmesi (`docs/js/sekmeler/uyari.js`). Seçilen günlük yağış ve önceki hafta (kuru / ıslak) için her ilçenin olay olasılığını haritada gösterir; alarm eşiğini geçen ilçeler kalın çerçeveli. Seçili model bütün verilerle (2020–26) yeniden eğitilir. "Islak" geçmiş, olay günlerinde gözlenen önceki gün yağışlarının ortancasıdır (önceki 7 günde ~44 mm). Panelde yıl yıl sınama sonuçları ve Foça örneği de var. İkinci görünüm "Yağışa duyarlılık": GWR'nin ilçe ilçe sonuçları (aşağıda). Veri: `venv/bin/python -m hesap.uyari_hazirla` → `docs/veri/uyari.json`.
 
 ### 🌬️ Ek değişkenler: çok noktalı yağış ve lodos (`hesap/ek_degiskenler.py`)
 
@@ -468,6 +468,8 @@ Yukarıdaki modeller bütün ilçelere tek denklem uygular. GWR her ilçe için 
 - **Nedeni bu veriyle ayrılamıyor.** Kuzey ilçeleri Bakırçay havzasında, doğu ilçeleri Küçük Menderes vadisinde; havzanın biçimi ve toprağı yağışa farklı tepki verebilir. ERA5'in kuzeyde sağanağı daha çok yumuşatması da olası (sağlamlık sınaması aynı ERA5 ürününü kullanıyor, bunu dışlayamaz). İkisi de hipotez.
 
 **Sınırlar:** GWR'de nüfus ve kent payı yok (ilçenin yerel sabiti onları taşır). Olayı az ilçelerde katsayılar düzenlileştirmeyle küçülür. Katsayılar ilişkiyi gösterir, nedeni değil.
+
+**Sitede:** Uyarı sekmesinin "Yağışa duyarlılık" görünümü. Her ilçe için o gün ya da önceki 7 günde 10 mm yerine 40 mm yağmasının olay olasılığını kabaca kaç katına çıkardığı (olasılık oranı, %95 aralığıyla). İki harita birlikte okununca örüntü görünüyor: kuzey (Dikili, Bergama) o günün yağışında en açık, önceki haftada en koyu; doğu iç kesimde önceki haftanın etkisi kanıtlanmamış. Etkisi kanıtlanmayan ilçeler gri ve kesik çizgili; liste aynı sayıları tablo olarak verir.
 
 ```bash
 venv/bin/python -m hesap.gwr   # ~2 dk; sonuç egitim/gwr_sonuc.json (önce hesap.ek_degiskenler: sağlamlık sınaması için)

@@ -27,8 +27,9 @@ ilçe farkının en basit hâli). Sınama guvenilirlik ile aynı: 2022–26 yıl
 eşik her katmanda yeniden; AP farkı eşleştirilmiş hafta bootstrap'ıyla.
 
 Harita çıktısı (bütün verilerle eğitilmiş): her ilçenin yerel katsayıları ve
-okunur karşılığı — kuru geçmişte 10 → 40 mm yağışın olasılık oranı (odds
-ratio) ve 40 mm'deki olasılık.
+okunur karşılığı — her değişken için 10 → 40 mm'nin olasılık oranı (odds
+ratio, "çarpan"; öteki değişkenler sabit) ve %95 aralığı; kuru geçmişte 10 ve
+40 mm'deki olasılık. Sitenin Uyarı sekmesi çarpanları haritada gösterir.
 
 Sağlamlık (ek_degiskenler.csv varsa): günün yağışı tek noktadan değil, ilçe
 içindeki en yağışlı ızgara noktasından (log_max_nokta) alınarak aynı bantla
@@ -188,7 +189,8 @@ def harita_ozeti(t, d, k, n=KATSAYI_BOOTSTRAP, kolonlar=DEGISKENLER):
     aralik = katsayi_araliklari(t, d, k, n, kolonlar=kolonlar) if n else {}
     a, b = DUYARLILIK_MM
     yagis = kolonlar[0]
-    adim = (np.log1p(b) - np.log1p(a)) / g.ss[yagis]      # standart birimde 10 → 40 mm
+    adim = {v: (np.log1p(b) - np.log1p(a)) / g.ss[v] for v in kolonlar}      # standart birimde 10 → 40 mm
+    carp = lambda v, x: round(float(np.exp(x * adim[v])), 2)
     out = []
     for ilce, kk in kat.items():
         satir = pd.DataFrame({"ilce": [ilce, ilce], **{v: [0.0, 0.0] for v in kolonlar}})
@@ -196,7 +198,9 @@ def harita_ozeti(t, d, k, n=KATSAYI_BOOTSTRAP, kolonlar=DEGISKENLER):
         p = g.predict_proba(satir)
         out.append({"ilce": ilce, "katsayi": {k2: round(v, 3) for k2, v in kk.items()} if kk else None,
                     "aralik_95": {v: aralik[(ilce, v)] for v in kolonlar if (ilce, v) in aralik},
-                    "odds_orani_10_40": round(float(np.exp(kk[yagis] * adim)), 2) if kk else None,
+                    "carpan_10_40": {v: {"deger": carp(v, kk[v]),
+                                         **({"aralik_95": [carp(v, x) for x in aralik[(ilce, v)]]} if (ilce, v) in aralik else {})}
+                                     for v in kolonlar} if kk else None,
                     "p_10": round(float(p[0]), 4), "p_40": round(float(p[1]), 4)})
     return out
 
@@ -253,11 +257,11 @@ def yazdir(r):
         f = o.get("ap_farki_globale_gore")
         print(f"{ad:9} {o['ap']:6.3f} {str(f) if f else '':>26} {o['duyarlilik']:10.2f} {o['kesinlik']:8.2f} "
               f"{o['atak']['ilk_gun_alarmli']:>5}/{o['atak']['atak']:<6} {o['kiyi']['yakalanan']:>4}/{o['kiyi']['olay']}")
-    print("\nİlçe başına (bütün veri): 10 → 40 mm olasılık oranı, P(40 mm, kuru)")
-    for i in sorted(r["ilceler"], key=lambda x: -(x["odds_orani_10_40"] or 0)):
-        a = i["aralik_95"]
-        print(f"  {i['ilce']:12} OR {i['odds_orani_10_40']}  P40 {i['p_40']:.3f}  yağış {i['katsayi']['log_yagis']} {a.get('log_yagis')}"
-              f"  önceki 7 gün {i['katsayi']['log_onceki7g']} {a.get('log_onceki7g')}")
+    print("\nİlçe başına (bütün veri): 10 → 40 mm çarpanı [%95], P(40 mm, kuru)")
+    for i in sorted(r["ilceler"], key=lambda x: -x["carpan_10_40"]["log_yagis"]["deger"]):
+        c = i["carpan_10_40"]
+        print(f"  {i['ilce']:12} günün yağışı ×{c['log_yagis']['deger']} {c['log_yagis'].get('aralik_95')}"
+              f"  önceki 7 gün ×{c['log_onceki7g']['deger']} {c['log_onceki7g'].get('aralik_95')}  P40 {i['p_40']:.3f}")
     c = r.get("cok_nokta")
     if not c:
         return

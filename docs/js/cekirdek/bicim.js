@@ -2,7 +2,8 @@
 import { T, sayi } from './dil.js';
 
 // TKGM yazımı (noktasız ı yok) → doğru yazım
-const YAZIM = { 'Güzelyali': 'Güzelyalı', 'Karşiyaka': 'Karşıyaka', 'Bayrakli': 'Bayraklı' };
+const YAZIM = { 'Güzelyali': 'Güzelyalı', 'Karşiyaka': 'Karşıyaka', 'Bayrakli': 'Bayraklı', 'Kinik': 'Kınık',
+  'Narlidere': 'Narlıdere', 'Bayindir': 'Bayındır', 'Torbali': 'Torbalı' };
 export const yerAdi = (ad) => YAZIM[ad] || ad;
 
 /** "100_6" → "100 mm / 6 saat" */

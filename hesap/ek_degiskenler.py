@@ -38,11 +38,11 @@ from sklearn.metrics import average_precision_score
 
 from afet import ag
 from afet.dosya import json_oku, json_yaz
+from afet.yollar import ILCE_SINIRLARI
 from hesap import guvenilirlik as gv
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
 from hesap.ilce_gun import ARSIV_URL, CIKTI_DIR, HAM_DIR, ILCE_CSV, ILCE_GUN_CSV, anahtar
-from hesap.uyari_hazirla import ILCE_GEOJSON
 
 log = logging.getLogger("ek_degiskenler")
 EK_CSV = os.path.join(CIKTI_DIR, "ek_degiskenler.csv")
@@ -212,7 +212,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     t = pd.read_csv(ILCE_GUN_CSV)
     ilce_df = pd.read_csv(ILCE_CSV)
-    nok = noktalar(ilce_df, json_oku(ILCE_GEOJSON))
+    nok = noktalar(ilce_df, json_oku(ILCE_SINIRLARI))
     bas = pd.Timestamp(f"{om.ILK_YIL}-01-01").date()
     bit = pd.Timestamp(t.gun.max()).date()
     ek = ozellikler(gunluk_arsiv(nok, bas, bit))
