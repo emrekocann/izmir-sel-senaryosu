@@ -46,7 +46,7 @@ import pandas as pd
 from sklearn.base import clone
 from sklearn.metrics import average_precision_score
 
-from afet.dosya import json_yaz
+from hesap import gunlugu_kur, sonucu_yaz
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
 from hesap import tahmin_sinamasi as ts
@@ -125,22 +125,43 @@ def atak_ozeti(x, alarm):
             "herhangi_alarmli": sum(a["herhangi_alarm"] for a in at), "liste": at}
 
 
+def hafta(gun):
+    """Gün (YYYY-AA-GG) → ISO yıl-hafta etiketi (bootstrap blokları)."""
+    return pd.to_datetime(gun).dt.strftime("%G-%V").values
+
+
+def blok_satirlari(etiket):
+    """Satırların blok etiketleri → (sıralı benzersiz etiketler, her bloğun satır indisleri)."""
+    adlar, ters = np.unique(np.asarray(etiket), return_inverse=True)
+    return adlar, [np.flatnonzero(ters == i) for i in range(len(adlar))]
+
+
+def blok_cek(satirlar, n, tohum=TOHUM):
+    """Blok bootstrap: bloklar yerine koyarak n kez çekilir. Her tekrar için
+    (seçilen blok sıraları, satır indisleri)."""
+    r = np.random.default_rng(tohum)
+    for _ in range(n):
+        sec = r.integers(0, len(satirlar), len(satirlar))
+        yield sec, np.concatenate([satirlar[i] for i in sec])
+
+
+def aralik_95(degerler):
+    """Bootstrap değerlerinin %95 aralığı: [2.5, 97.5 yüzdelik]."""
+    return [round(float(np.percentile(degerler, 2.5)), 3), round(float(np.percentile(degerler, 97.5)), 3)]
+
+
 def bootstrap(x, alarm, n=BOOTSTRAP, tohum=TOHUM, blok="gun"):
     """x: DataFrame(gun, olay, p, cagri_su, [blok]); alarm: bool dizi. Bloklar
     (gün ya da hafta) yerine koyarak çekilir. Döner: {ölçü: [alt, üst]} (%95)."""
     x = x.reset_index(drop=True).assign(a=np.asarray(alarm))
     il = x.groupby("gun").agg(c=("cagri_su", "sum"), a=("a", "any"), b=(blok, "first"))
-    bloklar, ters = np.unique(x[blok].values, return_inverse=True)
-    satirlar = [np.flatnonzero(ters == i) for i in range(len(bloklar))]
+    bloklar, satirlar = blok_satirlari(x[blok].values)
     il_ters = np.searchsorted(bloklar, il.b.values)
     il_buyuk = [(il.c.values[il_ters == i] >= om.OLAY_CAGRI) for i in range(len(bloklar))]
     il_alarm = [il.a.values[il_ters == i] for i in range(len(bloklar))]
     y, p, a = x.olay.values, x.p.values, x.a.values
-    r = np.random.default_rng(tohum)
     olc = {"ap": [], "kesinlik": [], "duyarlilik": [], "buyuk_gun_yakalama": []}
-    for _ in range(n):
-        sec = r.integers(0, len(bloklar), len(bloklar))
-        idx = np.concatenate([satirlar[i] for i in sec])
+    for sec, idx in blok_cek(satirlar, n, tohum):
         yy, aa = y[idx], a[idx]
         if yy.sum() == 0:
             continue
@@ -151,26 +172,39 @@ def bootstrap(x, alarm, n=BOOTSTRAP, tohum=TOHUM, blok="gun"):
         if bb.sum():
             ia = np.concatenate([il_alarm[i] for i in sec])
             olc["buyuk_gun_yakalama"].append((ia & bb).sum() / bb.sum())
-    return {k: [round(float(np.percentile(v, 2.5)), 3), round(float(np.percentile(v, 97.5)), 3)]
-            for k, v in olc.items() if v}
+    return {k: aralik_95(v) for k, v in olc.items() if v}
 
 
 # ── 1. Yıl yıl geriye dönük sınama ──────────────────────────────────────────
 
-def katman(t, yil, ad, girdiler=None):
+def tahmin_tablosu(x, p, esik):
+    """Sınamaların ortak çıktısı: DataFrame(ilce, gun, olay, cagri_su, p, esik)."""
+    return x[["ilce", "gun", "olay", "cagri_su"]].assign(p=p, esik=esik)
+
+
+def katman(t, yil, ad, girdiler=None, tanim=None):
     """yil'dan önceki yıllarla ayarla + eğit, yil'i her girdiyle tahmin et.
-    girdiler: {ad: (DataFrame) -> DataFrame} test satırlarını dönüştürür."""
+    girdiler: {ad: (DataFrame) -> DataFrame} test satırlarını dönüştürür;
+    tanim: sn.MODELLER biçiminde model tanımı (verilmezse sn.MODELLER[ad])."""
+    tanim = tanim or sn.MODELLER[ad]
+    kolonlar = tanim[1]
     egitim, test = t[t.yil < yil], t[t.yil == yil]
-    m, prm, _, esik = sn.ayarla(ad, egitim)
-    kolonlar = sn.MODELLER[ad][1]
+    m, prm, _, esik = sn.ayarla(ad, egitim, {ad: tanim})
     m = clone(m).fit(egitim[kolonlar], egitim.olay)
     out = {}
     for kaynak, donustur in {"gozlem": lambda x: x, **(girdiler or {})}.items():
         x = donustur(test).sort_values(["gun", "ilce"]).reset_index(drop=True)
         if len(x):
-            out[kaynak] = x[["ilce", "gun", "olay", "cagri_su"]].assign(
-                p=m.predict_proba(x[kolonlar])[:, 1], esik=esik)
+            out[kaynak] = tahmin_tablosu(x, m.predict_proba(x[kolonlar])[:, 1], esik)
     return out, {k.split("__")[-1]: v for k, v in prm.items()}, esik
+
+
+def yil_yil(t, ad, tanim=None, test_yillari=TEST_YILLARI):
+    """Her test yılı yalnız önceki yıllarla eğitilmiş modelle (gözlenen yağış);
+    birleşik tahmin tablosu. tanim: yıl → model tanımı (yıla göre parametre için);
+    verilmezse sn.MODELLER[ad]."""
+    return pd.concat([katman(t, yil, ad, tanim=tanim(yil) if tanim else None)[0]["gozlem"]
+                      for yil in test_yillari], ignore_index=True)
 
 
 def ozet(x, n=BOOTSTRAP):
@@ -181,7 +215,7 @@ def ozet(x, n=BOOTSTRAP):
     return {**sn.olculer(x.olay, x.p), "dogru_alarm": dp, "yanlis_alarm": yp, "kacirilan": yn,
             "kesinlik": round(dp / max(dp + yp, 1), 3), "duyarlilik": round(dp / max(dp + yn, 1), 3),
             "il": sn.il_gunleri(x, alarm.astype(float), 0.5), "atak": atak_ozeti(x, alarm),
-            "aralik_95": bootstrap(x.assign(hafta=pd.to_datetime(x.gun).dt.strftime("%G-%V")), alarm, n, blok="hafta"),
+            "aralik_95": bootstrap(x.assign(hafta=hafta(x.gun)), alarm, n, blok="hafta"),
             "yillar": sorted({int(g[:4]) for g in x.gun})}
 
 
@@ -240,7 +274,7 @@ def yazdir(r):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     t = pd.read_csv(ILCE_GUN_CSV)
     ilce_df = pd.read_csv(ILCE_CSV)
     bas, bit = dt.date(TAHMIN_ILK_YIL, 1, 1), pd.Timestamp(t.gun.max()).date()
@@ -255,10 +289,7 @@ def main():
         "tahminsiz": (TAHMIN_ILK_YIL, lambda x: ts.tahminle_degistir(
             x, x[["ilce", "gun"]].assign(**{k: 0.0 for k in ts.GUNUN_YAGISI}))),
     }
-    r = calistir(t, girdiler)
-    json_yaz(SONUC_JSON, r, okunur=True)
-    yazdir(r)
-    print(f"\nYazıldı: {SONUC_JSON}")
+    sonucu_yaz(SONUC_JSON, calistir(t, girdiler), yazdir)
 
 
 if __name__ == "__main__":

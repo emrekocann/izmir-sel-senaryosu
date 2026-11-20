@@ -2,7 +2,7 @@
 // önceliklendirilmesi (hesap/toplanma_denetimi.py). Ön eleme listesidir.
 import { T, sayi } from '../cekirdek/dil.js';
 import { alanAdi, baslik, kacis, mesafe } from '../cekirdek/bicim.js';
-import { sayiKutulari, lejantOgesi } from '../cekirdek/arayuz.js';
+import { sayiKutulari, listeDinle, lejantOgesi } from '../cekirdek/arayuz.js';
 import { DENETIM_CSV } from '../cekirdek/veri.js';
 
 // nokta kodu (denetim.json): 0 işaretsiz, 1–3 öncelik, 4 düz ova
@@ -104,12 +104,7 @@ export function denetimSekmesi({ denetim, harita }) {
     goster(yeniIcerik) {
       icerik = yeniIcerik;
       if (!katman) katmanlariKur();
-      const sec = (olay) => {
-        const oge = olay.target.closest('[data-alan-sira]');
-        if (oge && (olay.type === 'click' || olay.key === 'Enter')) alanaGit(Number(oge.dataset.alanSira));
-      };
-      icerik.addEventListener('click', sec);
-      icerik.addEventListener('keydown', sec);
+      listeDinle(icerik, 'data-alan-sira', (sira) => alanaGit(Number(sira)));
       ciz();
       katman.addTo(harita.harita);
       harita.ilGorunumu();

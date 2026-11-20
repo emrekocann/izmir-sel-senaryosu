@@ -1,8 +1,8 @@
 // Sekme: 2 Şubat 2021 seli. Haberlerde su bastığı yazılan yerler ile modelin
 // karşılaştırması (hesap/sel_dogrulama.py → hesap/vitrin_hazirla.py).
 import { T, sayi } from '../cekirdek/dil.js';
-import { senaryoAdi, yerAdi, kacis, aralik } from '../cekirdek/bicim.js';
-import { secimHtml, secimDinle, lejantOgesi, suLejanti } from '../cekirdek/arayuz.js';
+import { senaryoAdi, yerAdi, kacis, aralik, yuzde, yuzdeIsareti } from '../cekirdek/bicim.js';
+import { secimDinle, senaryoSecimi, listeDinle, lejantOgesi, suLejanti } from '../cekirdek/arayuz.js';
 
 const RENK = { yakalandi: '#047857', kacirildi: '#dc2626' };
 
@@ -19,9 +19,9 @@ export function olaySekmesi({ vitrin, harita }) {
   function modelSonucu(yer) {
     const o = yer.olcum[durum.senaryo];
     if (yer.tur === 'mahalle') {
-      const sira = o.derin_yuzdelik >= 50 ? T(`en ıslak %${100 - o.derin_yuzdelik}`, `wettest ${100 - o.derin_yuzdelik}%`)
-        : T(`en kuru %${o.derin_yuzdelik}`, `driest ${o.derin_yuzdelik}%`);
-      return T(`alanın %${sayi(o.derin_pay * 100, 1)} kadarı ıslak; ${sira} içinde`, `${sayi(o.derin_pay * 100, 1)}% of area wet; ${sira}`);
+      const sira = o.derin_yuzdelik >= 50 ? T(`en ıslak ${yuzdeIsareti(100 - o.derin_yuzdelik)}`, `wettest ${yuzdeIsareti(100 - o.derin_yuzdelik)}`)
+        : T(`en kuru ${yuzdeIsareti(o.derin_yuzdelik)}`, `driest ${yuzdeIsareti(o.derin_yuzdelik)}`);
+      return T(`alanın ${yuzde(o.derin_pay, 1)} kadarı ıslak; ${sira} içinde`, `${yuzde(o.derin_pay, 1)} of area wet; ${sira}`);
     }
     if (yer.tur === 'alt_gecit') return o.alt_gecit_dolu ? T('alt geçitler dolu', 'underpasses flooded') : T('alt geçitler kuru', 'underpasses dry');
     return o.en_derin_m > 0 ? T(`en derin nokta ${sayi(o.en_derin_m, 1)} m`, `deepest point ${sayi(o.en_derin_m, 1)} m`) : T('su yok', 'no water');
@@ -89,7 +89,7 @@ export function olaySekmesi({ vitrin, harita }) {
              'I compiled the places the news reported as flooded, with sources, and compared them with the model. The blue layer is modelled depth.')}</p>
       ${sonucKutusu()}
       <div class="alan-baslik">${T('Olaya yakın senaryo', 'Scenario close to the event')}</div>
-      ${secimHtml('senaryo', vitrin.olay_senaryolari.map((s) => [s, senaryoAdi(s)]), durum.senaryo)}
+      ${senaryoSecimi('senaryo', vitrin.olay_senaryolari, durum.senaryo)}
       <ul class="liste">${vitrin.yerler.map((yer, sira) => `
         <li ${yer.geometri ? `data-yer-sira="${sira}" tabindex="0" role="button"` : 'class="pasif"'}>
           <div><b>${kacis(yerAdi(yer.ad))}</b> ${rozet(yer)}</div>
@@ -127,12 +127,7 @@ export function olaySekmesi({ vitrin, harita }) {
         harita.suGoster(durum.senaryo);
         ciz();
       });
-      const sec = (olay) => {
-        const oge = olay.target.closest('[data-yer-sira]');
-        if (oge && (olay.type === 'click' || olay.key === 'Enter')) yereGit(Number(oge.dataset.yerSira));
-      };
-      icerik.addEventListener('click', sec);
-      icerik.addEventListener('keydown', sec);
+      listeDinle(icerik, 'data-yer-sira', (sira) => yereGit(Number(sira)));
       ciz();
       harita.suGoster(durum.senaryo);
       katman.addTo(harita.harita);

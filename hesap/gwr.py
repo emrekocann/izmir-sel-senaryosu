@@ -50,8 +50,8 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score
 
-from afet.dosya import json_yaz
 from hesap import ek_degiskenler as ed
+from hesap import gunlugu_kur, sonucu_yaz
 from hesap import guvenilirlik as gv
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
@@ -150,7 +150,7 @@ def yil_yil(t, d, k, test_yillari=gv.TEST_YILLARI, kolonlar=DEGISKENLER):
         _, oof = yil_disarida_ap(egitim, d, k, sorted(egitim.yil.unique()), kolonlar)
         esik = sn.f1_esigi(egitim.olay, oof)
         p = GWLR(d, k, kolonlar).fit(egitim).predict_proba(test)
-        parcalar.append(test[["ilce", "gun", "olay", "cagri_su"]].assign(p=p, esik=esik))
+        parcalar.append(gv.tahmin_tablosu(test, p, esik))
         log.info("GWR %d: AP %.3f", yil, average_precision_score(test.olay, p))
     return pd.concat(parcalar, ignore_index=True)
 
@@ -164,21 +164,16 @@ def katsayi_araliklari(t, d, k, n=KATSAYI_BOOTSTRAP, tohum=gv.TOHUM, kolonlar=DE
     """Yerel katsayıların %95 aralığı: haftalar yerine koyarak çekilir, GWR
     yeniden eğitilir. Aralık sıfırı içeriyorsa o ilçedeki etki kanıtlanmamış;
     iki ilçenin aralığı örtüşmüyorsa aralarındaki fark gerçek sayılabilir."""
-    hafta = pd.to_datetime(t.gun).dt.strftime("%G-%V").values
-    bloklar, ters = np.unique(hafta, return_inverse=True)
-    satirlar = [np.flatnonzero(ters == i) for i in range(len(bloklar))]
-    r = np.random.default_rng(tohum)
+    _, satirlar = gv.blok_satirlari(gv.hafta(t.gun))
     ornek = {}
-    for j in range(n):
-        idx = np.concatenate([satirlar[i] for i in r.integers(0, len(bloklar), len(bloklar))])
+    for j, (_, idx) in enumerate(gv.blok_cek(satirlar, n, tohum)):
         for ilce, kk in GWLR(d, k, kolonlar).fit(t.iloc[idx].reset_index(drop=True)).katsayilar().items():
             if kk:
                 for v in kolonlar:
                     ornek.setdefault((ilce, v), []).append(kk[v])
         if (j + 1) % 20 == 0:
             log.info("katsayı bootstrap %d/%d", j + 1, n)
-    return {key: [round(float(np.percentile(v, 2.5)), 3), round(float(np.percentile(v, 97.5)), 3)]
-            for key, v in ornek.items()}
+    return {key: gv.aralik_95(v) for key, v in ornek.items()}
 
 
 def harita_ozeti(t, d, k, n=KATSAYI_BOOTSTRAP, kolonlar=DEGISKENLER):
@@ -211,9 +206,7 @@ def cok_nokta_sinamasi(t_ham, ek, d, k, tek_nokta, test_yillari=gv.TEST_YILLARI,
     tek_nokta: asıl GWR'nin yıl yıl tahminleri (AP farkı için)."""
     x = ed.birlestir(t_ham, ek)
     tahmin = yil_yil(x, d, k, test_yillari, COK_NOKTA)
-    o = gv.ozet(tahmin, n)
-    o["atak"].pop("liste")
-    o["kiyi"] = ed.kiyi_yakalama(tahmin)
+    o = ed.kisa_ozet(tahmin, n)
     o["ap_farki_tek_noktaya_gore"] = ed.eslesik_fark(tek_nokta, tahmin, n)
     return {"degiskenler": COK_NOKTA, "sonuc": o, "ilceler": harita_ozeti(x, d, k, n_katsayi, COK_NOKTA)}
 
@@ -225,21 +218,12 @@ def calistir(t_ham, ilce_df, ek=None, bantlar=BANTLAR, test_yillari=gv.TEST_YILL
     egitim = t[~t.yil.isin(om.TEST_YILLARI)].reset_index(drop=True)
     k, skor = bant_sec(egitim, d, bantlar)
     log.info("seçilen bant: k=%d", k)
-    tahmin = {"gwr": yil_yil(t, d, k, test_yillari)}
-    for ad, tanim in {"global": global_tanim(), "lojistik": sn.MODELLER["lojistik"]}.items():
-        parca = []
-        for yil in test_yillari:
-            eg, te = t[t.yil < yil], t[t.yil == yil]
-            m, _, _, esik = sn.ayarla(ad, eg, {ad: tanim})
-            m = m.fit(eg[tanim[1]], eg.olay)
-            parca.append(te[["ilce", "gun", "olay", "cagri_su"]].assign(p=m.predict_proba(te[tanim[1]])[:, 1], esik=esik))
-        tahmin[ad] = pd.concat(parca, ignore_index=True)
-        log.info("%s sınandı", ad)
+    tahmin = {"gwr": yil_yil(t, d, k, test_yillari),
+              "global": gv.yil_yil(t, "global", lambda _: global_tanim(), test_yillari),
+              "lojistik": gv.yil_yil(t, "lojistik", test_yillari=test_yillari)}
     sonuc = {}
     for ad, x in tahmin.items():
-        o = gv.ozet(x, n)
-        o["atak"].pop("liste")
-        o["kiyi"] = ed.kiyi_yakalama(x)
+        o = ed.kisa_ozet(x, n)
         if ad != "global":
             o["ap_farki_globale_gore"] = ed.eslesik_fark(tahmin["global"], x, n)
         sonuc[ad] = o
@@ -279,14 +263,11 @@ def yazdir(r):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     ek = pd.read_csv(ed.EK_CSV) if os.path.exists(ed.EK_CSV) else None
     if ek is None:
         log.warning("%s yok: çok noktalı sağlamlık sınaması atlanıyor (önce hesap.ek_degiskenler)", ed.EK_CSV)
-    r = calistir(pd.read_csv(ILCE_GUN_CSV), pd.read_csv(ILCE_CSV), ek)
-    json_yaz(SONUC_JSON, r, okunur=True)
-    yazdir(r)
-    print(f"\nYazıldı: {SONUC_JSON}")
+    sonucu_yaz(SONUC_JSON, calistir(pd.read_csv(ILCE_GUN_CSV), pd.read_csv(ILCE_CSV), ek), yazdir)
 
 
 if __name__ == "__main__":

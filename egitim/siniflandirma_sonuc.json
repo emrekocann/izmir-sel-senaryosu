@@ -633,7 +633,12 @@
   ],
   "max1s_orani": 0.252,
   "max3s_orani": 0.497,
-  "varsayim": "önceki günler kuru; en yoğun saatler yağışlı günlerin ortanca oranıyla",
+  "varsayim": "en yoğun saatler yağışlı günlerin ortanca oranıyla",
+  "onceki": {
+   "yagis_dun_mm": 0.0,
+   "yagis_onceki3g_mm": 0.0,
+   "yagis_onceki7g_mm": 0.0
+  },
   "ilce": {
    "Aliağa": [
     0.0,

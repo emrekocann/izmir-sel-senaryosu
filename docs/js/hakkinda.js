@@ -1,24 +1,22 @@
 // "Hakkında" penceresi: olay, senaryo modeli, doğrulama, erken uyarı, eksik
 // veri, yöntem. Metin index.html'de durur; doğrulama ve erken uyarı sayıları
 // veriden doldurulur (data-doldur).
-import { T, sayi } from './cekirdek/dil.js';
-import { aralik, yerAdi, yuzde, tarih } from './cekirdek/bicim.js';
+import { sayi } from './cekirdek/dil.js';
+import { aralik, yerAdi, yuzde, yuzdeIsareti, yilAraligi, tarih } from './cekirdek/bicim.js';
 import { enDuyarlilar } from './sekmeler/uyari.js';
-
-const yillar = (y) => `${y[0]}–${y[y.length - 1]}`;
 
 /** Erken uyarı bölümünün sayıları (uyari.json; Uyarı sekmesiyle aynı kaynak). */
 function uyariDegerleri(uyari) {
   const s = uyari.sinama, tum = s.tum_yillar, og = s.oglen_tahmin, o = uyari.ornek, gwr = uyari.gwr;
   const ilkUc = (etken) => enDuyarlilar(gwr, etken).slice(0, 3).map(yerAdi).join(', ');
   return {
-    'uyari-yillari': yillar(uyari.veri.yillar),
+    'uyari-yillari': yilAraligi(uyari.veri.yillar),
     'ilce-cagri': sayi(uyari.olay_tanimi.ilce_cagri),
     'il-cagri': sayi(uyari.olay_tanimi.il_cagri),
-    'sinama-yillari': yillar(tum.yillar),
+    'sinama-yillari': yilAraligi(tum.yillar),
     'atak': `${tum.atak_ilk_gun}\u00a0/\u00a0${tum.atak}`,
     'atak-oglen': `${og.atak_ilk_gun}\u00a0/\u00a0${og.atak}`,
-    'oglen-yillari': yillar(og.yillar),
+    'oglen-yillari': yilAraligi(og.yillar),
     'yakalama': yuzde(tum.duyarlilik),
     'isabet': yuzde(tum.kesinlik),
     'yakalama-oglen': yuzde(og.duyarlilik),
@@ -46,7 +44,7 @@ export function hakkindaKur(pencere, { vitrin, uyari }) {
       'mahalle-puani': aralik(d.map((x) => x.mahalle_auc_yalniz_derinlik)),
       'cadde-puani': aralik(d.map((x) => x.cadde_auc)),
       'haber-cadde': `${aralik(d.map((x) => Math.round(x.cadde_kapali_oran.haber * x.cadde_sayisi.haber)), 0)} / ${ilk.cadde_sayisi.haber}`,
-      'oteki-cadde': T(`%${otekiCadde}`, `${otekiCadde}%`),
+      'oteki-cadde': yuzdeIsareti(otekiCadde),
       'mahalle-haber': sayi(ilk.mahalle_sayisi.haber),
       'mahalle-oteki': sayi(ilk.mahalle_sayisi.oteki),
       'cadde-oteki': sayi(ilk.cadde_sayisi.oteki),

@@ -1,11 +1,11 @@
 """GWR: çekirdek ağırlıkları ve bölgeye göre değişen etkiyi bulma."""
-import json
 import os
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from afet.dosya import json_oku
 from hesap import gwr
 
 
@@ -70,7 +70,7 @@ def test_harita_ozeti_baska_yagis_kolonuyla():
 
 @pytest.mark.skipif(not os.path.exists(gwr.SONUC_JSON), reason="GWR çalıştırılmadı")
 def test_sonuc_dosyasi_sozlesmesi():
-    r = json.load(open(gwr.SONUC_JSON, encoding="utf-8"))
+    r = json_oku(gwr.SONUC_JSON)
     assert str(r["bant"]) in r["bantlar"]
     assert {"gwr", "global", "lojistik"} == set(r["sonuclar"])
     assert len(r["ilceler"]) == 30

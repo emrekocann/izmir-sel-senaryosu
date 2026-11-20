@@ -22,8 +22,8 @@ import logging
 from afet import ag
 from afet.veritabani.baglanti import db
 from afet.veritabani.depo import AfetDeposu
+from hesap import gunlugu_kur
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("toplanma")
 
 CSV_URL = ("https://openfiles.izmir.bel.tr/100104/docs/"
@@ -91,4 +91,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+    gunlugu_kur()
     asyncio.run(main())

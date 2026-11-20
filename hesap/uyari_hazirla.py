@@ -33,6 +33,7 @@ import shapely
 
 from afet.dosya import json_oku, json_yaz
 from afet.yollar import ILCE_SINIRLARI, SITE_VERI_DIR
+from hesap import gunlugu_kur
 from hesap import guvenilirlik as gv
 from hesap import gwr
 from hesap import ols_model as om
@@ -152,7 +153,7 @@ def hazirla():
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     r = hazirla()
     json_yaz(UYARI_JSON, r)
     log.info("Yazıldı: %s (%.0f KB)", UYARI_JSON, os.path.getsize(UYARI_JSON) / 1024)

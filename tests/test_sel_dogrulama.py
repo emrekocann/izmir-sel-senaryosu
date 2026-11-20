@@ -1,7 +1,6 @@
 """Geçmiş selle doğrulama: ölçüler ve olay dosyası."""
-import json
-import os
-
+from afet.dosya import json_oku
+from afet.yollar import OLAY_2021
 from hesap.sel_dogrulama import auc, yuzdelik
 
 
@@ -18,8 +17,7 @@ def test_yuzdelik():
 
 
 def test_olay_dosyasi_kaynakli():
-    yol = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dogrulama", "olay_2021_02_02.json")
-    olay = json.load(open(yol, encoding="utf-8"))
+    olay = json_oku(OLAY_2021)
     for y in olay["yerler"]:
         assert y["tur"] in ("mahalle", "cadde", "dere", "alt_gecit")
         assert y["kaynak"] and all(k in olay["kaynaklar"] for k in y["kaynak"])

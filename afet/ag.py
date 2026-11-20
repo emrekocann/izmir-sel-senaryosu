@@ -7,8 +7,10 @@ havuzda tutar ve aynı anda açık bağlantı sayısını sınırlar.
 
 Çevrimdışı betikler (model eğitimi, sınır, sel hesapları): `getir` yansı
 listesi, yeniden deneme, 429 beklemesi, yanıt doğrulama ve dosya önbelleğini
-tek fonksiyonda toplar.
+tek fonksiyonda toplar; `open_meteo_arsiv` geçmiş hava verisini (ERA5 arşivi,
+geçmiş tahmin koşuları) çok noktalı tek istekle ve önbellekli getirir.
 """
+import datetime as dt
 import json
 import logging
 import math
@@ -22,6 +24,8 @@ import httpx
 
 UA = "izmir-afet-radar/1.5"
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+OPEN_METEO_ARSIV_URL = "https://archive-api.open-meteo.com/v1/archive"                    # ERA5 yeniden analizi
+OPEN_METEO_GECMIS_TAHMIN_URL = "https://previous-runs-api.open-meteo.com/v1/forecast"     # eski tahmin koşuları
 # Ana Overpass sunucusu sık 502 / kapasite dolu veriyor → sırayla yansılar
 OVERPASS_URLS = [
     "https://overpass-api.de/api/interpreter",
@@ -113,6 +117,24 @@ def getir(url, yol=None, veri=None, deneme=6, bekle_sn=10, timeout=300, dogrula=
 
 def json_getir(url, yol=None, veri=None, **kw):
     return json.loads(getir(url, yol, veri, dogrula=kw.pop("dogrula", json.loads), **kw))
+
+
+def yillara_bol(bas, bit):
+    """[bas, bit] tarih aralığını takvim yıllarına böler: (yıl, ilk gün, son gün)."""
+    for yil in range(bas.year, bit.year + 1):
+        yield yil, max(bas, dt.date(yil, 1, 1)), min(bit, dt.date(yil, 12, 31))
+
+
+def open_meteo_arsiv(url, lats, lons, bas, bit, yol, timeout=180, **params) -> list:
+    """Çevrimdışı, çok noktalı tek Open-Meteo isteği (arşiv ya da geçmiş tahmin),
+    yol'da önbellekli; her nokta için bir yanıt (liste). Saatler Europe/Istanbul.
+    params: hourly / daily değişkenleri, models …"""
+    q = urllib.parse.urlencode({
+        "latitude": ",".join(f"{float(v):.4f}" for v in lats),
+        "longitude": ",".join(f"{float(v):.4f}" for v in lons),
+        "start_date": bas.isoformat(), "end_date": bit.isoformat(), "timezone": "Europe/Istanbul", **params})
+    veri = json_getir(f"{url}?{q}", yol, timeout=timeout)
+    return veri if isinstance(veri, list) else [veri]
 
 
 def overpass(sorgu, yol=None, **kw) -> list:

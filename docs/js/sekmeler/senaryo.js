@@ -1,15 +1,15 @@
 // Sekme: yağış senaryoları. "X mm yağış Y saatte düşerse nereyi su basar?"
 import { T, sayi } from '../cekirdek/dil.js';
-import { senaryoAdi } from '../cekirdek/bicim.js';
-import { secimHtml, secimDinle, sayiKutulari, suLejanti } from '../cekirdek/arayuz.js';
+import { senaryoAnahtari, senaryoCoz } from '../cekirdek/bicim.js';
+import { secimDinle, sayiKutulari, senaryoSecimi, sureSecimi, suLejanti } from '../cekirdek/arayuz.js';
 
 export function senaryoSekmesi({ vitrin, harita }) {
   // açılış: 2 Şubat 2021'e en yakın kısa senaryo
-  const [ilkMm, ilkSaat] = vitrin.olay_senaryolari[0].split('_').map(Number);
+  const [ilkMm, ilkSaat] = senaryoCoz(vitrin.olay_senaryolari[0]);
   const durum = { sira: Math.max(0, vitrin.yagis_mm.indexOf(ilkMm)), saat: ilkSaat };
   let icerik = null;
 
-  const anahtar = () => `${vitrin.yagis_mm[durum.sira]}_${durum.saat}`;
+  const anahtar = () => senaryoAnahtari(vitrin.yagis_mm[durum.sira], durum.saat);
 
   function ozet() {
     const o = vitrin.senaryolar[anahtar()];
@@ -26,10 +26,8 @@ export function senaryoSekmesi({ vitrin, harita }) {
   function guncelle() {
     harita.suGoster(anahtar());
     icerik.querySelector('[data-yer="yagis"]').textContent = `${vitrin.yagis_mm[durum.sira]} mm`;
-    icerik.querySelector('[data-yer="sure"]').innerHTML = secimHtml('saat',
-      vitrin.sure_sa.map((saat) => [saat, `${saat} ${T('saat', 'h')}`]), durum.saat);
-    icerik.querySelector('[data-yer="olay"]').innerHTML = secimHtml('olay',
-      vitrin.olay_senaryolari.map((s) => [s, senaryoAdi(s)]), anahtar());
+    icerik.querySelector('[data-yer="sure"]').innerHTML = sureSecimi(vitrin.sure_sa, durum.saat);
+    icerik.querySelector('[data-yer="olay"]').innerHTML = senaryoSecimi('olay', vitrin.olay_senaryolari, anahtar());
     icerik.querySelector('[data-yer="ozet"]').innerHTML = ozet();
   }
 
@@ -65,7 +63,7 @@ export function senaryoSekmesi({ vitrin, harita }) {
       secimDinle(icerik, (grup, deger) => {
         if (grup === 'saat') durum.saat = Number(deger);
         if (grup === 'olay') {
-          const [mm, saat] = deger.split('_').map(Number);
+          const [mm, saat] = senaryoCoz(deger);
           durum.sira = vitrin.yagis_mm.indexOf(mm);
           durum.saat = saat;
           icerik.querySelector('#sen-kaydir').value = durum.sira;

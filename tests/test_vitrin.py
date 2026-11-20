@@ -1,5 +1,19 @@
-"""Yayın sayfası verisi: 'yakalandı' ölçütü."""
+"""Yayın sayfası verisi: 'yakalandı' ölçütü ve sitenin okuduğu alanların sözleşmesi
+(betik değişip site sessizce bozulmasın)."""
+import os
+import re
+
+from afet.dosya import json_oku
+from afet.yollar import SITE_VERI_DIR, VITRIN
+from hesap.uyari_hazirla import UYARI_JSON
 from hesap.vitrin_hazirla import MAHALLE_YUZDELIK, OLAY_SENARYOLARI, yakalandi
+
+SITE_DIR = os.path.dirname(SITE_VERI_DIR)          # docs/
+
+
+def _metin(*yol):
+    with open(os.path.join(SITE_DIR, *yol), encoding="utf-8") as f:
+        return f.read()
 
 
 def _sonuc(**alanlar):
@@ -16,20 +30,16 @@ def test_yakalandi_olcutu():
 
 
 def test_site_verisi_sozlesmesi():
-    """docs/js modüllerinin okuduğu alanlar veri dosyalarında var mı
-    (betik değişip site sessizce bozulmasın)."""
-    import json
-    import os
-    kok = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "veri")
-    v = json.load(open(os.path.join(kok, "vitrin.json"), encoding="utf-8"))
-    d = json.load(open(os.path.join(kok, "denetim.json"), encoding="utf-8"))
+    """docs/js modüllerinin okuduğu alanlar veri dosyalarında var mı."""
+    v = json_oku(VITRIN)
+    d = json_oku(os.path.join(SITE_VERI_DIR, "denetim.json"))
     assert {"yagis_mm", "sure_sa", "bounds", "siniflar", "olay_senaryolari", "senaryolar", "yerler",
             "dogrulama", "dogrulama_senaryolari", "merkez", "rota_baslangic", "rotalar"} <= set(v)
     # her senaryonun görüntüsü ve özeti var
     for p in v["yagis_mm"]:
         for saat in v["sure_sa"]:
             assert f"{p}_{saat}" in v["senaryolar"]
-            assert os.path.exists(os.path.join(kok, "senaryo", f"{p}_{saat}.png"))
+            assert os.path.exists(os.path.join(SITE_VERI_DIR, "senaryo", f"{p}_{saat}.png"))
     for s in v["olay_senaryolari"]:
         assert {"su_30_km2", "su_10_km2", "belirsiz_km2", "toplanma_su", "toplanma_belirsiz",
                 "yol_parcasi_su"} <= set(v["merkez"]["senaryolar"][s])
@@ -39,15 +49,12 @@ def test_site_verisi_sozlesmesi():
     assert {"toplam", "sayim", "dere_yakin", "dere_yakin_m", "noktalar", "liste"} <= set(d)
     assert len(d["noktalar"]) == d["toplam"]
     assert len(d["liste"]) == d["sayim"]["1"] + d["sayim"]["2"]
-    assert os.path.exists(os.path.join(kok, "toplanma_denetimi.csv"))
+    assert os.path.exists(os.path.join(SITE_VERI_DIR, "toplanma_denetimi.csv"))
 
 
 def test_uyari_verisi_sozlesmesi():
     """docs/js/sekmeler/uyari.js'in okuduğu alanlar (hesap/uyari_hazirla.py)."""
-    import json
-    import os
-    yol = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "veri", "uyari.json")
-    u = json.load(open(yol, encoding="utf-8"))
+    u = json_oku(UYARI_JSON)
     assert {"ad", "aciklama", "esik", "egitim_yillari"} <= set(u["model"])
     assert {"ilce_cagri", "il_cagri"} <= set(u["olay_tanimi"]) and "yillar" in u["veri"]
     adlar = {i["ad"] for i in u["ilceler"]}
@@ -82,11 +89,6 @@ def test_uyari_verisi_sozlesmesi():
 def test_hakkinda_doldurma_alanlari():
     """index.html'deki her data-doldur alanını docs/js/hakkinda.js dolduruyor
     (adı yanlış yazılan alan sitede sessizce boş kalırdı)."""
-    import os
-    import re
-    kok = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs")
-    html = open(os.path.join(kok, "index.html"), encoding="utf-8").read()
-    js = open(os.path.join(kok, "js", "hakkinda.js"), encoding="utf-8").read()
-    alanlar = set(re.findall(r'data-doldur="([^"]+)"', html))
-    tanimli = set(re.findall(r"'([a-z0-9-]+)':", js))
+    alanlar = set(re.findall(r'data-doldur="([^"]+)"', _metin("index.html")))
+    tanimli = set(re.findall(r"'([a-z0-9-]+)':", _metin("js", "hakkinda.js")))
     assert alanlar and alanlar <= tanimli, sorted(alanlar - tanimli)

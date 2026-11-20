@@ -42,6 +42,7 @@ from afet.dosya import json_yaz
 from afet.veritabani.baglanti import db
 from afet.veritabani.depo import AfetDeposu as R
 from afet.yollar import ROTA_VERI_DIR
+from hesap import gunlugu_kur
 from hesap.sel_dogrulama import ilceler_ve_mahalleler
 
 log = logging.getLogger("rota_agi")
@@ -328,5 +329,5 @@ async def calistir():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     asyncio.run(calistir())

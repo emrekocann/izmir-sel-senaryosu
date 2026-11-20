@@ -34,7 +34,6 @@ import logging
 import os
 import re
 import unicodedata
-import urllib.parse
 
 import numpy as np
 import pandas as pd
@@ -43,6 +42,7 @@ import shapely
 from afet import ag
 from afet.sinir import tkgm_ilceler
 from afet.yollar import CN_DOSYASI, DEM_TIF, EGITIM_DIR, ITFAIYE_HAM_DIR
+from hesap import gunlugu_kur
 
 log = logging.getLogger("ilce_gun")
 HAM_DIR = ITFAIYE_HAM_DIR                                  # indirilen ham dosyalar (depoda değil)
@@ -53,7 +53,6 @@ ILCE_CSV = os.path.join(CIKTI_DIR, "ilce.csv")
 CKAN = "https://acikveri.bizizmir.com/api/3/action/package_show?id="
 HIZMET_PAKETI = "izmir-itfaiyesi-kontrol-emniyet-tedbir-ve-vatandasa-verilen-hizmetlerin-istatistigi"
 NUFUS_PAKETI = "izmir-ilcelerinin-cinsiyete-gore-nufus-bilgileri"
-ARSIV_URL = "https://archive-api.open-meteo.com/v1/archive"
 
 # Su ile ilgili hizmet tipleri → kolon. "kontrol": su baskını yerinde
 # kontrol / emniyet / tetkik; "cekme": pompayla su çekme (bodrum, alt geçit).
@@ -224,26 +223,24 @@ def nufus(ilce_adlari):
 
 # ── Yağış ───────────────────────────────────────────────────────────────────
 
-def yagis_arsivi(ilce_df, bas, bit):
-    """Her ilçe noktası için saatlik yağış (mm): DataFrame(ilce, zaman, mm).
-    Open-Meteo arşivi çok noktayı tek istekte verir; yıl yıl istenir ve önbelleklenir."""
+def saatlik_arsiv(url, ilce_df, bas, bit, degisken, dosya, **params):
+    """Her ilçe noktası için saatlik bir Open-Meteo değişkeni: DataFrame(ilce, zaman, mm).
+    Bütün noktalar tek istekte, yıl yıl istenir; dosya: HAM_DIR'deki önbellek
+    adının kalıbı ({yil}, {bas}, {bit}). Eksik saatler NaN kalır."""
     parcalar = []
-    for yil in range(bas.year, bit.year + 1):
-        b = max(bas, pd.Timestamp(f"{yil}-01-01").date())
-        s = min(bit, pd.Timestamp(f"{yil}-12-31").date())
-        q = urllib.parse.urlencode({
-            "latitude": ",".join(f"{v:.4f}" for v in ilce_df.yagis_lat),
-            "longitude": ",".join(f"{v:.4f}" for v in ilce_df.yagis_lon),
-            "start_date": b.isoformat(), "end_date": s.isoformat(),
-            "hourly": "precipitation", "timezone": "Europe/Istanbul"})
-        veri = ag.json_getir(f"{ARSIV_URL}?{q}", os.path.join(HAM_DIR, f"yagis_{yil}_{b}_{s}.json"),
-                             timeout=180)
-        veri = veri if isinstance(veri, list) else [veri]
-        for ad, v in zip(ilce_df.ilce, veri):
-            parcalar.append(pd.DataFrame({"ilce": ad, "zaman": pd.to_datetime(v["hourly"]["time"]),
-                                          "mm": v["hourly"]["precipitation"]}))
-        log.info("Yağış %d: %s – %s", yil, b, s)
+    for yil, b, s in ag.yillara_bol(bas, bit):
+        ad = dosya.format(yil=yil, bas=b, bit=s)
+        veri = ag.open_meteo_arsiv(url, ilce_df.yagis_lat, ilce_df.yagis_lon, b, s, os.path.join(HAM_DIR, ad),
+                                   hourly=degisken, **params)
+        parcalar += [pd.DataFrame({"ilce": ilce, "zaman": pd.to_datetime(v["hourly"]["time"]),
+                                   "mm": pd.to_numeric(v["hourly"][degisken])}) for ilce, v in zip(ilce_df.ilce, veri)]
+        log.info("Open-Meteo: %s", ad)
     return pd.concat(parcalar, ignore_index=True)
+
+
+def yagis_arsivi(ilce_df, bas, bit):
+    """Her ilçe noktası için saatlik yağış (ERA5 arşivi, mm): DataFrame(ilce, zaman, mm)."""
+    return saatlik_arsiv(ag.OPEN_METEO_ARSIV_URL, ilce_df, bas, bit, "precipitation", "yagis_{yil}_{bas}_{bit}.json")
 
 
 def gunluk_yagis(saatlik):
@@ -289,7 +286,7 @@ def ilce_gun_tablosu(cagri, yagis, ilce_df):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     os.makedirs(HAM_DIR, exist_ok=True)
     os.makedirs(CIKTI_DIR, exist_ok=True)
     il = ilceler()

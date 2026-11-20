@@ -3,8 +3,8 @@
 // basan yollardan kaçarak en yakın açık toplanma alanına araç rotasını o anda
 // hesaplar (js/cekirdek/rota_motoru.js). Sunucu gerekmez.
 import { T, sayi } from '../cekirdek/dil.js';
-import { senaryoAdi, alanAdi, baslik, kacis, mesafe, yerAdi } from '../cekirdek/bicim.js';
-import { secimHtml, secimDinle, sayiKutulari, lejantOgesi, suLejanti } from '../cekirdek/arayuz.js';
+import { senaryoAnahtari, senaryoCoz, alanAdi, baslik, kacis, mesafe, yerAdi } from '../cekirdek/bicim.js';
+import { secimDinle, sayiKutulari, senaryoSecimi, sureSecimi, lejantOgesi, suLejanti } from '../cekirdek/arayuz.js';
 import { ROTA_AGI, jsonOku, rotaSuyu } from '../cekirdek/veri.js';
 import { kenarCizgileri } from '../cekirdek/harita.js';
 import { agKur, suKur, enYakinDugum, rotaBul, rotaCizgisi, rotaOzeti } from '../cekirdek/rota_motoru.js';
@@ -12,7 +12,7 @@ import { agKur, suKur, enYakinDugum, rotaBul, rotaCizgisi, rotaOzeti } from '../
 const ROTA_RENGI = '#4f46e5', KURU_RENGI = '#64748b', ALAN_RENGI = '#059669';
 
 export function rotaSekmesi({ vitrin, harita }) {
-  const [ilkMm, ilkSaat] = vitrin.olay_senaryolari[0].split('_').map(Number);
+  const [ilkMm, ilkSaat] = senaryoCoz(vitrin.olay_senaryolari[0]);
   // sira 0: yağış yok; 1..: vitrin.yagis_mm[sira - 1]
   const durum = { sira: vitrin.yagis_mm.indexOf(ilkMm) + 1, saat: ilkSaat,
     bas: { lon: vitrin.rota_baslangic.lon, lat: vitrin.rota_baslangic.lat } };
@@ -20,7 +20,7 @@ export function rotaSekmesi({ vitrin, harita }) {
   let ag = null, agSozu = null, icerik = null, katman = null, kapsam = null, isaretci = null;
   let sonuc = null, istekNo = 0, kare = 0, ilkSigdirma = true;
 
-  const anahtar = () => (durum.sira ? `${vitrin.yagis_mm[durum.sira - 1]}_${durum.saat}` : null);
+  const anahtar = () => (durum.sira ? senaryoAnahtari(vitrin.yagis_mm[durum.sira - 1], durum.saat) : null);
   const altGecitDolu = (a) => Boolean(a && vitrin.senaryolar[a]?.alt_gecit_dolu);
 
   function agYukle() {
@@ -193,10 +193,8 @@ export function rotaSekmesi({ vitrin, harita }) {
   function secimleriCiz() {
     icerik.querySelector('[data-yer="yagis"]').textContent = durum.sira
       ? `${vitrin.yagis_mm[durum.sira - 1]} mm` : T('yağış yok', 'no rain');
-    icerik.querySelector('[data-yer="sure"]').innerHTML = durum.sira
-      ? secimHtml('saat', vitrin.sure_sa.map((saat) => [saat, `${saat} ${T('saat', 'h')}`]), durum.saat) : '';
-    icerik.querySelector('[data-yer="olay"]').innerHTML = secimHtml('olay',
-      vitrin.olay_senaryolari.map((s) => [s, senaryoAdi(s)]), anahtar() ?? '');
+    icerik.querySelector('[data-yer="sure"]').innerHTML = durum.sira ? sureSecimi(vitrin.sure_sa, durum.saat) : '';
+    icerik.querySelector('[data-yer="olay"]').innerHTML = senaryoSecimi('olay', vitrin.olay_senaryolari, anahtar() ?? '');
   }
 
   function ciz() {
@@ -239,7 +237,7 @@ export function rotaSekmesi({ vitrin, harita }) {
       secimDinle(icerik, (grup, deger) => {
         if (grup === 'saat') durum.saat = Number(deger);
         if (grup === 'olay') {
-          const [mm, saat] = deger.split('_').map(Number);
+          const [mm, saat] = senaryoCoz(deger);
           durum.sira = vitrin.yagis_mm.indexOf(mm) + 1;
           durum.saat = saat;
           icerik.querySelector('#rota-kaydir').value = durum.sira;

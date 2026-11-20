@@ -48,6 +48,7 @@ from afet.sinir import il_poligonu
 from afet.veritabani.baglanti import db
 from afet.veritabani.depo import AfetDeposu
 from afet.yollar import DENETIM_CSV, DUYARLILIK, OSM_DERELER, SITE_VERI_DIR
+from hesap import gunlugu_kur
 from hesap.dem_hidroloji import osm_cizgileri, raster_ornekle
 
 log = logging.getLogger("denetim")
@@ -209,13 +210,12 @@ def yaz(satirlar):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     alanlar, su, erisim = asyncio.run(veri())
     z = np.load(DUYARLILIK)
     tr = Affine(float(z["dx"]), 0, float(z["bati"]), 0, float(z["dy"]), float(z["kuzey"]))
-    s = raster_ornekle(z["s"], tr, np.array([a["lon"] for a in alanlar]),
-                       np.array([a["lat"] for a in alanlar])) / 255.0
     lon, lat = np.array([a["lon"] for a in alanlar]), np.array([a["lat"] for a in alanlar])
+    s = raster_ornekle(z["s"], tr, lon, lat) / 255.0
     ozet, n = yaz(denetle(alanlar, su, erisim, s, dereye_uzaklik_m(lon, lat, osm_dereleri())))
     dy = ozet["dere_yakin"]
     log.info("OSM deresine ≤ %d m: öncelikli %d / %d, öteki %d / %d", DERE_YAKIN_M,

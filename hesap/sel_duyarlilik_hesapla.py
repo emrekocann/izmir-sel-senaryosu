@@ -38,10 +38,10 @@ from afet.izgara import hucre_merkezleri, sinira_degen
 from afet.sinir import il_poligonu
 from afet.veritabani.baglanti import db
 from afet.yollar import DUYARLILIK, MODEL_DIR
+from hesap import gunlugu_kur
 from hesap.dem_hidroloji import (akis_agi, cukurlar, dem_mozaik, hand_hesapla, kopru_tunel,
                                  raster_ornekle, yakin_mi, yol_noktalari)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("sel")
 
 DERE_KUCUK_KM2, DERE_BUYUK_KM2 = 1.0, 50.0
@@ -129,4 +129,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    gunlugu_kur()
     asyncio.run(main())

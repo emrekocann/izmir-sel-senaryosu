@@ -55,7 +55,7 @@ import pandas as pd
 import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
-from afet.dosya import json_yaz
+from hesap import gunlugu_kur, sonucu_yaz
 from hesap.ilce_gun import CIKTI_DIR, ILCE_GUN_CSV
 
 log = logging.getLogger("ols")
@@ -244,11 +244,9 @@ def yazdir(r):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     r = calistir(pd.read_csv(ILCE_GUN_CSV))
-    json_yaz(SONUC_JSON, r, okunur=True)
-    yazdir(r)
-    print(f"\nYazıldı: {SONUC_JSON}")
+    sonucu_yaz(SONUC_JSON, r, yazdir)
 
 
 if __name__ == "__main__":

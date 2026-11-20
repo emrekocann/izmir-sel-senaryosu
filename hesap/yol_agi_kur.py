@@ -32,8 +32,8 @@ from afet import ag
 from afet.sinir import il_poligonu
 from afet.veritabani.baglanti import db
 from afet.yollar import DEM_KARO_DIR
+from hesap import gunlugu_kur
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("yol_agi")
 
 OVERPASS_URLS = [u.rsplit("/", 1)[0] for u in ag.OVERPASS_URLS]   # osmnx kök adresi ister
@@ -310,6 +310,8 @@ async def main(modes, pbf=None):
 if __name__ == "__main__":
     import asyncio
     import sys
+
+    gunlugu_kur()
 
     args = sys.argv[1:]
     pbf = None

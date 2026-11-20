@@ -1,11 +1,11 @@
 """OLS modeli: bilinen ilişkiyi geri bulur, sınama ölçüleri ve sonuç dosyası."""
-import json
 import os
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from afet.dosya import json_oku
 from hesap import ols_model as om
 
 
@@ -54,7 +54,7 @@ def test_olculer_olay_gunlerini_il_toplamiyla_sayar():
 
 @pytest.mark.skipif(not os.path.exists(om.SONUC_JSON), reason="model eğitilmedi")
 def test_sonuc_dosyasi_sozlesmesi():
-    r = json.load(open(om.SONUC_JSON, encoding="utf-8"))
+    r = json_oku(om.SONUC_JSON)
     assert [k["ad"] for k in r["katsayilar"]] == ["const"] + om.OZELLIKLER
     assert max(r["vif"].values()) < 5                         # çoklu doğrusallık giderildi
     for s in ("zaman_sinamasi", "mekan_sinamasi"):

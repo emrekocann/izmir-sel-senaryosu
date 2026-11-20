@@ -190,7 +190,7 @@ export function rotaBul(ag, baslangic, su = null, altGecitDolu = false) {
 }
 
 /** Kenarın [boylam, enlem] noktaları; ters=true ise b'den a'ya. */
-export function kenarCizgisi(ag, k, ters = false) {
+function kenarCizgisi(ag, k, ters = false) {
   const nokta = [[ag.lon[ag.a[k]], ag.lat[ag.a[k]]]];
   let x = Math.round(ag.lon[ag.a[k]] * ag.olcek), y = Math.round(ag.lat[ag.a[k]] * ag.olcek);
   for (let p = ag.icBas[k]; p < ag.icBas[k + 1]; p++) {

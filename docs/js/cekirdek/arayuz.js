@@ -1,6 +1,6 @@
-// Küçük arayüz parçaları: seçim düğmeleri, lejant, sayı kutuları.
+// Küçük arayüz parçaları: seçim düğmeleri, tıklanır listeler, lejant, sayı kutuları.
 import { T } from './dil.js';
-import { kacis } from './bicim.js';
+import { kacis, senaryoAdi, sureAdi } from './bicim.js';
 
 const SINIF_EN = ['Shallow (10–30 cm)', 'Knee-deep (30 cm–1 m)', 'Deep (1–2 m)', 'Very deep (2 m+)',
   'Flat plain: water arrives, depth unknown'];
@@ -18,6 +18,23 @@ export function secimDinle(kapsayici, islev) {
     const dugme = olay.target.closest('[data-secim]');
     if (dugme && kapsayici.contains(dugme)) islev(dugme.dataset.secim, dugme.dataset.deger);
   });
+}
+
+/** Yağış süresi düğmeleri (senaryo ve rota sekmeleri). */
+export const sureSecimi = (sureler, saat) => secimHtml('saat', sureler.map((s) => [s, sureAdi(s)]), saat);
+
+/** Hazır senaryoların düğmeleri ("100 mm / 6 saat"). */
+export const senaryoSecimi = (grup, senaryolar, secili) =>
+  secimHtml(grup, senaryolar.map((s) => [s, senaryoAdi(s)]), secili);
+
+/** Listede `ozellik` taşıyan öğeye tıklanınca ya da Enter'a basılınca islev(özelliğin değeri). */
+export function listeDinle(kapsayici, ozellik, islev) {
+  const sec = (olay) => {
+    const oge = olay.target.closest(`[${ozellik}]`);
+    if (oge && (olay.type === 'click' || olay.key === 'Enter')) islev(oge.getAttribute(ozellik));
+  };
+  kapsayici.addEventListener('click', sec);
+  kapsayici.addEventListener('keydown', sec);
 }
 
 export const sayiKutulari = (ogeler) => `<div class="sayilar">${ogeler.map(([deger, etiket]) =>

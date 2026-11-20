@@ -1,11 +1,11 @@
 """Güvenilirlik: öğlen uyarısı girdisi, güne göre bootstrap, yıl yıl sınama."""
-import json
 import os
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from afet.dosya import json_oku
 from hesap import guvenilirlik as gv
 from hesap import siniflandirma as sn
 from tests.test_siniflandirma import _sentetik
@@ -88,7 +88,7 @@ def test_calistir_yillar_ve_tahminli_donem():
 
 @pytest.mark.skipif(not os.path.exists(gv.SONUC_JSON), reason="güvenilirlik çalıştırılmadı")
 def test_sonuc_dosyasi_sozlesmesi():
-    r = json.load(open(gv.SONUC_JSON, encoding="utf-8"))
+    r = json_oku(gv.SONUC_JSON)
     for ad, s in r["sonuclar"].items():
         assert [k["test_yili"] for k in s["katmanlar"]] == r["test_yillari"]
         for o in [s["tum_yillar"], *s["tahminli_donem"].values()]:

@@ -32,6 +32,7 @@ from afet.sinir import il_poligonu
 from afet.veritabani.baglanti import db
 from afet.veritabani.depo import AfetDeposu, depo
 from afet.yollar import IL_SINIRI, OLAY_2021, SITE_VERI_DIR, SONUC_2021, VITRIN
+from hesap import gunlugu_kur
 from hesap.sel_dogrulama import adli_caddeler, ilceler_ve_mahalleler, osm_adli_cizgiler
 
 log = logging.getLogger("vitrin")
@@ -194,7 +195,7 @@ async def veritabani_ozetleri(bolge):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     os.makedirs(os.path.join(SITE_VERI_DIR, "senaryo"), exist_ok=True)
     y = senaryolar.yanit()
     maske = {}

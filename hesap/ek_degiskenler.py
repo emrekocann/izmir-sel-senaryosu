@@ -28,21 +28,20 @@ farkı); %95 aralık sıfırı içeriyorsa fark kanıtlanmamıştır.
 import logging
 import os
 import time
-import urllib.parse
 
 import numpy as np
 import pandas as pd
 import shapely
-from sklearn.base import clone
 from sklearn.metrics import average_precision_score
 
 from afet import ag
-from afet.dosya import json_oku, json_yaz
+from afet.dosya import json_oku
 from afet.yollar import ILCE_SINIRLARI
+from hesap import gunlugu_kur, sonucu_yaz
 from hesap import guvenilirlik as gv
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
-from hesap.ilce_gun import ARSIV_URL, CIKTI_DIR, HAM_DIR, ILCE_CSV, ILCE_GUN_CSV, anahtar
+from hesap.ilce_gun import CIKTI_DIR, HAM_DIR, ILCE_CSV, ILCE_GUN_CSV, anahtar
 
 log = logging.getLogger("ek_degiskenler")
 EK_CSV = os.path.join(CIKTI_DIR, "ek_degiskenler.csv")
@@ -76,12 +75,9 @@ def noktalar(ilce_df, geo):
 
 def _gunluk(nok, b, s, degiskenler, ad):
     """Open-Meteo arşivinden noktaların günlük değişkenleri (tek istek, önbellekli)."""
-    q = urllib.parse.urlencode({
-        "latitude": ",".join(f"{v:.4f}" for v in nok.lat), "longitude": ",".join(f"{v:.4f}" for v in nok.lon),
-        "start_date": b.isoformat(), "end_date": s.isoformat(), "timezone": "Europe/Istanbul",
-        "daily": ",".join(degiskenler)})
-    veri = ag.json_getir(f"{ARSIV_URL}?{q}", os.path.join(HAM_DIR, f"ek_{ad}_{len(nok)}n_{b}_{s}.json"), timeout=300)
-    return veri if isinstance(veri, list) else [veri]
+    return ag.open_meteo_arsiv(ag.OPEN_METEO_ARSIV_URL, nok.lat, nok.lon, b, s,
+                               os.path.join(HAM_DIR, f"ek_{ad}_{len(nok)}n_{b}_{s}.json"), timeout=300,
+                               daily=",".join(degiskenler))
 
 
 def gunluk_arsiv(nok, bas, bit):
@@ -90,9 +86,7 @@ def gunluk_arsiv(nok, bas, bit):
     gün × değişken sayısıyla ölçülür, rüzgâr yalnız asıl noktada gerekir."""
     ana = nok[nok.ana].reset_index(drop=True)
     parcalar = []
-    for yil in range(bas.year, bit.year + 1):
-        b = max(bas, pd.Timestamp(f"{yil}-01-01").date())
-        s = min(bit, pd.Timestamp(f"{yil}-12-31").date())
+    for yil, b, s in ag.yillara_bol(bas, bit):
         yag = _gunluk(nok, b, s, ["precipitation_sum"], "yagis")
         rz = _gunluk(ana, b, s, ["wind_speed_10m_max", "wind_direction_10m_dominant"], "ruzgar")
         yagis = pd.concat([pd.DataFrame({"ilce": n.ilce, "ana": n.ana, "gun": v["daily"]["time"],
@@ -140,34 +134,19 @@ def model_tanimi(ad, ek, prm=None):
 
 
 def yil_yil(t, ad, ek, gb_prm, test_yillari=gv.TEST_YILLARI):
-    """Her test yılı için (önceki yıllarla) tahmin; birleşik DataFrame(ilce, gun, olay, cagri_su, p, esik)."""
-    parcalar = []
-    for yil in test_yillari:
-        tanim = model_tanimi(ad, ek, gb_prm.get(yil))
-        egitim, test = t[t.yil < yil], t[t.yil == yil]
-        m, _, _, esik = sn.ayarla(ad, egitim, {ad: tanim})
-        m = clone(m).fit(egitim[tanim[1]], egitim.olay)
-        parcalar.append(test[["ilce", "gun", "olay", "cagri_su"]].assign(
-            p=m.predict_proba(test[tanim[1]])[:, 1], esik=esik))
-    return pd.concat(parcalar, ignore_index=True)
+    """gv.yil_yil, ek değişkenlerle; gradient boosting o yılın katman parametreleriyle."""
+    return gv.yil_yil(t, ad, lambda yil: model_tanimi(ad, ek, gb_prm.get(yil)), test_yillari)
 
 
 def eslesik_fark(a, b, n=BOOTSTRAP, tohum=gv.TOHUM):
     """b − a AP farkı, hafta bloklarıyla eşleştirilmiş bootstrap: [fark, alt, üst]."""
     a = a.sort_values(["gun", "ilce"]).reset_index(drop=True)
     b = b.sort_values(["gun", "ilce"]).reset_index(drop=True)
-    hafta = pd.to_datetime(a.gun).dt.strftime("%G-%V").values
-    bloklar, ters = np.unique(hafta, return_inverse=True)
-    satirlar = [np.flatnonzero(ters == i) for i in range(len(bloklar))]
+    _, satirlar = gv.blok_satirlari(gv.hafta(a.gun))
     y, pa, pb = a.olay.values, a.p.values, b.p.values
-    r = np.random.default_rng(tohum)
-    farklar = []
-    for _ in range(n):
-        idx = np.concatenate([satirlar[i] for i in r.integers(0, len(bloklar), len(bloklar))])
-        if y[idx].sum():
-            farklar.append(average_precision_score(y[idx], pb[idx]) - average_precision_score(y[idx], pa[idx]))
-    fark = average_precision_score(y, pb) - average_precision_score(y, pa)
-    return [round(float(fark), 3), round(float(np.percentile(farklar, 2.5)), 3), round(float(np.percentile(farklar, 97.5)), 3)]
+    ap_farki = lambda i: average_precision_score(y[i], pb[i]) - average_precision_score(y[i], pa[i])
+    farklar = [ap_farki(idx) for _, idx in gv.blok_cek(satirlar, n, tohum) if y[idx].sum()]
+    return [round(float(ap_farki(slice(None))), 3), *gv.aralik_95(farklar)]      # slice(None): bütün satırlar
 
 
 KIYI = ["Foça", "Dikili", "Seferihisar", "Çeşme", "Urla", "Karaburun", "Konak", "Karşiyaka"]
@@ -178,6 +157,14 @@ def kiyi_yakalama(x):
     return {"olay": int(len(k)), "yakalanan": int((k.p >= k.esik).sum())}
 
 
+def kisa_ozet(x, n=BOOTSTRAP):
+    """gv.ozet, atak listesi olmadan; kıyı ilçelerindeki olayların yakalanmasıyla."""
+    o = gv.ozet(x, n)
+    o["atak"].pop("liste")
+    o["kiyi"] = kiyi_yakalama(x)
+    return o
+
+
 def calistir(t, ek, gb_prm, setler=SETLER, modeller=MODELLER, n=BOOTSTRAP, test_yillari=gv.TEST_YILLARI):
     x = birlestir(t, ek)
     out = {}
@@ -186,12 +173,9 @@ def calistir(t, ek, gb_prm, setler=SETLER, modeller=MODELLER, n=BOOTSTRAP, test_
         for set_adi, ekler in setler.items():
             s = time.time()
             tahmin[set_adi] = yil_yil(x, ad, ekler, gb_prm, test_yillari)
-            o = gv.ozet(tahmin[set_adi], n)
-            o["atak"].pop("liste")
-            o["kiyi"] = kiyi_yakalama(tahmin[set_adi])
-            sonuc[set_adi] = o
+            sonuc[set_adi] = o = kisa_ozet(tahmin[set_adi], n)
             if set_adi != "temel":
-                sonuc[set_adi]["ap_farki_temele_gore"] = eslesik_fark(tahmin["temel"], tahmin[set_adi], n)
+                o["ap_farki_temele_gore"] = eslesik_fark(tahmin["temel"], tahmin[set_adi], n)
             log.info("%s / %s (%.0f sn): AP %.3f", ad, set_adi, time.time() - s, o["ap"])
         out[ad] = sonuc
     return {"setler": setler, "lodos_yon": LODOS_YON, "kiyi_ilceler": KIYI, "test_yillari": test_yillari,
@@ -209,7 +193,7 @@ def yazdir(r):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     t = pd.read_csv(ILCE_GUN_CSV)
     ilce_df = pd.read_csv(ILCE_CSV)
     nok = noktalar(ilce_df, json_oku(ILCE_SINIRLARI))
@@ -219,10 +203,7 @@ def main():
     ek.to_csv(EK_CSV, index=False)
     log.info("Yazıldı: %s (%d satır, %d nokta)", EK_CSV, len(ek), len(nok))
     gb_prm = {k["test_yili"]: k["parametreler"] for k in json_oku(gv.SONUC_JSON)["sonuclar"]["gb"]["katmanlar"]}
-    r = calistir(t, ek, gb_prm)
-    json_yaz(SONUC_JSON, r, okunur=True)
-    yazdir(r)
-    print(f"\nYazıldı: {SONUC_JSON}")
+    sonucu_yaz(SONUC_JSON, calistir(t, ek, gb_prm), yazdir)
 
 
 if __name__ == "__main__":

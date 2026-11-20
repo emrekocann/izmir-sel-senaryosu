@@ -65,11 +65,11 @@ from afet.sinir import il_poligonu, tkgm_ilceler, tkgm_mahalleler
 from afet.veritabani.baglanti import db
 from afet.veritabani.depo import AfetDeposu
 from afet.yollar import CN_DOSYASI, MODEL_DIR, SENARYO, SENARYO_OZETI
+from hesap import gunlugu_kur
 from hesap import sel_senaryo_yollar
 from hesap.dem_hidroloji import (DIRMAP, akis_agi, cukurlar, dem_mozaik, hand_hesapla,
                            kopru_tunel, raster_ornekle, yakin_mi, yol_noktalari)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("senaryo")
 
 
@@ -363,6 +363,7 @@ async def yol_ornekleri():
 
 
 def main():
+    gunlugu_kur()
     sinir = il_poligonu()
     dem_mozaik(sinir)
     t0 = time.time()

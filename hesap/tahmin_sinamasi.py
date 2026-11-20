@@ -32,23 +32,21 @@ her tahmin modelinin eksiksiz saatleri olan ilçe-günler.
 Çıktı: egitim/tahmin_sinamasi.json. Çalıştırma: venv/bin/python -m hesap.tahmin_sinamasi
 (ilk çalıştırmada tahmin arşivi itfaiye_veri/ önbelleğine indirilir)
 """
-import json
 import logging
 import os
-import urllib.parse
 
 import numpy as np
 import pandas as pd
 
 from afet import ag
-from afet.dosya import json_yaz
+from afet.dosya import json_oku
+from hesap import gunlugu_kur, sonucu_yaz
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
-from hesap.ilce_gun import HAM_DIR, ILCE_CSV, ILCE_GUN_CSV, gunluk_yagis
+from hesap.ilce_gun import ILCE_CSV, ILCE_GUN_CSV, gunluk_yagis, saatlik_arsiv
 
 log = logging.getLogger("tahmin_sinamasi")
 SONUC_JSON = os.path.join(sn.CIKTI_DIR, "tahmin_sinamasi.json")
-URL = "https://previous-runs-api.open-meteo.com/v1/forecast"
 TAHMIN_MODELLERI = {"ecmwf_ifs025": "ECMWF IFS 0.25°", "gfs_seamless": "GFS (NOAA)",
                     "best_match": "Open-Meteo karma"}
 ANA = "ecmwf_ifs025"
@@ -58,24 +56,9 @@ GUNUN_YAGISI = ["yagis_mm", "yagis_max1s_mm", "yagis_max3s_mm"]   # tahminden ge
 def tahmin_arsivi(ilce_df, model, bas, bit, once=1):
     """Her ilçe noktası için saatlik tahmin: DataFrame(ilce, zaman, mm). Her saatin
     değeri, modelin `once` gün önceki koşusundan. Eksik saatler NaN kalır."""
-    degisken = f"precipitation_previous_day{once}"
     ek = "" if once == 1 else f"_d{once}"
-    parcalar = []
-    for yil in range(bas.year, bit.year + 1):
-        b = max(bas, pd.Timestamp(f"{yil}-01-01").date())
-        s = min(bit, pd.Timestamp(f"{yil}-12-31").date())
-        q = urllib.parse.urlencode({
-            "latitude": ",".join(f"{v:.4f}" for v in ilce_df.yagis_lat),
-            "longitude": ",".join(f"{v:.4f}" for v in ilce_df.yagis_lon),
-            "start_date": b.isoformat(), "end_date": s.isoformat(), "models": model,
-            "hourly": degisken, "timezone": "Europe/Istanbul"})
-        veri = ag.json_getir(f"{URL}?{q}", os.path.join(HAM_DIR, f"tahmin_{model}{ek}_{b}_{s}.json"), timeout=180)
-        veri = veri if isinstance(veri, list) else [veri]
-        for ad, v in zip(ilce_df.ilce, veri):
-            parcalar.append(pd.DataFrame({"ilce": ad, "zaman": pd.to_datetime(v["hourly"]["time"]),
-                                          "mm": pd.to_numeric(v["hourly"][degisken])}))
-        log.info("Tahmin %s (%d gün önce) %d: %s – %s", model, once, yil, b, s)
-    return pd.concat(parcalar, ignore_index=True)
+    return saatlik_arsiv(ag.OPEN_METEO_GECMIS_TAHMIN_URL, ilce_df, bas, bit, f"precipitation_previous_day{once}",
+                         f"tahmin_{model}{ek}_{{bas}}_{{bit}}.json", models=model)
 
 
 def tahmin_gunluk(saatlik):
@@ -172,18 +155,14 @@ def yazdir(r):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
-    with open(sn.SONUC_JSON, encoding="utf-8") as f:
-        sonuc = json.load(f)
+    gunlugu_kur()
+    sonuc = json_oku(sn.SONUC_JSON)
     t = pd.read_csv(ILCE_GUN_CSV)
     ilce_df = pd.read_csv(ILCE_CSV)
     bas = pd.Timestamp(f"{min(om.TEST_YILLARI)}-01-01").date()
     bit = pd.Timestamp(t.gun.max()).date()
     tahminler = {k: tahmin_gunluk(tahmin_arsivi(ilce_df, k, bas, bit)) for k in TAHMIN_MODELLERI}
-    r = calistir(t, tahminler, sonuc)
-    json_yaz(SONUC_JSON, r, okunur=True)
-    yazdir(r)
-    print(f"\nYazıldı: {SONUC_JSON}")
+    sonucu_yaz(SONUC_JSON, calistir(t, tahminler, sonuc), yazdir)
 
 
 if __name__ == "__main__":

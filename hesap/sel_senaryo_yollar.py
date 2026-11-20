@@ -29,6 +29,7 @@ from afet.sel.senaryo import BELIRSIZ
 from afet.sinir import il_poligonu
 from afet.veritabani.baglanti import db
 from afet.yollar import SENARYO, SENARYO_OZETI
+from hesap import gunlugu_kur
 from hesap.dem_hidroloji import kopru_tunel, raster_ornekle, yakin_mi, yol_noktalari
 
 log = logging.getLogger("sel")
@@ -115,5 +116,5 @@ async def _degistir(conn, katman, kayit, senaryo_sayisi):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     asyncio.run(yaz())

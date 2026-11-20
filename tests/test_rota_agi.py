@@ -7,11 +7,11 @@ import subprocess
 import numpy as np
 import pytest
 
+from afet.dosya import json_oku
+from afet.yollar import KOK, ROTA_VERI_DIR, VITRIN
 from hesap import rota_agi_hazirla as ra
 
-KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MOTOR = os.path.join(KOK, "docs", "js", "cekirdek", "rota_motoru.js")
-VERI = os.path.join(KOK, "docs", "veri")
 
 
 def test_cift_yonlu_ikizler_atilir():
@@ -119,10 +119,10 @@ console.log(JSON.stringify({{
     assert r["uzak"] is None
 
 
-@pytest.mark.skipif(not os.path.exists(os.path.join(VERI, "rota", "ag.json")), reason="rota ağı üretilmedi")
+@pytest.mark.skipif(not os.path.exists(os.path.join(ROTA_VERI_DIR, "ag.json")), reason="rota ağı üretilmedi")
 def test_rota_verisi_sozlesmesi():
-    ag = json.load(open(os.path.join(VERI, "rota", "ag.json"), encoding="utf-8"))
-    v = json.load(open(os.path.join(VERI, "vitrin.json"), encoding="utf-8"))
+    ag = json_oku(os.path.join(ROTA_VERI_DIR, "ag.json"))
+    v = json_oku(VITRIN)
     n, e = len(ag["dugum_x"]), len(ag["kenar_a"])
     assert len(ag["dugum_y"]) == n and e == len(ag["kenar_b"]) == len(ag["kenar_m"]) == len(ag["ic_sayi"])
     assert len(ag["ic"]) == 2 * sum(ag["ic_sayi"])
@@ -131,6 +131,6 @@ def test_rota_verisi_sozlesmesi():
     # sayfadaki her senaryonun su dosyası var ve kenar sırası ağın içinde
     for mm in v["yagis_mm"]:
         for saat in v["sure_sa"]:
-            su = json.load(open(os.path.join(VERI, "rota", f"su_{mm}_{saat}.json"), encoding="utf-8"))
+            su = json_oku(os.path.join(ROTA_VERI_DIR, f"su_{mm}_{saat}.json"))
             k = np.cumsum(su["kenar"])
             assert len(k) == len(su["ek"]) == len(su["derin_dm"]) and (len(k) == 0 or k.max() < e)

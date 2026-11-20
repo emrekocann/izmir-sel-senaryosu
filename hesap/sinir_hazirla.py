@@ -39,8 +39,8 @@ from shapely.ops import polygonize, unary_union
 from afet import ag
 from afet.dosya import json_yaz
 from afet.yollar import IL_SINIRI, ILCE_SINIRLARI, SINIR_HAM_DIR
+from hesap import gunlugu_kur
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 log = logging.getLogger("sinir")
 
 TKGM_URL = "https://cbsapi.tkgm.gov.tr/megsiswebapi.v3/api/idariYapi/"
@@ -130,6 +130,7 @@ def paylastir(il, ilceler):
 
 
 def main():
+    gunlugu_kur()
     os.makedirs(SINIR_HAM_DIR, exist_ok=True)
     iller = _getir(TKGM_URL + "ilListe", "tkgm/il")["features"]
     ilce_f = _getir(TKGM_URL + f"ilceListe/{TKGM_IL_ID}", "tkgm/izmir_ilce")["features"]

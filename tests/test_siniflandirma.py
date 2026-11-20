@@ -1,5 +1,4 @@
 """Sınıflandırma: olay tanımı, ölçüler, eşik seçimi, uçtan uca sonuç ve dosya sözleşmesi."""
-import json
 import os
 
 import numpy as np
@@ -7,6 +6,7 @@ import pandas as pd
 import pytest
 from sklearn.ensemble import RandomForestClassifier
 
+from afet.dosya import json_oku
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
 
@@ -74,7 +74,7 @@ def test_uctan_uca_sentetik():
 
 @pytest.mark.skipif(not os.path.exists(sn.SONUC_JSON), reason="model eğitilmedi")
 def test_sonuc_dosyasi_sozlesmesi():
-    r = json.load(open(sn.SONUC_JSON, encoding="utf-8"))
+    r = json_oku(sn.SONUC_JSON)
     assert set(r["modeller"]) == set(sn.MODELLER) and r["secili"] in sn.MODELLER
     for ad in sn.MODELLER:
         assert {"auc", "ap", "brier", "kesinlik", "duyarlilik", "esik", "il"} <= set(r["zaman_sinamasi"][ad])

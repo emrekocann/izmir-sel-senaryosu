@@ -73,7 +73,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
-from afet.dosya import json_yaz
+from hesap import gunlugu_kur, sonucu_yaz
 from hesap import ols_model as om
 from hesap.ilce_gun import CIKTI_DIR, ILCE_GUN_CSV
 
@@ -175,7 +175,7 @@ def il_gunleri(test, p, esik):
 def zaman_sinamasi(t, ayar):
     egitim, test = t[~t.yil.isin(om.TEST_YILLARI)], t[t.yil.isin(om.TEST_YILLARI)]
     out, tahminler = {}, {}
-    for ad, (m, prm, ic_ap, esik) in ayar.items():
+    for ad, (m, _, _, esik) in ayar.items():
         kolonlar = MODELLER[ad][1]
         m = clone(m).fit(egitim[kolonlar], egitim.olay)
         p = m.predict_proba(test[kolonlar])[:, 1]
@@ -298,11 +298,9 @@ def yazdir(r):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     r = calistir(pd.read_csv(ILCE_GUN_CSV))
-    json_yaz(SONUC_JSON, r, okunur=True)
-    yazdir(r)
-    print(f"\nYazıldı: {SONUC_JSON}")
+    sonucu_yaz(SONUC_JSON, r, yazdir)
 
 
 if __name__ == "__main__":

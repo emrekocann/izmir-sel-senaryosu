@@ -38,6 +38,7 @@ from afet.dosya import json_oku, json_yaz
 from afet.sel.senaryo import BELIRSIZ
 from afet.sinir import il_poligonu, tkgm_ilceler, tkgm_mahalleler
 from afet.yollar import OLAY_2021, OSM_ADLI_YOLLAR, SENARYO, SENARYO_OZETI
+from hesap import gunlugu_kur, sonucu_yaz
 from hesap.dem_hidroloji import kopru_tunel, osm_cizgileri, raster_ornekle, yakin_mi, yol_noktalari
 
 log = logging.getLogger("dogrulama")
@@ -248,14 +249,12 @@ def yazdir(sonuc):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    gunlugu_kur()
     olay_yolu = sys.argv[1] if len(sys.argv) > 1 else OLAY_2021
     sonuc = dogrula(olay_yolu)
     cikti = os.path.join(os.path.dirname(olay_yolu),
                          os.path.basename(olay_yolu).replace("olay_", "sonuc_"))
-    json_yaz(cikti, sonuc, okunur=True)
-    yazdir(sonuc)
-    print(f"\nYazıldı: {cikti}")
+    sonucu_yaz(cikti, sonuc, yazdir)
 
 
 if __name__ == "__main__":

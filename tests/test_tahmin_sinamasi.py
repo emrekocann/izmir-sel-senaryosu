@@ -1,11 +1,11 @@
 """Hava tahminiyle sınama: eksik gün atma, yalnız bugünün yağışının değişmesi, uçtan uca."""
-import json
 import os
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from afet.dosya import json_oku
 from hesap import tahmin_sinamasi as ts
 from tests.test_siniflandirma import _sentetik
 
@@ -49,7 +49,7 @@ def test_uctan_uca_sentetik():
 
 @pytest.mark.skipif(not os.path.exists(ts.SONUC_JSON), reason="sınama çalıştırılmadı")
 def test_sonuc_dosyasi_sozlesmesi():
-    r = json.load(open(ts.SONUC_JSON, encoding="utf-8"))
+    r = json_oku(ts.SONUC_JSON)
     assert r["ana"] in r["tahmin_modelleri"]
     for ad, k in r["sonuclar"].items():
         assert set(k) == {"gozlem", "tahminsiz", *r["tahmin_modelleri"]}

@@ -5,8 +5,8 @@
 //                neyle geliyor, o günün yağışıyla mı, önceki haftanınkiyle mi?
 // Veri: hesap/uyari_hazirla.py → veri/uyari.json (model, sınama, GWR, ilçe sınırları).
 import { T, sayi } from '../cekirdek/dil.js';
-import { yerAdi, kacis, yuzde, tarih } from '../cekirdek/bicim.js';
-import { secimHtml, secimDinle, sayiKutulari, lejantOgesi } from '../cekirdek/arayuz.js';
+import { yerAdi, kacis, aralik, yuzde, yuzdeAraligi, yilAraligi, tarih } from '../cekirdek/bicim.js';
+import { secimHtml, secimDinle, listeDinle, sayiKutulari, lejantOgesi } from '../cekirdek/arayuz.js';
 
 // Olasılık: tek tonlu (turuncu) sıralı ölçek, açıktan koyuya. Mavi öteki
 // sekmelerde su derinliği demek; olasılık onunla karışmasın diye turuncu.
@@ -23,8 +23,6 @@ const KANITSIZ_RENK = '#d1d5db';
 const KANITSIZ_STIL = { color: '#6b7280', weight: 1.2, dashArray: '4 3', fillColor: KANITSIZ_RENK, fillOpacity: 0.5 };
 
 const MODEL_EN = { gb: 'gradient boosting', rf: 'Random Forest', lojistik: 'logistic regression', agac: 'decision tree' };
-/** Olasılık aralığı etiketi: tr "%5–10", en "5–10%". */
-const araligi = (a, b) => T(`%${sayi(a * 100)}–${sayi(b * 100)}`, `${sayi(a * 100)}–${sayi(b * 100)}%`);
 // 1'e yakın değerler iki ondalıkla: [1,04–2,2] "1'i içeriyor" diye okunmasın.
 const carpanSayi = (x) => sayi(x, Math.abs(x - 1) < 0.1 ? 2 : 1);
 const carpan = (x) => `×${carpanSayi(x)}`;
@@ -74,7 +72,7 @@ export function uyariSekmesi({ uyari, harita }) {
     const p = olasilik(ilce.ad);
     return `${ad} ${alarm(p) ? `<span class="rozet kotu">${T('alarm', 'alert')}</span>` : ''}<br>
       <span class="soluk">${T('Olay olasılığı', 'Event probability')}:</span> ${yuzde(p)}<br>
-      <span class="soluk">${T(`${uyari.model.egitim_yillari.join('–')} olay günü`, `Event days ${uyari.model.egitim_yillari.join('–')}`)}:</span> ${sayi(ilce.olay_gunu)}`;
+      <span class="soluk">${T(`${yilAraligi(uyari.model.egitim_yillari)} olay günü`, `Event days ${yilAraligi(uyari.model.egitim_yillari)}`)}:</span> ${sayi(ilce.olay_gunu)}`;
   };
 
   function katmanlariKur() {
@@ -136,8 +134,8 @@ export function uyariSekmesi({ uyari, harita }) {
 
   function olasilikHtml() {
     const s = uyari.sinama, tum = s.tum_yillar, og = s.oglen_tahmin, yok = s.tahminsiz;
-    const isl = uyari.kosullar.islak.onceki, o = uyari.ornek, yil = (x) => `${x.yillar[0]}–${x.yillar[x.yillar.length - 1]}`;
-    const ar = (x, k) => araligi(...x.aralik_95[k]);
+    const isl = uyari.kosullar.islak.onceki, o = uyari.ornek, yil = (x) => yilAraligi(x.yillar);
+    const ar = (x, k) => yuzdeAraligi(...x.aralik_95[k]);
     return `
       <h3>${T('Yarın bu kadar yağarsa', 'If this much rain falls tomorrow')}</h3>
       <p class="soluk kucuk">${T(`Model: ${kacis(uyari.model.aciklama)}.`, `Model: ${MODEL_EN[uyari.model.ad] || uyari.model.ad}.`)}</p>
@@ -169,8 +167,8 @@ export function uyariSekmesi({ uyari, harita }) {
 
       <div class="kutu kotu"><b>${T('Nerede duruyor?', 'Where it stops')}</b>
         <ul>
-          <li>${T(`<b>Dar alanlı sağanağı göremiyor.</b> ${kacis(yerAdi(o.ilce))}, ${tarih(o.gun)}: valiliğe göre ${sayi(o.haber_saat, 1)} saatte ~${sayi(o.haber_mm)} mm yağdı, ${o.cagri_gun_sayisi} günde ${sayi(o.cagri)} çağrı geldi. Yağış arşivi o gün ${sayi(o.arsiv_mm, 1)} mm, bir gün önceki tahminler ${sayi(Math.min(...Object.values(o.tahmin_mm)), 1)}–${sayi(Math.max(...Object.values(o.tahmin_mm)), 1)} mm diyor. Model değil, veri kör.`,
-                   `<b>It cannot see narrow downpours.</b> ${kacis(yerAdi(o.ilce))}, ${tarih(o.gun)}: the governor's office reported ~${sayi(o.haber_mm)} mm in ${sayi(o.haber_saat, 1)} hours, and ${sayi(o.cagri)} calls came in over ${o.cagri_gun_sayisi} days. The rain archive says ${sayi(o.arsiv_mm, 1)} mm that day, day-before forecasts ${sayi(Math.min(...Object.values(o.tahmin_mm)), 1)}–${sayi(Math.max(...Object.values(o.tahmin_mm)), 1)} mm. The data is blind, not the model.`)}
+          <li>${T(`<b>Dar alanlı sağanağı göremiyor.</b> ${kacis(yerAdi(o.ilce))}, ${tarih(o.gun)}: valiliğe göre ${sayi(o.haber_saat, 1)} saatte ~${sayi(o.haber_mm)} mm yağdı, ${o.cagri_gun_sayisi} günde ${sayi(o.cagri)} çağrı geldi. Yağış arşivi o gün ${sayi(o.arsiv_mm, 1)} mm, bir gün önceki tahminler ${aralik(Object.values(o.tahmin_mm), 1)} mm diyor. Model değil, veri kör.`,
+                   `<b>It cannot see narrow downpours.</b> ${kacis(yerAdi(o.ilce))}, ${tarih(o.gun)}: the governor's office reported ~${sayi(o.haber_mm)} mm in ${sayi(o.haber_saat, 1)} hours, and ${sayi(o.cagri)} calls came in over ${o.cagri_gun_sayisi} days. The rain archive says ${sayi(o.arsiv_mm, 1)} mm that day, day-before forecasts ${aralik(Object.values(o.tahmin_mm), 1)} mm. The data is blind, not the model.`)}
             ${o.kaynaklar.map((k) => `<a href="${kacis(k.url)}" target="_blank" rel="noopener">${kacis(k.ad)}</a>`).join(' · ')}</li>
           <li>${T(`<b>İlçe düzeyinde zayıf:</b> çoğu alarm boşa çıkıyor ve olayların çoğu kaçıyor. Bu bir ön uyarı sinyali, karar değil.`,
                    `<b>Weak at district level:</b> most alerts are false and most events are missed. It is an early signal, not a decision.`)}</li>
@@ -179,7 +177,7 @@ export function uyariSekmesi({ uyari, harita }) {
   }
 
   function duyarlilikHtml() {
-    const s = gwr.sinama, yillar = `${s.gwr.yillar[0]}–${s.gwr.yillar[s.gwr.yillar.length - 1]}`;
+    const s = gwr.sinama, yillar = yilAraligi(s.gwr.yillar);
     const enUst = (etken) => enDuyarlilar(gwr, etken).slice(0, 3).map((ad) => kacis(yerAdi(ad))).join(', ');
     const kanitsiz = uyari.ilceler.filter((i) => !etki(i.ad, 'onceki_hafta').kanitli).map((i) => yerAdi(i.ad))
       .sort((a, b) => a.localeCompare(b, 'tr')).map(kacis);
@@ -213,8 +211,8 @@ export function uyariSekmesi({ uyari, harita }) {
   function ciz() {
     icerik.innerHTML = `
       <h2>${T('Erken uyarı: hangi ilçede sel olur?', 'Early warning: which district floods?')}</h2>
-      <p>${T(`İzmir İtfaiyesi'nin ${uyari.veri.yillar.join('–')} su baskını kayıtlarıyla eğitilmiş makine öğrenmesi modelleri. Soru: <b>bir ilçede bir günde en az ${uyari.olay_tanimi.ilce_cagri} su baskını çağrısı gelir mi?</b>`,
-             `Machine-learning models trained on İzmir Fire Department flood calls, ${uyari.veri.yillar.join('–')}. Question: <b>will a district get at least ${uyari.olay_tanimi.ilce_cagri} flood calls in a day?</b>`)}</p>
+      <p>${T(`İzmir İtfaiyesi'nin ${yilAraligi(uyari.veri.yillar)} su baskını kayıtlarıyla eğitilmiş makine öğrenmesi modelleri. Soru: <b>bir ilçede bir günde en az ${uyari.olay_tanimi.ilce_cagri} su baskını çağrısı gelir mi?</b>`,
+             `Machine-learning models trained on İzmir Fire Department flood calls, ${yilAraligi(uyari.veri.yillar)}. Question: <b>will a district get at least ${uyari.olay_tanimi.ilce_cagri} flood calls in a day?</b>`)}</p>
       <p class="alt-baslik">${T('Harita', 'Map')}</p>
       ${secimHtml('gorunum', [['olasilik', T('Olay olasılığı', 'Event probability')], ['duyarlilik', T('Yağışa duyarlılık', 'Sensitivity to rain')]], durum.gorunum)}
       <div data-yer="gorunum"></div>`;
@@ -227,7 +225,7 @@ export function uyariSekmesi({ uyari, harita }) {
     sekil.openPopup(sekil.getBounds().getCenter());
   }
 
-  const olasilikLejanti = () => [`< ${yuzde(SINIR[0])}`, ...SINIR.slice(1).map((s, i) => araligi(SINIR[i], s)), `≥ ${yuzde(SINIR[SINIR.length - 1])}`]
+  const olasilikLejanti = () => [`< ${yuzde(SINIR[0])}`, ...SINIR.slice(1).map((s, i) => yuzdeAraligi(SINIR[i], s)), `≥ ${yuzde(SINIR[SINIR.length - 1])}`]
     .map((etiket, i) => lejantOgesi(RENK[i], etiket)).join('')
     + `<span class="lej"><i style="--renk:${RENK[2]};border:2.5px solid #1f2937;box-shadow:0 0 0 1px #e5e7eb"></i>${T('alarm', 'alert')}</span>`;
 
@@ -253,12 +251,7 @@ export function uyariSekmesi({ uyari, harita }) {
         if (grup === 'gorunum') gorunumCiz(); else secimCiz();
         boya();
       });
-      const sec = (olay) => {
-        const oge = olay.target.closest('[data-ilce]');
-        if (oge && (olay.type === 'click' || olay.key === 'Enter')) ilceyeGit(oge.dataset.ilce);
-      };
-      icerik.addEventListener('click', sec);
-      icerik.addEventListener('keydown', sec);
+      listeDinle(icerik, 'data-ilce', ilceyeGit);
       ciz();
       boya();
       katman.addTo(harita.harita);

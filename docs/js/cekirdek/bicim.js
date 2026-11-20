@@ -6,10 +6,15 @@ const YAZIM = { 'Güzelyali': 'Güzelyalı', 'Karşiyaka': 'Karşıyaka', 'Bayra
   'Narlidere': 'Narlıdere', 'Bayindir': 'Bayındır', 'Torbali': 'Torbalı' };
 export const yerAdi = (ad) => YAZIM[ad] || ad;
 
+/** Senaryo anahtarı: (100 mm, 6 saat) ↔ "100_6" (veri dosyalarının adı da bu). */
+export const senaryoAnahtari = (mm, saat) => `${mm}_${saat}`;
+export const senaryoCoz = (anahtar) => anahtar.split('_').map(Number);
+export const sureAdi = (saat) => `${saat} ${T('saat', 'h')}`;
+
 /** "100_6" → "100 mm / 6 saat" */
 export function senaryoAdi(anahtar) {
-  const [mm, saat] = anahtar.split('_');
-  return `${mm} mm / ${saat} ${T('saat', 'h')}`;
+  const [mm, saat] = senaryoCoz(anahtar);
+  return `${mm} mm / ${sureAdi(saat)}`;
 }
 
 /** "ÇETİN EMEÇ" → "Çetin Emeç" (Türkçe büyük/küçük harf kurallarıyla) */
@@ -24,8 +29,15 @@ export function alanAdi(alan) {
 
 export const mesafe = (metre) => (metre >= 1000 ? `${sayi(metre / 1000, 1)} km` : `${sayi(metre)} m`);
 
-/** Oran (0–1) → yüzde, dile göre: tr "%36", en "36%". */
-export const yuzde = (oran) => T(`%${sayi(oran * 100)}`, `${sayi(oran * 100)}%`);
+/** Yüzde işareti dile göre: tr "%36", en "36%" (metin: hazır sayı ya da aralık). */
+export const yuzdeIsareti = (metin) => T(`%${metin}`, `${metin}%`);
+/** Oran (0–1) → yüzde: tr "%36", en "36%". */
+export const yuzde = (oran, kesir = 0) => yuzdeIsareti(sayi(oran * 100, kesir));
+/** İki oranın yüzde aralığı: tr "%5–10", en "5–10%". */
+export const yuzdeAraligi = (a, b) => yuzdeIsareti(`${sayi(a * 100)}–${sayi(b * 100)}`);
+
+/** Yıl listesi → "2022–2026" (ilk ve son). */
+export const yilAraligi = (yillar) => `${yillar[0]}–${yillar[yillar.length - 1]}`;
 
 /** "2025-10-23" → tr "23 Ekim 2025", en "23 October 2025". */
 export const tarih = (gun) => new Date(`${gun}T12:00:00`).toLocaleDateString(aktifDil() === 'tr' ? 'tr-TR' : 'en-GB',
