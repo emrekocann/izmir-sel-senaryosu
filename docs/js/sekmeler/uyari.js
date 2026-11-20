@@ -4,8 +4,8 @@
 //   duyarlılık — coğrafi ağırlıklı lojistik regresyon (GWR): her ilçede sel
 //                neyle geliyor, o günün yağışıyla mı, önceki haftanınkiyle mi?
 // Veri: hesap/uyari_hazirla.py → veri/uyari.json (model, sınama, GWR, ilçe sınırları).
-import { T, sayi, aktifDil } from '../cekirdek/dil.js';
-import { yerAdi, kacis } from '../cekirdek/bicim.js';
+import { T, sayi } from '../cekirdek/dil.js';
+import { yerAdi, kacis, yuzde, tarih } from '../cekirdek/bicim.js';
 import { secimHtml, secimDinle, sayiKutulari, lejantOgesi } from '../cekirdek/arayuz.js';
 
 // Olasılık: tek tonlu (turuncu) sıralı ölçek, açıktan koyuya. Mavi öteki
@@ -22,11 +22,6 @@ const carpanSinifi = (c) => CARPAN_SINIR.filter((s) => c >= s).length;
 const KANITSIZ_RENK = '#d1d5db';
 const KANITSIZ_STIL = { color: '#6b7280', weight: 1.2, dashArray: '4 3', fillColor: KANITSIZ_RENK, fillOpacity: 0.5 };
 
-const yuzde = (p) => `%${sayi(p * 100)}`;
-const yuzdeEn = (p) => `${sayi(p * 100)}%`;
-const oran = (p) => T(yuzde(p), yuzdeEn(p));
-const tarih = (gun) => new Date(`${gun}T12:00:00`).toLocaleDateString(aktifDil() === 'tr' ? 'tr-TR' : 'en-GB',
-  { day: 'numeric', month: 'long', year: 'numeric' });
 const MODEL_EN = { gb: 'gradient boosting', rf: 'Random Forest', lojistik: 'logistic regression', agac: 'decision tree' };
 /** Olasılık aralığı etiketi: tr "%5–10", en "5–10%". */
 const araligi = (a, b) => T(`%${sayi(a * 100)}–${sayi(b * 100)}`, `${sayi(a * 100)}–${sayi(b * 100)}%`);
@@ -35,6 +30,10 @@ const carpanSayi = (x) => sayi(x, Math.abs(x - 1) < 0.1 ? 2 : 1);
 const carpan = (x) => `×${carpanSayi(x)}`;
 const carpanAraligi = (c) => `[${carpanSayi(c.aralik_95[0])}–${carpanSayi(c.aralik_95[1])}]`;
 const kanitsizEtiket = () => T('kanıtlanmamış', 'not proven');
+
+/** GWR: etkisi kanıtlanmış ilçeler, çarpanı büyükten küçüğe (Hakkında penceresi de kullanır). */
+export const enDuyarlilar = (gwr, etken) => Object.keys(gwr.ilceler).filter((ad) => gwr.ilceler[ad][etken].kanitli)
+  .sort((a, b) => gwr.ilceler[b][etken].deger - gwr.ilceler[a][etken].deger);
 
 export function uyariSekmesi({ uyari, harita }) {
   const ilk = uyari.yagis_mm.includes(40) ? 40 : uyari.yagis_mm[Math.floor(uyari.yagis_mm.length / 2)];
@@ -74,7 +73,7 @@ export function uyariSekmesi({ uyari, harita }) {
     }
     const p = olasilik(ilce.ad);
     return `${ad} ${alarm(p) ? `<span class="rozet kotu">${T('alarm', 'alert')}</span>` : ''}<br>
-      <span class="soluk">${T('Olay olasılığı', 'Event probability')}:</span> ${oran(p)}<br>
+      <span class="soluk">${T('Olay olasılığı', 'Event probability')}:</span> ${yuzde(p)}<br>
       <span class="soluk">${T(`${uyari.model.egitim_yillari.join('–')} olay günü`, `Event days ${uyari.model.egitim_yillari.join('–')}`)}:</span> ${sayi(ilce.olay_gunu)}`;
   };
 
@@ -82,7 +81,7 @@ export function uyariSekmesi({ uyari, harita }) {
     katman = L.layerGroup();
     uyari.ilceler.forEach((ilce) => {
       const sekil = L.geoJSON(ilce.geometri, { style: () => stil(ilce.ad) })
-        .bindTooltip(() => `${kacis(yerAdi(ilce.ad))}: ${duyarlilikta() ? etkiMetni(etki(ilce.ad)) : oran(olasilik(ilce.ad))}`, { sticky: true })
+        .bindTooltip(() => `${kacis(yerAdi(ilce.ad))}: ${duyarlilikta() ? etkiMetni(etki(ilce.ad)) : yuzde(olasilik(ilce.ad))}`, { sticky: true })
         .bindPopup(() => acilir(ilce), { maxWidth: 260 });
       sekiller.set(ilce.ad, sekil);
       katman.addLayer(sekil);
@@ -94,7 +93,7 @@ export function uyariSekmesi({ uyari, harita }) {
   function olasilikListesi() {
     return uyari.ilceler.map((i) => ({ ad: i.ad, p: olasilik(i.ad) })).sort((a, b) => b.p - a.p)
       .map(({ ad, p }) => `<li data-ilce="${kacis(ad)}" tabindex="0" role="button">
-        <i class="olcek-kare" style="--renk:${RENK[sinif(p)]}"></i> <b>${kacis(yerAdi(ad))}</b> ${oran(p)}
+        <i class="olcek-kare" style="--renk:${RENK[sinif(p)]}"></i> <b>${kacis(yerAdi(ad))}</b> ${yuzde(p)}
         ${alarm(p) ? `<span class="rozet kotu">${T('alarm', 'alert')}</span>` : ''}</li>`).join('');
   }
 
@@ -130,7 +129,7 @@ export function uyariSekmesi({ uyari, harita }) {
     yer.innerHTML = `
       ${sayiKutulari([
         [`${sayi(alarmli.length)} / ${sayi(uyari.ilceler.length)}`, T('ilçede alarm', 'districts on alert')],
-        [oran(Math.max(...uyari.ilceler.map((i) => olasilik(i.ad)))), T('en yüksek olasılık', 'highest probability')],
+        [yuzde(Math.max(...uyari.ilceler.map((i) => olasilik(i.ad)))), T('en yüksek olasılık', 'highest probability')],
       ])}
       <ul class="liste kaydir" data-yer="liste">${olasilikListesi()}</ul>`;
   }
@@ -150,7 +149,7 @@ export function uyariSekmesi({ uyari, harita }) {
              `Wet: ${sayi(isl.yagis_onceki7g_mm)} mm in the previous 7 days, ${sayi(isl.yagis_onceki3g_mm)} mm in the last 3 (typical history of an event day). The previous week's rain is the model's most important input: when soil and drains are full, little rain floods.`)}</p>
       <div data-yer="secim"></div>
       <p class="soluk kucuk">${T(`Kalın çerçeve: alarm (olasılık ≥ ${yuzde(esik)}, eğitim yıllarında en iyi isabet/yakalama dengesini veren eşik). Yağış miktarı yağış arşivinin (ERA5) ölçeğindedir; arşiv sağanağı yumuşattığı için istasyonda ölçülen yağış daha yüksektir.`,
-             `Thick outline: alert (probability ≥ ${yuzdeEn(esik)}, the threshold with the best precision/recall balance in training years). Rain is on the scale of the reanalysis archive (ERA5), which smooths downpours; station rainfall is higher.`)}</p>
+             `Thick outline: alert (probability ≥ ${yuzde(esik)}, the threshold with the best precision/recall balance in training years). Rain is on the scale of the reanalysis archive (ERA5), which smooths downpours; station rainfall is higher.`)}</p>
 
       <h3>${T('Model nasıl sınandı?', 'How was it tested?')}</h3>
       <p>${T(`Her yıl, yalnız kendinden önceki yıllarla eğitilen modelle tahmin edildi (${yil(tum)}). Arka arkaya gelen büyük sel günleri (il genelinde ≥ ${uyari.olay_tanimi.il_cagri} çağrı) tek <b>atak</b> sayıldı; soru: atağın ilk gününde alarm var mıydı?`,
@@ -158,12 +157,12 @@ export function uyariSekmesi({ uyari, harita }) {
       ${sayiKutulari([
         [`${tum.atak_ilk_gun} / ${tum.atak}`, T('atak ilk gününde alarmlı', 'episodes alerted on day one')],
         [`${og.atak_ilk_gun} / ${og.atak}`, T(`bir gün önceki tahminle (${yil(og)})`, `with the day-before forecast (${yil(og)})`)],
-        [oran(tum.duyarlilik), T('ilçe olaylarının yakalanan payı', 'of district events caught')],
-        [oran(tum.kesinlik), T('alarmların isabetli payı', 'of alerts that were right')],
+        [yuzde(tum.duyarlilik), T('ilçe olaylarının yakalanan payı', 'of district events caught')],
+        [yuzde(tum.kesinlik), T('alarmların isabetli payı', 'of alerts that were right')],
       ])}
       <ul>
-        <li>${T(`<b>Bir gün önceden çalışıyor.</b> Uyarı önceki gün öğlen, o anda elde olan ECMWF hava tahminiyle verildiğinde de sonuç neredeyse aynı. Tahmin olmadan ilçe olaylarının yalnız ${oran(yok.duyarlilik)} kadarı yakalanıyor (tahminle ${oran(og.duyarlilik)}).`,
-                 `<b>It works a day ahead.</b> With the alert issued at noon the day before, using the ECMWF forecast available then, results barely change. Without a forecast only ${oran(yok.duyarlilik)} of district events are caught (${oran(og.duyarlilik)} with it).`)}</li>
+        <li>${T(`<b>Bir gün önceden çalışıyor.</b> Uyarı önceki gün öğlen, o anda elde olan ECMWF hava tahminiyle verildiğinde de sonuç neredeyse aynı. Tahmin olmadan ilçe olaylarının yalnız ${yuzde(yok.duyarlilik)} kadarı yakalanıyor (tahminle ${yuzde(og.duyarlilik)}).`,
+                 `<b>It works a day ahead.</b> With the alert issued at noon the day before, using the ECMWF forecast available then, results barely change. Without a forecast only ${yuzde(yok.duyarlilik)} of district events are caught (${yuzde(og.duyarlilik)} with it).`)}</li>
         <li>${T(`<b>Yıldan yıla çok oynuyor.</b> Büyük sel günlerinde alarm: ${s.yillar.map((y) => `${y.yil}: ${y.buyuk_gun_alarmli}/${y.buyuk_gun}`).join(', ')}. %95 aralıklar geniş: yakalama ${ar(tum, 'duyarlilik')}, isabet ${ar(tum, 'kesinlik')}.`,
                  `<b>It varies a lot from year to year.</b> Major flood days alerted: ${s.yillar.map((y) => `${y.yil}: ${y.buyuk_gun_alarmli}/${y.buyuk_gun}`).join(', ')}. 95% intervals are wide: recall ${ar(tum, 'duyarlilik')}, precision ${ar(tum, 'kesinlik')}.`)}</li>
       </ul>
@@ -181,8 +180,7 @@ export function uyariSekmesi({ uyari, harita }) {
 
   function duyarlilikHtml() {
     const s = gwr.sinama, yillar = `${s.gwr.yillar[0]}–${s.gwr.yillar[s.gwr.yillar.length - 1]}`;
-    const enUst = (etken) => uyari.ilceler.map((i) => ({ ad: i.ad, c: etki(i.ad, etken) })).filter((x) => x.c.kanitli)
-      .sort((a, b) => b.c.deger - a.c.deger).slice(0, 3).map((x) => kacis(yerAdi(x.ad))).join(', ');
+    const enUst = (etken) => enDuyarlilar(gwr, etken).slice(0, 3).map((ad) => kacis(yerAdi(ad))).join(', ');
     const kanitsiz = uyari.ilceler.filter((i) => !etki(i.ad, 'onceki_hafta').kanitli).map((i) => yerAdi(i.ad))
       .sort((a, b) => a.localeCompare(b, 'tr')).map(kacis);
     const komsu = gwr.bant - 1;
@@ -200,8 +198,8 @@ export function uyariSekmesi({ uyari, harita }) {
                  `<b>Floods do not come with the same rain everywhere.</b> Most sensitive to the day's rain: ${enUst('gunun_yagisi')}. Most sensitive to the previous week's rain: ${enUst('onceki_hafta')}. The previous week has no proven effect in ${sayi(kanitsiz.length)} districts: ${kanitsiz.join(', ')}.`)}</li>
         <li>${T(`<b>Tek yağış noktasının yan etkisi değil.</b> Büyük ilçelerde sağanak, yağışın okunduğu noktayı ıskalayabilir. O günün yağışı ilçenin en yağışlı noktasından alınınca da ilçelerin sıralaması neredeyse aynı kalıyor (sıra korelasyonu ${sayi(gwr.cok_nokta_sira_korelasyonu, 2)}).`,
                  `<b>Not an artefact of the single rain point.</b> In large districts a downpour can miss the point where rain is read. Taking the day's rain from the wettest point in the district leaves the ranking almost unchanged (rank correlation ${sayi(gwr.cok_nokta_sira_korelasyonu, 2)}).`)}</li>
-        <li>${T(`<b>Uyarıyı iyileştirmiyor.</b> ${yillar} yıl yıl sınandığında ayrı modeller ilçe olaylarının ${oran(s.gwr.duyarlilik)} kadarını yakalıyor (tek model: ${oran(s.global.duyarlilik)}), alarmlarının ${oran(s.gwr.kesinlik)} kadarı isabetli (tek model: ${oran(s.global.kesinlik)}). Değeri ilçeler arasındaki farkı göstermesinde.`,
-                 `<b>It does not improve the alert.</b> Tested year by year (${yillar}), the separate models catch ${oran(s.gwr.duyarlilik)} of district events (single model: ${oran(s.global.duyarlilik)}) and ${oran(s.gwr.kesinlik)} of their alerts are right (single model: ${oran(s.global.kesinlik)}). Its value is in showing how districts differ.`)}</li>
+        <li>${T(`<b>Uyarıyı iyileştirmiyor.</b> ${yillar} yıl yıl sınandığında ayrı modeller ilçe olaylarının ${yuzde(s.gwr.duyarlilik)} kadarını yakalıyor (tek model: ${yuzde(s.global.duyarlilik)}), alarmlarının ${yuzde(s.gwr.kesinlik)} kadarı isabetli (tek model: ${yuzde(s.global.kesinlik)}). Değeri ilçeler arasındaki farkı göstermesinde.`,
+                 `<b>It does not improve the alert.</b> Tested year by year (${yillar}), the separate models catch ${yuzde(s.gwr.duyarlilik)} of district events (single model: ${yuzde(s.global.duyarlilik)}) and ${yuzde(s.gwr.kesinlik)} of their alerts are right (single model: ${yuzde(s.global.kesinlik)}). Its value is in showing how districts differ.`)}</li>
         <li>${T(`<b>Nedeni bu veriyle ayrılamıyor.</b> Havzanın biçimi ve toprağı yağışa farklı tepki veriyor olabilir; yağış arşivi de bazı yerlerde sağanağı daha çok yumuşatıyor olabilir.`,
                  `<b>The cause cannot be separated with this data.</b> Catchment shape and soil may respond differently to rain, or the rain archive may smooth downpours more in some places.`)}</li>
       </ul>`;
@@ -229,7 +227,7 @@ export function uyariSekmesi({ uyari, harita }) {
     sekil.openPopup(sekil.getBounds().getCenter());
   }
 
-  const olasilikLejanti = () => [`< ${oran(SINIR[0])}`, ...SINIR.slice(1).map((s, i) => araligi(SINIR[i], s)), `≥ ${oran(SINIR[SINIR.length - 1])}`]
+  const olasilikLejanti = () => [`< ${yuzde(SINIR[0])}`, ...SINIR.slice(1).map((s, i) => araligi(SINIR[i], s)), `≥ ${yuzde(SINIR[SINIR.length - 1])}`]
     .map((etiket, i) => lejantOgesi(RENK[i], etiket)).join('')
     + `<span class="lej"><i style="--renk:${RENK[2]};border:2.5px solid #1f2937;box-shadow:0 0 0 1px #e5e7eb"></i>${T('alarm', 'alert')}</span>`;
 

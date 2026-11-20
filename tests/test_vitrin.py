@@ -77,3 +77,16 @@ def test_uyari_verisi_sozlesmesi():
         for gorunum in ("gunun_yagisi", "onceki_hafta"):
             c = i[gorunum]
             assert c["aralik_95"][0] <= c["deger"] <= c["aralik_95"][1] and isinstance(c["kanitli"], bool)
+
+
+def test_hakkinda_doldurma_alanlari():
+    """index.html'deki her data-doldur alanını docs/js/hakkinda.js dolduruyor
+    (adı yanlış yazılan alan sitede sessizce boş kalırdı)."""
+    import os
+    import re
+    kok = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs")
+    html = open(os.path.join(kok, "index.html"), encoding="utf-8").read()
+    js = open(os.path.join(kok, "js", "hakkinda.js"), encoding="utf-8").read()
+    alanlar = set(re.findall(r'data-doldur="([^"]+)"', html))
+    tanimli = set(re.findall(r"'([a-z0-9-]+)':", js))
+    assert alanlar and alanlar <= tanimli, sorted(alanlar - tanimli)

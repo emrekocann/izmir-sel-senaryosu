@@ -1,5 +1,5 @@
-// Metin biçimleme: senaryo adı, yer adları, HTML kaçışı.
-import { T, sayi } from './dil.js';
+// Metin biçimleme: senaryo adı, yer adları, yüzde, tarih, HTML kaçışı.
+import { T, sayi, aktifDil } from './dil.js';
 
 // TKGM yazımı (noktasız ı yok) → doğru yazım
 const YAZIM = { 'Güzelyali': 'Güzelyalı', 'Karşiyaka': 'Karşıyaka', 'Bayrakli': 'Bayraklı', 'Kinik': 'Kınık',
@@ -23,6 +23,13 @@ export function alanAdi(alan) {
 }
 
 export const mesafe = (metre) => (metre >= 1000 ? `${sayi(metre / 1000, 1)} km` : `${sayi(metre)} m`);
+
+/** Oran (0–1) → yüzde, dile göre: tr "%36", en "36%". */
+export const yuzde = (oran) => T(`%${sayi(oran * 100)}`, `${sayi(oran * 100)}%`);
+
+/** "2025-10-23" → tr "23 Ekim 2025", en "23 October 2025". */
+export const tarih = (gun) => new Date(`${gun}T12:00:00`).toLocaleDateString(aktifDil() === 'tr' ? 'tr-TR' : 'en-GB',
+  { day: 'numeric', month: 'long', year: 'numeric' });
 
 /** Veriden gelen metni HTML'e güvenle koymak için. */
 export const kacis = (metin) => String(metin ?? '').replace(/[&<>"']/g,

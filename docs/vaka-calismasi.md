@@ -1,20 +1,22 @@
 # 2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?
 
-**Açık veriyle bir sel senaryosu modeli, tahliye rotası ve gerçek olayla karşılaştırma**
+**Açık veriyle bir sel senaryosu modeli, tahliye rotası, gerçek olayla karşılaştırma ve itfaiye kayıtlarıyla eğitilmiş bir erken uyarı modeli**
 
 > Taslak — yayın sayfasının (GitHub Pages) Türkçe metni. Sayılar `hesap/sel_dogrulama.py`,
-> `sel_model/senaryo_ozet.json` ve veritabanından üretilmiştir (11 Kasım 2026).
+> `sel_model/senaryo_ozet.json`, veritabanı ve `egitim/` altındaki sonuç dosyalarından alınmıştır (20 Kasım 2026).
 
 ## Özet
 
 İzmir için, yalnız herkese açık verilerle (uydu yükseklik verisi, OpenStreetMap, ESA arazi örtüsü, İBB toplanma alanları) bir sel senaryosu modeli kurdum. Model "şu kadar yağmur şu kadar saatte yağarsa nereyi su basar, hangi yollar kapanır, toplanma alanına hangi yoldan gidilir" sorusunu yanıtlıyor. Sonra modeli gerçek bir olayla, 2 Şubat 2021 seliyle sınadım.
 
+Ardından ikinci bir soruya geçtim: **hangi gün hangi ilçede sel olur?** Bunun için İzmir İtfaiyesi'nin 2020–2026 su baskını kayıtlarıyla bir erken uyarı modeli eğittim ve her yılı, yalnız kendinden önceki yıllarla eğitilen modelle sınadım.
+
 Sonuç iki parçalı:
 
-- **Çalışan kısım:** veri hattı, su derinliği haritası, su basan yollardan kaçan rota ve hepsini gösteren web haritası uçtan uca çalışıyor.
-- **Sınırı:** model büyük dere hatlarını ve ana caddeleri kısmen yakalıyor, ama su basan mahalleleri ötekilerden ayırt edemiyor. Kıyıdaki kanalizasyon taşkınını ve küçük kent derelerini göremiyor. Bunun nedeni yöntemden çok verinin çözünürlüğü.
+- **Çalışan kısım:** veri hattı, su derinliği haritası, su basan yollardan kaçan rota ve hepsini gösteren web haritası uçtan uca çalışıyor. Erken uyarı modeli, büyük sel ataklarının 23'ünden 17'sinde ilk gün alarm veriyor; bir gün önceki hava tahminiyle de çalışıyor.
+- **Sınırı:** senaryo modeli büyük dere hatlarını ve ana caddeleri kısmen yakalıyor, ama su basan mahalleleri ötekilerden ayırt edemiyor. Kıyıdaki kanalizasyon taşkınını ve küçük kent derelerini göremiyor. Erken uyarı ilçe düzeyinde zayıf: alarmların yalnız beşte biri isabetli ve dar alanlı sağanağı yağış verisi göremiyor. İki parçada da sınırı çoğunlukla yöntem değil, verinin çözünürlüğü belirliyor.
 
-Bu çalışma bir uyarı sistemi değil; açık veriyle nereye kadar gidilebildiğini ve kurum verisinin nerede şart olduğunu gösteren bir vaka çalışmasıdır.
+Bu çalışma resmî bir uyarı sistemi değil; açık veriyle nereye kadar gidilebildiğini ve kurum verisinin nerede şart olduğunu gösteren bir vaka çalışmasıdır.
 
 ## 1. Olay
 
@@ -36,9 +38,9 @@ Bu çalışma bir uyarı sistemi değil; açık veriyle nereye kadar gidilebildi
 
 Kaynaklar: [Anadolu Ajansı](https://www.aa.com.tr/tr/turkiye/izmirde-saganak-sel-ve-su-baskinlarina-neden-oldu-/2130674), [Cumhuriyet](https://www.cumhuriyet.com.tr/haber/tunc-soyerden-evden-cikmayin-uyarisi-1810674), [İnşaport](https://www.insaport.com/haberler/izmirde-sel-felaketi-can-kaybi-2ye-yukseldi/), [İzmir Büyükşehir Belediyesi](https://www.izmir.bel.tr/tr/Haberler/bir-yillik-yagmurun-yuzde-18-i-bir-gecede-yagdi/44620/156).
 
-## 2. Model
+## 2. Sel senaryosu modeli
 
-Eğitilmiş bir yapay zekâ modeli değil; fizik tabanlı, basitleştirilmiş bir hesap. Dört adım:
+Senaryo modeli eğitilmiş bir yapay zekâ modeli değil; fizik tabanlı, basitleştirilmiş bir hesap (veriden öğrenen model 6. bölümde). Dört adım:
 
 1. **Yağmurun ne kadarı yüzeyde kalır?** Arazi örtüsüne göre (beton, tarla, orman) hesaplanır. Kentte yağmur suyu kanallarının saatte 20 mm taşıdığı varsayılır.
 2. **Su nereye akar?** Yükseklik verisi üzerinde her hücrenin suyu en alçak komşusuna gönderilir; dereler böyle ortaya çıkar.
@@ -124,20 +126,94 @@ Tam liste: `denetim/toplanma_denetimi.csv` (ilçe, mahalle, alan adı, koordinat
 - Bağımsız sağlama: model dereleri yükseklik verisinden türetir, OpenStreetMap'i kullanmaz. 1. ve 2. öncelikli 66 alanın 13'i (%20) OSM'de çizili bir dereye 100 m'den yakın; öteki alanlarda bu oran %5. Öncelikli alanlar derelere belirgin biçimde daha yakın, ama çoğunun yanında haritada çizili bir dere yok.
 - Kıyıdaki kanalizasyon taşkını listede yok; model onu göremiyor.
 
-## 6. Kurum verisiyle ne değişir?
+## 6. Erken uyarı: hangi gün hangi ilçede sel olur?
+
+Senaryo modeli fizikle çalışıyor ve gerçek bir olayla yalnız bir kez sınanabildi. Bu bölümdeki model ise veriden öğreniyor ve beş yıl boyunca her yıl yeniden sınanıyor.
+
+**Veri**
+- **Çağrılar:** İzmir İtfaiyesi'nin hizmet istatistikleri (İBB Açık Veri, Haziran 2019 – Eylül 2026); 18.623 su baskını ve su çekme çağrısı. Kayıtlarda adres yok, bu yüzden birim ilçe.
+- **Olay:** bir ilçede bir günde en az 3 su baskını çağrısı.
+- **Yağış:** Open-Meteo geçmiş arşivi (ERA5). Her ilçe için yapılaşmış alanın ağırlık merkezinde o günün, önceki günün ve önceki 3 ve 7 günün yağışı.
+- **Eğitim verisi:** 2020–2026, 30 ilçe × 2.464 gün = 73.920 ilçe-gün; bunların 964'ü olay (%1.3).
+
+**Model.** Beş model karşılaştırıldı: yağışsız temel model, lojistik regresyon, karar ağacı, Random Forest ve gradient boosting. Gradient boosting'e "daha çok yağış olasılığı düşüremez" kısıtı kondu. Parametreler ve model seçimi yalnız 2020–24 verisiyle yapıldı; seçilen model gradient boosting. Alarm eşiği, eğitim yıllarında isabet ile yakalama arasında en iyi dengeyi veren olasılık (%11.4).
+
+| 2025–26 (modelin görmediği yıllar) | AP | Yakalanan olay | İsabetli alarm |
+|---|---|---|---|
+| yağışsız temel | 0.02 | %8 | %4 |
+| lojistik regresyon | 0.25 | %44 | %26 |
+| gradient boosting | 0.29 | %49 | %27 |
+
+AP, modelin olay günlerini ne kadar öne sıraladığını ölçer: rastgele tahminde olay oranına (~0.02) eşittir, kusursuz modelde 1. Gradient boosting, 2025–26'nın 28 büyük sel gününün (il genelinde en az 50 çağrı) 22'sinde en az bir ilçede alarm verdi.
+
+**Bir gün önceden: hava tahminiyle sınama.** Yukarıdaki sınama o günün gerçekte yağan yağmurunu kullanıyor; bu sayı gün bitince bilinir. Gerçek bir uyarıda elde olan, önceki günün hava tahminidir. Aynı model, o günün yağışı yerine bir gün önceki tahmin konarak sınandı (Open-Meteo geçmiş tahmin arşivi):
+- ECMWF tahminiyle AP 0.29'dan 0.26'ya iniyor; 28 büyük sel gününün 23'ünde alarm var.
+- Tahmin olmadan (yalnız geçmiş günlerin yağışıyla) yakalanan olay payı %43'ten %10'a düşüyor. Başarıyı hava tahmini taşıyor.
+
+**Yıl yıl sınama ve ataklar.** Tek bir test dönemi şansa bağlı olabilir. Bu yüzden her yıl (2022–2026), yalnız kendinden önceki yıllarla eğitilen modelle tahmin edildi; parametreler ve eşik her yıl yeniden seçildi. Büyük sel günleri bağımsız değil, yağışlı dönemler günlerce sürüyor. Arka arkaya gelen günler tek **atak** sayıldı ve asıl erken uyarı sorusu soruldu: atağın ilk gününde alarm var mıydı? %95 aralıklar haftalık bloklarla bootstrap yöntemiyle hesaplandı.
+
+| Gradient boosting, gerçek yağış | 2022 | 2023 | 2024 | 2025 | 2026 | 2022–26 |
+|---|---|---|---|---|---|---|
+| AP | 0.10 | 0.15 | 0.05 | 0.06 | 0.38 | 0.19 [0.12–0.26] |
+| Büyük sel günü alarmlı | 4/7 | 15/18 | 2/4 | 3/9 | 19/19 | 43/57 |
+| Atak, ilk gününde alarmlı | | | | | | 17/23 |
+
+- İlçe olaylarının %36'sı yakalanıyor [%26–44]; alarmların %19'u isabetli [%13–26].
+- Uyarı önceki gün öğlen, o anda elde olan ECMWF tahminiyle verildiğinde (2024–26): 8 atağın 6'sı ilk gününde alarmlı. Tahmin olmadan 2'si.
+- Gradient boosting, lojistik regresyondan anlamlı biçimde iyi değil (2022–26 AP: 0.19'a 0.18). Basit model işin çoğunu yapıyor.
+
+**2024–25 neden zayıf?**
+- **Foça, 23 Ekim 2025:** 2025'in 9 büyük sel gününün 7'si bu tek yerel sağanağa ait. Valiliğe göre 1.5 saatte ~144 mm yağdı; yağış arşivi o gün Foça için 7 mm diyor, bir gün önceki tahminler 9–18 mm. Model değil, veri kör.
+- **2024'te toprak kuruydu:** olay günlerinden önceki 7 günün ortalama yağışı 2024'te 16 mm, 2026'da 89 mm. Aynı yağış daha az sel getirdi, model fazla alarm verdi.
+- Kaçırılan atakların çoğu tek günlük, dar alanlı yaz ve sonbahar sağanakları.
+
+**Denediğim ve işe yaramayan iki değişken.** Kıyı ilçelerinin olayları çoğunlukla kaçırılıyordu. Güneyli kuvvetli rüzgâr (lodos) deniz suyunu kıyıya ve yağmur suyu kanallarına iter diye lodosu ekledim. Büyük ilçelerde sağanak, yağışın okunduğu tek noktayı ıskalayabilir diye ilçe içindeki ızgara noktalarının (~10 km aralıklı, 30 ilçede 156 nokta) en yağışlısını da ekledim.
+
+| Gradient boosting, 2022–26 | AP | Fark [%95] |
+|---|---|---|
+| önceki değişkenler | 0.188 | |
+| + lodos | 0.192 | +0.004 [−0.003, +0.012] |
+| + en yağışlı nokta | 0.185 | −0.003 [−0.008, +0.002] |
+
+İki farkın aralığı da sıfırı içeriyor: kazanç kanıtlanmadı, uyarı modelini değiştirmedim. Foça'da ilçenin en yağışlı noktası bile 16 mm diyor. Sorun nokta sayısı değil, yağış arşivinin kendisi.
+
+**Sel her ilçede aynı yağışla gelmiyor (GWR).** Yukarıdaki modeller bütün ilçelere tek denklem uyguluyor. Coğrafi ağırlıklı lojistik regresyon (GWR) her ilçe için ayrı bir model kuruyor: ilçenin kendi kayıtları tam ağırlıkla, en yakın komşularınınki uzaklıkla azalan ağırlıkla girer. Komşu sayısı görülmemiş yıllarda seçildi: ilçenin kendisi ve en yakın iki komşusu. Sonuç okunması kolay olsun diye bir çarpanla verildi: yağış 10 mm yerine 40 mm olunca olay olasılığı (olasılık oranı) kabaca kaç katına çıkıyor?
+
+| | O günün yağışı | Önceki 7 günün yağışı |
+|---|---|---|
+| En duyarlı | Selçuk ×5.3 [3.4–9.6], Urla ×4.8, Ödemiş ×4.7 | Dikili ×8.2 [4.7–16.7], Bergama ×5.5, Kınık ×4.1 |
+| En az duyarlı | Seferihisar ×1.6, Dikili ×1.8, Bergama ×1.9 | Etkisi kanıtlanmamış: Bayındır, Beydağ, Kiraz, Ödemiş, Selçuk, Tire ve Seferihisar |
+
+- **Bakırçay havzasında (Dikili, Bergama, Kınık)** sel ancak günlerce yağdıktan sonra geliyor: o günün yağışının etkisi en zayıflar arasında, önceki haftanınki en güçlü.
+- **Küçük Menderes havzasında (Bayındır, Beydağ, Kiraz, Ödemiş, Selçuk, Tire)** sel o günün sağanağıyla geliyor; önceki haftanın etkisi kanıtlanmamış.
+- **Tek yağış noktasının yan etkisi değil.** O günün yağışı ilçedeki en yağışlı noktadan alınınca da ilçelerin sıralaması neredeyse aynı kalıyor (sıra korelasyonu 0.96).
+- **Uyarıyı iyileştirmiyor.** 2022–26 yıl yıl sınamada AP 0.184, tek denklemle 0.176; fark [−0.009, +0.028], yani kanıtlanmadı. Değeri ilçeler arasındaki farkı göstermesinde.
+- **Nedeni bu veriyle ayrılamıyor.** Havzaların biçimi ve toprağı yağışa farklı tepki veriyor olabilir; yağış arşivi de bazı yerlerde sağanağı daha çok yumuşatıyor olabilir. İkisi de hipotez.
+
+**Nasıl okunmalı**
+- Bir ön uyarı sinyali, karar değil: alarmların beşte dördü boşa çıkıyor, olayların üçte ikisi kaçıyor.
+- Mahalle yok: itfaiye kayıtlarında adres olmadığı için birim ilçe.
+- Yağış miktarları arşivin (ERA5) ölçeğinde; istasyonda ölçülen sağanak daha yüksektir.
+
+Sitede: "Uyarı" sekmesi. İki harita var: seçilen yağışta her ilçenin olay olasılığı ve ilçe ilçe yağışa duyarlılık.
+
+## 7. Kurum verisiyle ne değişir?
 
 | Eksik | Gereken veri | Düzelteceği şey |
 |---|---|---|
 | Kıyıdaki şebeke taşkını | İZSU yağmur suyu ve kanalizasyon şebekesi | Modelin su göstermediği Alsancak, Güzelyalı gibi yerler |
 | Küçük kent dereleri | Belediyenin hassas yükseklik ölçümü (LiDAR, 1 m) | Soğukkuyu, Hacı Ahmet gibi dar dere yatakları |
-| Zayıf doğrulama | Belediyenin ve itfaiyenin su baskını ihbar kayıtları | 14 yer yerine yüzlerce noktayla sınama |
+| Zayıf doğrulama, ilçe düzeyinde uyarı | Belediyenin ve itfaiyenin adresli su baskını ihbar kayıtları | 14 yer yerine yüzlerce noktayla sınama; mahalle düzeyinde uyarı |
+| Dar alanlı sağanak | MGM istasyon ve radar yağışı | Erken uyarının göremediği yerel sağanak (ör. Foça, Ekim 2025) |
 | Düz ovalardaki belirsizlik | DSİ taşkın haritaları, sedde ve baraj işletmesi | Gediz deltası ve Menemen ovası |
 
-## 7. Bu çalışmada neler var?
+## 8. Bu çalışmada neler var?
 
 - **Mekânsal veri hattı:** OSM'den yol ağı kurma, yükseklik verisinden eğim, TKGM sınırlarıyla il ve mahalle maskeleri.
 - **Hidrolojik modelleme:** yüzey akışı, akış yönü ve birikimi, dere taşkını, kapalı çukurların dolması.
 - **Ağ analizi:** pgRouting ile eğim, deprem, trafik ve sel cezalı tahliye rotası; 920 bin yol parçasında ~1 saniyede yanıt. Sunucusuz sitede aynı maliyetle tarayıcıda çalışan Dijkstra (82 bin yol parçası, birkaç ms).
+- **Makine öğrenmesi:** itfaiye kayıtları ve yağış arşivinden ilçe-gün eğitim verisi; lojistik regresyon, karar ağacı, Random Forest ve gradient boosting (scikit-learn); yıl yıl ve ilçe dışarıda bırakılarak sınama.
+- **Mekânsal istatistik:** her ilçeye ayrı model, coğrafi ağırlıklı lojistik regresyon (GWR); komşu sayısı görülmemiş yıllarda seçildi.
 - **Web uygulaması:** FastAPI + PostGIS arka uç, Leaflet harita, mobil uyumlu arayüz.
-- **Doğrulama ve test:** gerçek olayla karşılaştırma betiği, 47 otomatik test, tekrar üretilebilir kurulum adımları.
-- **Dürüst raporlama:** varsayımlar, sınırlar ve işe yaramayan deneme açıkça yazılı.
+- **Doğrulama ve test:** gerçek olayla karşılaştırma betiği, geçmiş hava tahminleriyle sınama, haftalık bloklarla güven aralığı, 96 otomatik test, tekrar üretilebilir kurulum adımları.
+- **Dürüst raporlama:** varsayımlar, sınırlar ve işe yaramayan denemeler açıkça yazılı.

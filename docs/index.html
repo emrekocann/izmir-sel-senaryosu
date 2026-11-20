@@ -5,7 +5,7 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>İzmir sel senaryosu — 2 Şubat 2021 yeniden yaşansa</title>
-<meta name="description" content="Açık veriyle İzmir için sel senaryosu modeli, tahliye rotası, toplanma alanı denetimi ve 2 Şubat 2021 seliyle karşılaştırma. PostGIS, pgRouting, Python, Leaflet.">
+<meta name="description" content="Açık veriyle İzmir için sel senaryosu modeli, tahliye rotası, toplanma alanı denetimi, 2 Şubat 2021 seliyle karşılaştırma ve itfaiye kayıtlarıyla eğitilmiş ilçe ilçe erken uyarı. PostGIS, pgRouting, Python, scikit-learn, Leaflet.">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="css/app.css">
 </head>
@@ -42,16 +42,17 @@
   </div>
   <div class="hk-govde">
     <p class="alt-baslik">
-      <span class="tr">Yalnız açık veriyle kurulmuş bir sel senaryosu modeli, su basan yollardan kaçan tahliye rotası, toplanma alanı denetimi ve modelin gerçek olayla sınanması.</span>
-      <span class="en">A flood scenario model built only from open data, an evacuation route that avoids flooded roads, an assembly-area audit, and a test of the model against the real event.</span>
+      <span class="tr">Yalnız açık veriyle kurulmuş bir sel senaryosu modeli, su basan yollardan kaçan tahliye rotası, toplanma alanı denetimi, modelin gerçek olayla sınanması ve itfaiye kayıtlarıyla eğitilmiş bir erken uyarı modeli.</span>
+      <span class="en">A flood scenario model built only from open data, an evacuation route that avoids flooded roads, an assembly-area audit, a test of the model against the real event, and an early-warning model trained on fire-brigade records.</span>
     </p>
     <p class="kunye">Emre Koçan · <span class="tr">Kasım 2026</span><span class="en">November 2026</span> ·
       <a href="https://github.com/emrekocann/izmir-afet-radar-sistemi"><span class="tr">Kaynak kod</span><span class="en">Source code</span></a></p>
     <nav class="hk-icindekiler">
       <a href="#hk-ozet"><span class="tr">Özet</span><span class="en">Summary</span></a>
       <a href="#hk-olay"><span class="tr">Olay</span><span class="en">Event</span></a>
-      <a href="#hk-model">Model</a>
+      <a href="#hk-model"><span class="tr">Senaryo modeli</span><span class="en">Scenario model</span></a>
       <a href="#hk-dogrulama"><span class="tr">Doğrulama</span><span class="en">Validation</span></a>
+      <a href="#hk-uyari"><span class="tr">Erken uyarı</span><span class="en">Early warning</span></a>
       <a href="#hk-veri"><span class="tr">Eksik veri</span><span class="en">Data gaps</span></a>
       <a href="#hk-yontem"><span class="tr">Yöntem</span><span class="en">Stack</span></a>
     </nav>
@@ -60,18 +61,22 @@
   <div class="ikili">
     <div class="kutu iyi">
       <p><b><span class="tr">Çalışan kısım</span><span class="en">What works</span></b></p>
-      <p class="tr">Veri hattı, su derinliği haritası, su basan yoldan kaçan rota ve web haritası uçtan uca çalışıyor. Model büyük dere hatlarını ve ana caddeleri kısmen yakalıyor.</p>
-      <p class="en">The data pipeline, depth maps, flood-aware routing and web map work end to end. The model partly captures major stream corridors and main streets.</p>
+      <p class="tr">Veri hattı, su derinliği haritası, su basan yoldan kaçan rota ve web haritası uçtan uca çalışıyor. Senaryo modeli büyük dere hatlarını ve ana caddeleri kısmen yakalıyor.</p>
+      <p class="en">The data pipeline, depth maps, flood-aware routing and web map work end to end. The scenario model partly captures major stream corridors and main streets.</p>
+      <p class="tr">Erken uyarı modeli büyük sel ataklarını çoğunlukla ilk gününde yakalıyor (<span data-doldur="atak"></span>); bir gün önceki hava tahminiyle de.</p>
+      <p class="en">The early-warning model mostly flags major flood episodes on their first day (<span data-doldur="atak"></span>), also with the day-before weather forecast.</p>
     </div>
     <div class="kutu kotu">
       <p><b><span class="tr">Sınırı</span><span class="en">Where it stops</span></b></p>
-      <p class="tr">Model, su basan mahalleleri ötekilerden ayırt edemiyor. Kıyıdaki kanalizasyon taşkınını ve küçük kent derelerini göremiyor. Neden: verinin çözünürlüğü.</p>
-      <p class="en">The model cannot tell flooded neighbourhoods from the rest. It misses coastal sewer flooding and small urban creeks. The cause is data resolution.</p>
+      <p class="tr">Senaryo modeli, su basan mahalleleri ötekilerden ayırt edemiyor. Kıyıdaki kanalizasyon taşkınını ve küçük kent derelerini göremiyor. Neden: verinin çözünürlüğü.</p>
+      <p class="en">The scenario model cannot tell flooded neighbourhoods from the rest. It misses coastal sewer flooding and small urban creeks. The cause is data resolution.</p>
+      <p class="tr">Erken uyarı ilçe düzeyinde zayıf: alarmların çoğu boşa çıkıyor. Dar alanlı sağanağı yağış verisi göremiyor.</p>
+      <p class="en">The early warning is weak at district level: most alerts are false. The rain data cannot see narrow downpours.</p>
     </div>
   </div>
 
-    <p class="tr">Bu bir uyarı sistemi değil. Açık veriyle nereye kadar gidilebildiğini ve kurum verisinin nerede şart olduğunu gösteren bir çalışma. Haritadaki dört sekme: yağış senaryoları, 2021 seliyle karşılaştırma, haritada seçilen noktadan anında hesaplanan tahliye rotası ve toplanma alanı denetimi.</p>
-    <p class="en">This is not a warning system. It shows how far open data can go and where institutional data becomes necessary. The map has four tabs: rainfall scenarios, comparison with the 2021 flood, an evacuation route computed on the spot from any point you pick on the map, and the assembly-area audit.</p>
+    <p class="tr">Bu resmî bir uyarı sistemi değil. Açık veriyle nereye kadar gidilebildiğini ve kurum verisinin nerede şart olduğunu gösteren bir çalışma. Haritadaki sekmeler: yağış senaryoları, 2021 seliyle karşılaştırma, haritada seçilen noktadan anında hesaplanan tahliye rotası, toplanma alanı denetimi ve ilçe ilçe erken uyarı.</p>
+    <p class="en">This is not an official warning system. It shows how far open data can go and where institutional data becomes necessary. The map's tabs: rainfall scenarios, comparison with the 2021 flood, an evacuation route computed on the spot from any point you pick on the map, the assembly-area audit, and district-level early warning.</p>
 
     <h2 id="hk-olay"><span class="tr">Olay: 2 Şubat 2021</span><span class="en">The event: 2 February 2021</span></h2>
 <p class="tr">2 Şubat 2021 gecesi İzmir merkezine, şubat ayı ortalamasından fazla yağmur birkaç saatte düştü. İki kişi hayatını kaybetti; dereler taştı, kıyı mahallelerinde ev ve iş yerlerini su bastı, ana yollar kapandı.</p>
@@ -92,9 +97,9 @@
   <a href="https://www.izmir.bel.tr/tr/Haberler/bir-yillik-yagmurun-yuzde-18-i-bir-gecede-yagdi/44620/156">İzmir Büyükşehir Belediyesi</a>.</p>
 
 
-    <h2 id="hk-model">Model</h2>
-<p class="tr">Eğitilmiş bir yapay zekâ modeli değil; fizik tabanlı, basitleştirilmiş bir hesap. Dört adımı var:</p>
-<p class="en">Not a trained AI model: a simplified, physics-based calculation in four steps.</p>
+    <h2 id="hk-model"><span class="tr">Sel senaryosu modeli</span><span class="en">The flood scenario model</span></h2>
+<p class="tr">Senaryo modeli eğitilmiş bir yapay zekâ modeli değil; fizik tabanlı, basitleştirilmiş bir hesap (veriden öğrenen model aşağıda, erken uyarı bölümünde). Dört adımı var:</p>
+<p class="en">The scenario model is not a trained AI model: it is a simplified, physics-based calculation in four steps (the model that learns from data is in the early-warning section below).</p>
 <ul class="tr">
   <li><b>Yağmurun ne kadarı yüzeyde kalır?</b> Arazi örtüsüne göre (beton, tarla, orman) hesaplanır. Kentte yağmur suyu kanallarının saatte 20 mm taşıdığı varsayılır.</li>
   <li><b>Su nereye akar?</b> Yükseklik verisinde her hücrenin suyu en alçak komşusuna gider; dereler böyle ortaya çıkar.</li>
@@ -117,7 +122,7 @@
 </table></div>
 
 
-    <h2 id="hk-dogrulama"><span class="tr">Doğrulama: model gerçek selle ne kadar örtüşüyor?</span><span class="en">Validation: how well did the model match the event?</span></h2>
+    <h2 id="hk-dogrulama"><span class="tr">Doğrulama: senaryo modeli gerçek selle ne kadar örtüşüyor?</span><span class="en">Validation: how well did the scenario model match the event?</span></h2>
     <p class="tr">Haberlerde adıyla geçen, su basan <span data-doldur="yer-sayisi"></span> yeri (mahalle, cadde, dere hattı, alt geçit) kaynaklarıyla derledim. Haberler yalnız su basan yerleri yazar. Bu yüzden şunu sordum: haberdeki yerler, modelde aynı <span data-doldur="ilce-sayisi"></span> ilçenin öteki <span data-doldur="mahalle-oteki"></span> mahallesinden ve <span data-doldur="cadde-oteki"></span> caddesinden daha mı ıslak? Puan 0,5 ise model yazı-tura kadar iyidir, 1 ise kusursuzdur. O günün yağışına en yakın senaryolar 100–150 mm / 6–24 saattir.</p>
     <p class="en">I compiled, with sources, the <span data-doldur="yer-sayisi"></span> places (neighbourhoods, streets, a stream, an underpass) the news named as flooded. News only lists flooded places, so the question was: are the reported places wetter in the model than the other <span data-doldur="mahalle-oteki"></span> neighbourhoods and <span data-doldur="cadde-oteki"></span> streets of the same <span data-doldur="ilce-sayisi"></span> districts? A score (AUC) of 0.5 is a coin toss, 1 is perfect. The scenarios closest to that night's rain are 100–150 mm over 6–24 hours.</p>
     <div class="tablo-sar"><table>
@@ -150,12 +155,59 @@
 <p class="kunye en">This comparison rests on one event and a small sample. Some unreported places were probably flooded too, which lowers the score. Read it as a first measurement of what the model can and cannot see, not as statistical proof.</p>
 
 
+    <h2 id="hk-uyari"><span class="tr">Erken uyarı: hangi ilçede sel olur?</span><span class="en">Early warning: which district floods?</span></h2>
+    <p class="tr">Senaryo modeli suyun nereye gideceğini fizikle hesaplıyor, ama gerçek bir olayla yalnız bir kez sınanabildi. Erken uyarı modeli ise veriden öğreniyor: İzmir İtfaiyesi'nin <span data-doldur="uyari-yillari"></span> su baskını kayıtları (İBB Açık Veri) ve her ilçenin günlük yağışı. Soru: <b>bir ilçede bir günde en az <span data-doldur="ilce-cagri"></span> su baskını çağrısı gelir mi?</b> Lojistik regresyondan gradient boosting'e kadar birkaç makine öğrenmesi modeli karşılaştırıldı.</p>
+    <p class="en">The scenario model computes where water goes from physics, but it could be tested against a real event only once. The early-warning model learns from data instead: İzmir Fire Department flood calls, <span data-doldur="uyari-yillari"></span> (İzmir Municipality open data), and each district's daily rainfall. The question: <b>will a district get at least <span data-doldur="ilce-cagri"></span> flood calls in a day?</b> Several machine-learning models were compared, from logistic regression to gradient boosting.</p>
+    <p class="tr">Sınama: her yıl, yalnız kendinden önceki yıllarla eğitilen modelle tahmin edildi (<span data-doldur="sinama-yillari"></span>). Arka arkaya gelen büyük sel günleri (il genelinde en az <span data-doldur="il-cagri"></span> çağrı) tek <b>atak</b> sayıldı. Asıl soru: atağın ilk gününde alarm var mıydı? Gerçek bir uyarıda o günün yağışı henüz bilinmez; bu yüzden uyarı, önceki gün öğlen elde olan hava tahminiyle (ECMWF) de sınandı.</p>
+    <p class="en">Testing: each year was predicted by a model trained only on earlier years (<span data-doldur="sinama-yillari"></span>). Consecutive major flood days (at least <span data-doldur="il-cagri"></span> calls province-wide) count as one <b>episode</b>. The real question: was there an alert on its first day? In a real warning the day's rain is not yet known, so the alert was also tested with the weather forecast available at noon the day before (ECMWF).</p>
+    <div class="tablo-sar"><table>
+      <tr><th><span class="tr">Ölçü</span><span class="en">Measure</span></th><th class="s"><span class="tr">Sonuç</span><span class="en">Result</span></th></tr>
+      <tr><td><span class="tr">Atak, ilk gününde alarmlı</span><span class="en">Episodes alerted on day one</span></td><td class="s" data-doldur="atak"></td></tr>
+      <tr><td><span class="tr">Aynısı, önceki gün öğlenki tahminle (<span data-doldur="oglen-yillari"></span>)</span><span class="en">The same, with the noon forecast the day before (<span data-doldur="oglen-yillari"></span>)</span></td><td class="s" data-doldur="atak-oglen"></td></tr>
+      <tr><td><span class="tr">İlçe olaylarının yakalanan payı</span><span class="en">District events caught</span></td><td class="s" data-doldur="yakalama"></td></tr>
+      <tr><td><span class="tr">Alarmların isabetli payı</span><span class="en">Alerts that were right</span></td><td class="s" data-doldur="isabet"></td></tr>
+    </table></div>
+    <ul class="tr">
+      <li><b>Bir gün önceden çalışıyor.</b> Hava tahminiyle sonuç neredeyse aynı. Tahmin olmadan ilçe olaylarının yalnız <span data-doldur="yakalama-tahminsiz"></span> kadarı yakalanıyor, tahminle <span data-doldur="yakalama-oglen"></span> (<span data-doldur="oglen-yillari"></span>): başarıyı hava tahmini taşıyor.</li>
+      <li><b>Karmaşık model az fark yaratıyor.</b> Gradient boosting, basit lojistik regresyondan anlamlı biçimde iyi değil.</li>
+      <li><b>Sel her ilçede aynı yağışla gelmiyor.</b> Her ilçeye ayrı bir model kuruldu: coğrafi ağırlıklı lojistik regresyon (GWR). O günün yağışına en duyarlı ilçeler <span data-doldur="gwr-gunun"></span>; önceki haftanın yağışına en duyarlılar <span data-doldur="gwr-hafta"></span>. <span data-doldur="gwr-kanitsiz"></span> ilçede önceki haftanın etkisi kanıtlanmamış. Yani bazı ilçelerde sel o günün sağanağıyla, bazılarında ancak günlerce yağdıktan sonra geliyor. Ayrı modeller uyarıyı iyileştirmiyor; değerleri bu farkı göstermelerinde.</li>
+    </ul>
+    <ul class="en">
+      <li><b>It works a day ahead.</b> With the weather forecast the results barely change. Without a forecast only <span data-doldur="yakalama-tahminsiz"></span> of district events are caught, <span data-doldur="yakalama-oglen"></span> with it (<span data-doldur="oglen-yillari"></span>): the forecast carries the skill.</li>
+      <li><b>The complex model adds little.</b> Gradient boosting is not significantly better than plain logistic regression.</li>
+      <li><b>Floods do not come with the same rain everywhere.</b> A separate model was fitted for each district: geographically weighted logistic regression (GWR). Most sensitive to the day's rain: <span data-doldur="gwr-gunun"></span>; to the previous week's rain: <span data-doldur="gwr-hafta"></span>. In <span data-doldur="gwr-kanitsiz"></span> districts the previous week has no proven effect. So in some districts floods come with the day's downpour, in others only after days of rain. The separate models do not improve the alert; their value is in showing this difference.</li>
+    </ul>
+<div class="kutu kotu">
+  <p><b><span class="tr">Erken uyarı nerede duruyor?</span><span class="en">Where the early warning stops</span></b></p>
+  <ul class="tr">
+    <li><b>İlçe düzeyinde zayıf:</b> alarmların çoğu boşa çıkıyor, olayların çoğu kaçıyor. Bir ön uyarı sinyali, karar değil.</li>
+    <li><b>Dar alanlı sağanağı göremiyor.</b> <span data-doldur="ornek-yer"></span>: valiliğe göre <span data-doldur="ornek-saat"></span> saatte <span data-doldur="ornek-haber"></span> yağdı; yağış arşivi o gün için <span data-doldur="ornek-arsiv"></span> diyor. Model değil, veri kör.</li>
+    <li><b>Mahalle yok:</b> itfaiye kayıtlarında adres olmadığı için birim ilçe.</li>
+  </ul>
+  <ul class="en">
+    <li><b>Weak at district level:</b> most alerts are false and most events are missed. It is an early signal, not a decision.</li>
+    <li><b>It cannot see narrow downpours.</b> <span data-doldur="ornek-yer"></span>: the governor's office reported <span data-doldur="ornek-haber"></span> in <span data-doldur="ornek-saat"></span> hours; the rain archive says <span data-doldur="ornek-arsiv"></span> for that day. The data is blind, not the model.</li>
+    <li><b>No neighbourhoods:</b> fire records carry no address, so the unit is the district.</li>
+  </ul>
+</div>
+
+
+<div class="kutu not">
+  <p><b><span class="tr">Denediğim ve işe yaramayan iki değişken</span><span class="en">Two variables I tried that did not help</span></b></p>
+  <p class="tr">Kıyı ilçelerinin olayları çoğunlukla kaçırılıyordu. Güneyli kuvvetli rüzgâr (lodos) deniz suyunu kıyıya ve yağmur suyu kanallarına iter diye lodosu ekledim. Büyük ilçelerde sağanak, yağışın okunduğu tek noktayı ıskalayabilir diye ilçedeki en yağışlı noktanın yağışını da ekledim. İkisi de başarıyı kanıtlanmış biçimde artırmadı; uyarı modelini değiştirmedim. Foça sağanağını ilçenin en yağışlı noktası da göstermiyor: sorun nokta sayısı değil, yağış arşivinin kendisi.</p>
+  <p class="en">Coastal districts' events were mostly missed. A strong southerly wind (lodos) pushes sea water onto the shore and into storm drains, so I added it. In large districts a downpour can miss the single point where rain is read, so I also added the rain at the district's wettest point. Neither gave a proven improvement; I left the warning model unchanged. Even the wettest point misses the Foça downpour: the limit is the rain archive itself, not the number of points.</p>
+</div>
+<p class="kunye tr">Sonuçlar az sayıda atağa dayanıyor ve yıldan yıla çok oynuyor. %95 aralıklar ve yıl yıl sonuçlar haritadaki Uyarı sekmesinde.</p>
+<p class="kunye en">The results rest on few episodes and vary a lot from year to year. The 95% intervals and year-by-year results are in the map's Alert tab.</p>
+
+
     <h2 id="hk-veri"><span class="tr">Kurum verisiyle ne değişir?</span><span class="en">What institutional data would change</span></h2>
 <div class="tablo-sar"><table>
   <tr><th><span class="tr">Eksik</span><span class="en">Gap</span></th><th><span class="tr">Gereken veri</span><span class="en">Data needed</span></th><th><span class="tr">Düzelteceği şey</span><span class="en">What it fixes</span></th></tr>
   <tr><td><span class="tr">Kıyıdaki şebeke taşkını</span><span class="en">Coastal sewer flooding</span></td><td><span class="tr">İZSU yağmur suyu ve kanalizasyon şebekesi</span><span class="en">Water utility (İZSU) storm and sewer network</span></td><td><span class="tr">Modelin su göstermediği Alsancak, Güzelyalı gibi yerler</span><span class="en">Places the model shows dry, such as Alsancak and Güzelyalı</span></td></tr>
   <tr><td><span class="tr">Küçük kent dereleri</span><span class="en">Small urban creeks</span></td><td><span class="tr">Hassas yükseklik ölçümü (LiDAR, 1 m)</span><span class="en">LiDAR elevation (1 m)</span></td><td><span class="tr">Soğukkuyu, Hacı Ahmet gibi dar dere yatakları</span><span class="en">Narrow channels such as Soğukkuyu and Hacı Ahmet</span></td></tr>
-  <tr><td><span class="tr">Küçük doğrulama örneği</span><span class="en">Small validation sample</span></td><td><span class="tr">Belediye ve itfaiyenin su baskını ihbar kayıtları</span><span class="en">Municipal and fire-brigade flood call records</span></td><td><span class="tr">14 yer yerine yüzlerce noktayla sınama</span><span class="en">Hundreds of points instead of 14 places</span></td></tr>
+  <tr><td><span class="tr">Küçük doğrulama örneği, ilçe düzeyinde uyarı</span><span class="en">Small validation sample, district-level alerts</span></td><td><span class="tr">Belediye ve itfaiyenin adresli su baskını ihbar kayıtları</span><span class="en">Municipal and fire-brigade flood call records with addresses</span></td><td><span class="tr"><span data-doldur="yer-sayisi"></span> yer yerine yüzlerce noktayla sınama; mahalle düzeyinde uyarı</span><span class="en">Hundreds of points instead of <span data-doldur="yer-sayisi"></span> places; neighbourhood-level alerts</span></td></tr>
+  <tr><td><span class="tr">Dar alanlı sağanak</span><span class="en">Narrow downpours</span></td><td><span class="tr">MGM istasyon ve radar yağışı</span><span class="en">Met service (MGM) station and radar rainfall</span></td><td><span class="tr">Erken uyarının göremediği yerel sağanak (ör. Foça)</span><span class="en">Local downpours the early warning cannot see (e.g. Foça)</span></td></tr>
   <tr><td><span class="tr">Düz ovalardaki belirsizlik</span><span class="en">Uncertainty on flat plains</span></td><td><span class="tr">DSİ taşkın haritaları, sedde ve baraj işletmesi</span><span class="en">State hydraulic works flood maps, levees, dam operation</span></td><td><span class="tr">Gediz deltası ve Menemen ovası</span><span class="en">Gediz delta and Menemen plain</span></td></tr>
 </table></div>
 
@@ -165,26 +217,30 @@
   <li><b>Mekânsal veri hattı:</b> OSM'den yol ağı kurma, yükseklik verisinden eğim, TKGM sınırlarıyla il ve mahalle maskeleri.</li>
   <li><b>Hidrolojik modelleme:</b> yüzey akışı, akış yönü ve birikimi, dere taşkını, kapalı çukurların dolması.</li>
   <li><b>Ağ analizi:</b> pgRouting ile eğim, deprem, trafik ve sel cezalı rota; 920 bin yol parçasında yaklaşık 1 saniyede yanıt. Sunucusuz sitede aynı maliyetle tarayıcıda çalışan Dijkstra: merkezdeki 11 ilçenin 82 bin yol parçasında birkaç milisaniye.</li>
+  <li><b>Makine öğrenmesi:</b> itfaiye kayıtları ve yağış arşivinden ilçe-gün eğitim verisi; lojistik regresyon, karar ağacı, Random Forest ve gradient boosting; yıl yıl ve ilçe dışarıda bırakılarak sınama.</li>
+  <li><b>Mekânsal istatistik:</b> her ilçeye ayrı model, coğrafi ağırlıklı lojistik regresyon (GWR); komşu sayısı görülmemiş yıllarda seçildi.</li>
   <li><b>Web uygulaması:</b> FastAPI ve PostGIS arka uç, Leaflet harita, mobil uyumlu arayüz.</li>
-  <li><b>Doğrulama ve test:</b> gerçek olayla karşılaştırma betiği, otomatik testler, tekrar üretilebilir kurulum.</li>
-  <li><b>Açık raporlama:</b> varsayımlar, sınırlar ve işe yaramayan deneme yazılı.</li>
+  <li><b>Doğrulama ve test:</b> gerçek olayla karşılaştırma betiği, geçmiş hava tahminleriyle sınama, hafta bloklarıyla güven aralığı, otomatik testler, tekrar üretilebilir kurulum.</li>
+  <li><b>Açık raporlama:</b> varsayımlar, sınırlar ve işe yaramayan denemeler yazılı.</li>
 </ul>
 <ul class="en">
   <li><b>Spatial data pipeline:</b> road network from OSM, slope from elevation, province and neighbourhood masks from cadastral boundaries.</li>
   <li><b>Hydrological modelling:</b> runoff, flow direction and accumulation, stream overflow, depression filling.</li>
-  <li><b>Network analysis:</b> pgRouting with slope, earthquake, traffic and flood costs; about 1 second on 920k edges.</li>
+  <li><b>Network analysis:</b> pgRouting with slope, earthquake, traffic and flood costs; about 1 second on 920k edges. On the serverless site the same costs run as Dijkstra in the browser: a few milliseconds on the 82k edges of the 11 central districts.</li>
+  <li><b>Machine learning:</b> district-day training data from fire-brigade records and a rain archive; logistic regression, decision tree, Random Forest and gradient boosting; tested year by year and with districts held out.</li>
+  <li><b>Spatial statistics:</b> geographically weighted logistic regression (GWR), a separate model for each district; the neighbour count was chosen on unseen years.</li>
   <li><b>Web application:</b> FastAPI and PostGIS backend, Leaflet map, mobile-friendly interface.</li>
-  <li><b>Validation and tests:</b> comparison script against the real event, automated tests, reproducible setup.</li>
-  <li><b>Plain reporting:</b> assumptions, limits and the failed experiment are all written down.</li>
+  <li><b>Validation and tests:</b> comparison script against the real event, tests against archived weather forecasts, week-block confidence intervals, automated tests, reproducible setup.</li>
+  <li><b>Plain reporting:</b> assumptions, limits and the failed experiments are all written down.</li>
 </ul>
 <div class="etiketler">
-  <span>PostGIS</span><span>pgRouting</span><span>Python</span><span>pysheds</span><span>rasterio</span><span>shapely</span>
-  <span>FastAPI</span><span>Leaflet</span><span>Docker</span><span>pytest</span><span>OpenStreetMap</span><span>SRTM</span><span>ESA WorldCover</span>
+  <span>PostGIS</span><span>pgRouting</span><span>Python</span><span>pandas</span><span>scikit-learn</span><span>statsmodels</span><span>pysheds</span><span>rasterio</span><span>shapely</span>
+  <span>FastAPI</span><span>Leaflet</span><span>Docker</span><span>pytest</span><span>OpenStreetMap</span><span>SRTM</span><span>ESA WorldCover</span><span>Open-Meteo</span><span>ERA5</span>
 </div>
 
 
-    <p class="kunye tr">Veri: © OpenStreetMap katkıcıları (ODbL) · SRTM (NASA) · ESA WorldCover 2021 (CC BY 4.0) · İzmir Büyükşehir Belediyesi Açık Veri · TKGM. Haritalar önceden hesaplanmıştır; site sunucu olmadan çalışır.</p>
-    <p class="kunye en">Data: © OpenStreetMap contributors (ODbL) · SRTM (NASA) · ESA WorldCover 2021 (CC BY 4.0) · İzmir Metropolitan Municipality Open Data · TKGM. Maps are precomputed; the site runs without a server.</p>
+    <p class="kunye tr">Veri: © OpenStreetMap katkıcıları (ODbL) · SRTM (NASA) · ESA WorldCover 2021 (CC BY 4.0) · İzmir Büyükşehir Belediyesi Açık Veri (toplanma alanları, itfaiye kayıtları) · TKGM · Open-Meteo (CC BY 4.0; ERA5: Copernicus İklim Değişikliği Hizmeti). Haritalar ve modeller önceden hesaplanmıştır; site sunucu olmadan çalışır.</p>
+    <p class="kunye en">Data: © OpenStreetMap contributors (ODbL) · SRTM (NASA) · ESA WorldCover 2021 (CC BY 4.0) · İzmir Metropolitan Municipality Open Data (assembly areas, fire-brigade records) · TKGM · Open-Meteo (CC BY 4.0; ERA5: Copernicus Climate Change Service). Maps and models are precomputed; the site runs without a server.</p>
   </div>
 </dialog>
 
