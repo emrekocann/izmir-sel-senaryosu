@@ -25,6 +25,7 @@ farkı); %95 aralık sıfırı içeriyorsa fark kanıtlanmamıştır.
 Çıktılar: egitim/ek_degiskenler.csv (ilçe-gün), egitim/ek_degiskenler_sonuc.json
 Çalıştırma: venv/bin/python -m hesap.ek_degiskenler   (~5 dk; ilk seferde arşiv iner, kota yüzünden ~30 dk)
 """
+import functools
 import logging
 import os
 import time
@@ -36,16 +37,15 @@ from sklearn.metrics import average_precision_score
 
 from afet import ag
 from afet.dosya import json_oku
-from afet.yollar import ILCE_SINIRLARI
+from afet.yollar import (EK_DEGISKENLER_CSV, EK_DEGISKENLER_SONUC, GUVENILIRLIK_SONUC, ILCE_CSV, ILCE_GUN_CSV,
+                         ILCE_SINIRLARI, ITFAIYE_HAM_DIR)
 from hesap import gunlugu_kur, sonucu_yaz
 from hesap import guvenilirlik as gv
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
-from hesap.ilce_gun import CIKTI_DIR, HAM_DIR, ILCE_CSV, ILCE_GUN_CSV, anahtar
+from hesap.ilce_gun import anahtar
 
 log = logging.getLogger("ek_degiskenler")
-EK_CSV = os.path.join(CIKTI_DIR, "ek_degiskenler.csv")
-SONUC_JSON = os.path.join(CIKTI_DIR, "ek_degiskenler_sonuc.json")
 IZGARA = 0.1                      # derece; ERA5-Land / IFS ölçeği
 LODOS_YON = (150, 260)            # baskın rüzgâr yönü (derece, nereden estiği): G–GB
 BOOTSTRAP = 1000
@@ -76,7 +76,7 @@ def noktalar(ilce_df, geo):
 def _gunluk(nok, b, s, degiskenler, ad):
     """Open-Meteo arşivinden noktaların günlük değişkenleri (tek istek, önbellekli)."""
     return ag.open_meteo_arsiv(ag.OPEN_METEO_ARSIV_URL, nok.lat, nok.lon, b, s,
-                               os.path.join(HAM_DIR, f"ek_{ad}_{len(nok)}n_{b}_{s}.json"), timeout=300,
+                               os.path.join(ITFAIYE_HAM_DIR, f"ek_{ad}_{len(nok)}n_{b}_{s}.json"), timeout=300,
                                daily=",".join(degiskenler))
 
 
@@ -123,14 +123,14 @@ def birlestir(t, ek):
 # ── Değerlendirme ───────────────────────────────────────────────────────────
 
 def model_tanimi(ad, ek, prm=None):
-    """(kurucu, kolonlar, ızgara, açıklama) — sn.ayarla'nın beklediği biçimde."""
+    """sn.ModelTanimi, ek değişkenlerle: lojistik (ızgarasıyla) ya da gradient boosting
+    (prm parametreleriyle; yeni yağış değişkenleri de monoton)."""
     if ad == "lojistik":
-        _, kol, izg, ac = sn.MODELLER["lojistik"]
-        return (sn._lojistik, kol + [LOG_KARSILIK[k] for k in ek], izg, ac)
-    kol = sn.AGAC_OZ + ek
-    mono = {k: 1 for k in sn.YAGIS_HAM + [k for k in ek if k in YENI_YAGIS]}
-    kur = lambda: sn._gb().set_params(monotonic_cst=mono, **(prm or {}))
-    return (kur, kol, {}, sn.MODELLER["gb"][3])
+        loj = sn.MODELLER["lojistik"]
+        return loj._replace(kolonlar=loj.kolonlar + [LOG_KARSILIK[k] for k in ek])
+    monoton = sn.YAGIS_HAM + [k for k in ek if k in YENI_YAGIS]
+    return sn.ModelTanimi(functools.partial(sn.gb_kur, monoton, **(prm or {})), sn.AGAC_OZ + ek, {},
+                          sn.MODELLER["gb"].aciklama)
 
 
 def yil_yil(t, ad, ek, gb_prm, test_yillari=gv.TEST_YILLARI):
@@ -144,7 +144,10 @@ def eslesik_fark(a, b, n=BOOTSTRAP, tohum=gv.TOHUM):
     b = b.sort_values(["gun", "ilce"]).reset_index(drop=True)
     _, satirlar = gv.blok_satirlari(gv.hafta(a.gun))
     y, pa, pb = a.olay.values, a.p.values, b.p.values
-    ap_farki = lambda i: average_precision_score(y[i], pb[i]) - average_precision_score(y[i], pa[i])
+
+    def ap_farki(i):
+        return average_precision_score(y[i], pb[i]) - average_precision_score(y[i], pa[i])
+
     farklar = [ap_farki(idx) for _, idx in gv.blok_cek(satirlar, n, tohum) if y[idx].sum()]
     return [round(float(ap_farki(slice(None))), 3), *gv.aralik_95(farklar)]      # slice(None): bütün satırlar
 
@@ -185,11 +188,13 @@ def calistir(t, ek, gb_prm, setler=SETLER, modeller=MODELLER, n=BOOTSTRAP, test_
 def yazdir(r):
     for ad, s in r["sonuclar"].items():
         print(f"\n{ad}:")
-        print(f"  {'set':10} {'AP':>6} {'ΔAP [%95]':>22} {'duyarlılık':>10} {'kesinlik':>8} {'atak ilk gün':>12} {'kıyı yakalanan':>15}")
+        print(f"  {'set':10} {'AP':>6} {'ΔAP [%95]':>22} {'duyarlılık':>10} {'kesinlik':>8} "
+              f"{'atak ilk gün':>12} {'kıyı yakalanan':>15}")
         for k, o in s.items():
             f = o.get("ap_farki_temele_gore")
             print(f"  {k:10} {o['ap']:6.3f} {str(f) if f else '':>22} {o['duyarlilik']:10.2f} {o['kesinlik']:8.2f} "
-                  f"{o['atak']['ilk_gun_alarmli']:>5}/{o['atak']['atak']:<6} {o['kiyi']['yakalanan']:>7}/{o['kiyi']['olay']}")
+                  f"{o['atak']['ilk_gun_alarmli']:>5}/{o['atak']['atak']:<6} "
+                  f"{o['kiyi']['yakalanan']:>7}/{o['kiyi']['olay']}")
 
 
 def main():
@@ -200,10 +205,10 @@ def main():
     bas = pd.Timestamp(f"{om.ILK_YIL}-01-01").date()
     bit = pd.Timestamp(t.gun.max()).date()
     ek = ozellikler(gunluk_arsiv(nok, bas, bit))
-    ek.to_csv(EK_CSV, index=False)
-    log.info("Yazıldı: %s (%d satır, %d nokta)", EK_CSV, len(ek), len(nok))
-    gb_prm = {k["test_yili"]: k["parametreler"] for k in json_oku(gv.SONUC_JSON)["sonuclar"]["gb"]["katmanlar"]}
-    sonucu_yaz(SONUC_JSON, calistir(t, ek, gb_prm), yazdir)
+    ek.to_csv(EK_DEGISKENLER_CSV, index=False)
+    log.info("Yazıldı: %s (%d satır, %d nokta)", EK_DEGISKENLER_CSV, len(ek), len(nok))
+    gb_prm = {k["test_yili"]: k["parametreler"] for k in json_oku(GUVENILIRLIK_SONUC)["sonuclar"]["gb"]["katmanlar"]}
+    sonucu_yaz(EK_DEGISKENLER_SONUC, calistir(t, ek, gb_prm), yazdir)
 
 
 if __name__ == "__main__":

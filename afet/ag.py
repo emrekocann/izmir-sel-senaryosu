@@ -22,6 +22,8 @@ import urllib.request
 
 import httpx
 
+from afet.dosya import atomik_yaz
+
 UA = "izmir-afet-radar/1.5"
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 OPEN_METEO_ARSIV_URL = "https://archive-api.open-meteo.com/v1/archive"                    # ERA5 yeniden analizi
@@ -40,22 +42,28 @@ log = logging.getLogger("ag")
 
 # ── Çalışma zamanı: paylaşılan asenkron istemci ─────────────────────────────
 
-_istemci: httpx.AsyncClient | None = None
+class PaylasilanIstemci:
+    """Uygulama boyunca tek httpx.AsyncClient: ilk istekte (olay döngüsü içinde)
+    açılır, kapatılmışsa yeniden açılır."""
+
+    def __init__(self):
+        self._istemci: httpx.AsyncClient | None = None
+
+    def al(self) -> httpx.AsyncClient:
+        if self._istemci is None or self._istemci.is_closed:
+            self._istemci = httpx.AsyncClient(
+                timeout=15.0, follow_redirects=True, headers={"User-Agent": UA},
+                limits=httpx.Limits(max_connections=50, max_keepalive_connections=20))
+        return self._istemci
+
+    async def kapat(self):
+        if self._istemci is not None and not self._istemci.is_closed:
+            await self._istemci.aclose()
 
 
-def istemci() -> httpx.AsyncClient:
-    """Uygulama boyunca tek istemci (ilk çağrıda, olay döngüsü içinde açılır)."""
-    global _istemci
-    if _istemci is None or _istemci.is_closed:
-        _istemci = httpx.AsyncClient(
-            timeout=15.0, follow_redirects=True, headers={"User-Agent": UA},
-            limits=httpx.Limits(max_connections=50, max_keepalive_connections=20))
-    return _istemci
-
-
-async def kapat():
-    if _istemci is not None and not _istemci.is_closed:
-        await _istemci.aclose()
+_PAYLASILAN = PaylasilanIstemci()
+istemci = _PAYLASILAN.al
+kapat = _PAYLASILAN.kapat
 
 
 async def open_meteo(client, lats, lons, **params) -> list:
@@ -72,24 +80,40 @@ async def open_meteo(client, lats, lons, **params) -> list:
 
 # ── Çevrimdışı: yeniden denemeli indirme ────────────────────────────────────
 
+def _onbellekten(yol, dogrula):
+    """Önbellek dosyasının gövdesi; dosya yoksa None, bozuksa silinir ve None."""
+    if not (yol and os.path.exists(yol)):
+        return None
+    with open(yol, "rb") as f:
+        govde = f.read()
+    try:
+        if dogrula:
+            dogrula(govde)
+        return govde
+    except Exception:
+        log.warning("Bozuk önbellek siliniyor: %s", yol)
+        os.remove(yol)
+        return None
+
+
+def bekleme_sn(hata, sira, bekle_sn):
+    """sira. başarısız denemeden sonra bekleme: 429 (kota) ise 5 dakika,
+    değilse bekle_sn × sira (en çok 2 dakika)."""
+    if isinstance(hata, urllib.error.HTTPError) and hata.code == 429:
+        return 300
+    return min(bekle_sn * sira, 120)
+
+
 def getir(url, yol=None, veri=None, deneme=6, bekle_sn=10, timeout=300, dogrula=None) -> bytes:
     """url (tek adres ya da sırayla denenecek yansı listesi) gövdesini döner.
 
     yol verilirse dosya önbelleğidir: geçerli dosya varsa okunur, yoksa
     indirilip atomik yazılır. dogrula(gövde) hata atarsa yanıt (ya da bozuk
     önbellek) geçersiz sayılır — ör. zaman aşımında 200 ile dönen düz metin.
-    Hata sonrası bekleme: bekle_sn × deneme sırası (en çok 2 dk); 429'da 5 dakika.
-    veri: POST gövdesi (bytes)."""
-    if yol and os.path.exists(yol):
-        with open(yol, "rb") as f:
-            govde = f.read()
-        try:
-            if dogrula:
-                dogrula(govde)
-            return govde
-        except Exception:
-            log.warning("Bozuk önbellek siliniyor: %s", yol)
-            os.remove(yol)
+    Hatadan sonra bekleme_sn kadar beklenir. veri: POST gövdesi (bytes)."""
+    govde = _onbellekten(yol, dogrula)
+    if govde is not None:
+        return govde
     adresler = url if isinstance(url, (list, tuple)) else [url]
     for i in range(deneme):
         u = adresler[i % len(adresler)]
@@ -101,13 +125,10 @@ def getir(url, yol=None, veri=None, deneme=6, bekle_sn=10, timeout=300, dogrula=
             if dogrula:
                 dogrula(govde)
             if yol:
-                os.makedirs(os.path.dirname(yol) or ".", exist_ok=True)
-                with open(yol + ".tmp", "wb") as f:
-                    f.write(govde)
-                os.replace(yol + ".tmp", yol)
+                atomik_yaz(yol, govde)
             return govde
         except Exception as e:
-            bekle = 300 if isinstance(e, urllib.error.HTTPError) and e.code == 429 else min(bekle_sn * (i + 1), 120)
+            bekle = bekleme_sn(e, i + 1, bekle_sn)
             log.warning("%s: %s — %d sn sonra tekrar (%d/%d)",
                         urllib.parse.urlsplit(u).netloc, str(e)[:100], bekle, i + 1, deneme)
             if i < deneme - 1:

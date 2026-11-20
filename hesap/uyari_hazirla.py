@@ -37,7 +37,6 @@ olasılığı verdiği denetlenir.
 """
 import datetime as dt
 import logging
-import os
 from statistics import median
 
 import numpy as np
@@ -46,18 +45,17 @@ import shapely
 from sklearn.ensemble import HistGradientBoostingClassifier
 
 from afet.dosya import json_oku, json_yaz
-from afet.yollar import ILCE_SINIRLARI, SITE_VERI_DIR
+from afet.yollar import (GUVENILIRLIK_SONUC, GWR_SONUC, ILCE_CSV, ILCE_GUN_CSV, ILCE_SINIRLARI, SINIFLANDIRMA_SONUC,
+                         UYARI_JSON, UYARI_MODEL_JSON)
 from hesap import gunlugu_kur
 from hesap import guvenilirlik as gv
 from hesap import gwr
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
 from hesap import tahmin_sinamasi as ts
-from hesap.ilce_gun import ILCE_CSV, ILCE_GUN_CSV, anahtar
+from hesap.ilce_gun import anahtar
 
 log = logging.getLogger("uyari")
-UYARI_JSON = os.path.join(SITE_VERI_DIR, "uyari.json")
-UYARI_MODEL_JSON = os.path.join(SITE_VERI_DIR, "uyari_model.json")
 SADELESTIR = 0.002            # ~200 m: ilçe ölçeğinde yeterli, dosya küçük kalır
 GWR_GORUNUMLER = {"gunun_yagisi": "log_yagis", "onceki_hafta": "log_onceki7g"}   # sekmedeki görünüm → değişken
 ORNEK = {
@@ -115,25 +113,31 @@ def dalgalar(t, ataklar):
         en = gun.loc[gun.cagri_su.idxmax()]
         liste.append({**a, "il_cagri": int(gun.cagri_su.sum()), "ilce": en.ilce, "cagri": int(en.cagri_su),
                       "yagis_mm": round(float(en.yagis_mm), 1), "onceki7g_mm": round(float(en.yagis_onceki7g_mm), 1)})
+
     def ortanca(alarmli):
         x = [a for a in liste if a["ilk_gun_alarm"] == alarmli]
-        orta = lambda k: round(median(a[k] for a in x), 1) if x else None
-        return {"dalga": len(x), "yagis_mm": orta("yagis_mm"), "onceki7g_mm": orta("onceki7g_mm")}
+        orta = {k: round(median(a[k] for a in x), 1) if x else None for k in ("yagis_mm", "onceki7g_mm")}
+        return {"dalga": len(x), **orta}
     return {"liste": liste, "ilk_gun_alarmli": ortanca(True), "ilk_gun_alarmsiz": ortanca(False)}
+
+
+def _sinama_sayilari(o):
+    """Bir sınama koşulunun sekmede gösterilen sayıları."""
+    return {"atak": o["atak"]["atak"], "atak_ilk_gun": o["atak"]["ilk_gun_alarmli"],
+            "atak_herhangi": o["atak"]["herhangi_alarmli"],
+            "buyuk_gun": o["il"]["buyuk_olay_gunu"], "buyuk_gun_alarmli": o["il"]["alarmli"],
+            "duyarlilik": o["duyarlilik"], "kesinlik": o["kesinlik"], "ap": o["ap"],
+            "yillar": o["yillar"], "aralik_95": o["aralik_95"]}
 
 
 def sinama_ozeti(g, secili, t):
     """guvenilirlik.json → sekmenin sınama sayıları (t: ilce_gun, dört kutu ve dalgalar için)."""
     s = g["sonuclar"][secili]
     tum, oglen, yok = s["tum_yillar"], s["tahminli_donem"]["ecmwf_oglen"], s["tahminli_donem"]["tahminsiz"]
-    al = lambda o: {"atak": o["atak"]["atak"], "atak_ilk_gun": o["atak"]["ilk_gun_alarmli"],
-                    "atak_herhangi": o["atak"]["herhangi_alarmli"],
-                    "buyuk_gun": o["il"]["buyuk_olay_gunu"], "buyuk_gun_alarmli": o["il"]["alarmli"],
-                    "duyarlilik": o["duyarlilik"], "kesinlik": o["kesinlik"], "ap": o["ap"],
-                    "yillar": o["yillar"], "aralik_95": o["aralik_95"]}
-    return {"tum_yillar": {**al(tum), "dort_kutu": dort_kutu(t, tum), "dalgalar": dalgalar(t, tum["atak"]["liste"])},
-            "oglen_tahmin": al(oglen), "tahminsiz": al(yok),
-            "canli_tahmin": al(s["tahminli_donem"]["ecmwf_canli"]),
+    return {"tum_yillar": {**_sinama_sayilari(tum), "dort_kutu": dort_kutu(t, tum),
+                           "dalgalar": dalgalar(t, tum["atak"]["liste"])},
+            "oglen_tahmin": _sinama_sayilari(oglen), "tahminsiz": _sinama_sayilari(yok),
+            "canli_tahmin": _sinama_sayilari(s["tahminli_donem"]["ecmwf_canli"]),
             "yillar": [{"yil": k["test_yili"], "ap": k["ap"], "buyuk_gun": k["il"]["buyuk_olay_gunu"],
                         "buyuk_gun_alarmli": k["il"]["alarmli"]} for k in s["katmanlar"]]}
 
@@ -196,6 +200,11 @@ def aktarimi_denetle(model, m, X, esik):
     return fark
 
 
+def _sifir_disinda(aralik):
+    """%95 aralığı sıfırı içermiyor mu (etki kanıtlı)."""
+    return bool(aralik[0] > 0 or aralik[1] < 0)
+
+
 def gwr_ozeti(g, adlar):
     """gwr_sonuc.json → duyarlılık haritası. kanitli: katsayının %95 aralığı
     sıfırı içermiyor (çarpan aralığı 1'i içermiyor)."""
@@ -205,14 +214,13 @@ def gwr_ozeti(g, adlar):
     c = g["cok_nokta"]
     tek_y = pd.Series({ad: i["katsayi"]["log_yagis"] for ad, i in tek.items()})
     cok_y = pd.Series({i["ilce"]: i["katsayi"][c["degiskenler"][0]] for i in c["ilceler"]})
-    kanitli = lambda a: bool(a[0] > 0 or a[1] < 0)
     s = g["sonuclar"]
-    al = lambda o: {k: o[k] for k in ("ap", "duyarlilik", "kesinlik", "yillar")}
+    sayilar = {m: {k: s[m][k] for k in ("ap", "duyarlilik", "kesinlik", "yillar")} for m in ("gwr", "global")}
     return {
         "bant": g["bant"], "olcek_mm": list(gwr.DUYARLILIK_MM),
-        "sinama": {"gwr": al(s["gwr"]), "global": al(s["global"]), "ap_farki": s["gwr"]["ap_farki_globale_gore"]},
+        "sinama": {**sayilar, "ap_farki": s["gwr"]["ap_farki_globale_gore"]},
         "cok_nokta_sira_korelasyonu": round(float(tek_y.corr(cok_y.reindex(tek_y.index), method="spearman")), 2),
-        "ilceler": {ad: {gor: {**tek[ad]["carpan_10_40"][v], "kanitli": kanitli(tek[ad]["aralik_95"][v])}
+        "ilceler": {ad: {gor: {**tek[ad]["carpan_10_40"][v], "kanitli": _sifir_disinda(tek[ad]["aralik_95"][v])}
                          for gor, v in GWR_GORUNUMLER.items()} for ad in adlar},
     }
 
@@ -233,11 +241,11 @@ def ornek_ozeti(t, ilce_df):
 
 def hazirla():
     """Döner: (uyari.json içeriği, uyari_model.json içeriği)."""
-    sonuc = json_oku(sn.SONUC_JSON)
+    sonuc = json_oku(SINIFLANDIRMA_SONUC)
     secili = sonuc["secili"]
     t = sn.hazirla(pd.read_csv(ILCE_GUN_CSV))
     ilce_df = pd.read_csv(ILCE_CSV)
-    kolonlar = sn.MODELLER[secili][1]
+    kolonlar = sn.MODELLER[secili].kolonlar
     m = ts.egitilmis(secili, sonuc).fit(t[kolonlar], t.olay)
     kosullar = {"kuru": sn.KURU, "islak": islak_gecmis(t)}
     tablolar = {k: sn.olasilik_tablosu(t, m, kolonlar, o) for k, o in kosullar.items()}
@@ -245,7 +253,8 @@ def hazirla():
     olay_gunu = t.groupby("ilce").olay.sum()
     esik = sonuc["modeller"][secili]["esik"]
     model = canli_modeli(m, kolonlar, t, ilce_df)
-    log.info("Dışa aktarılan model sklearn ile aynı (en büyük fark %.1e)", aktarimi_denetle(model, m, t[kolonlar], esik))
+    log.info("Dışa aktarılan model sklearn ile aynı (en büyük fark %.1e)",
+             aktarimi_denetle(model, m, t[kolonlar], esik))
     return {
         "model": {"ad": secili, "aciklama": sonuc["modeller"][secili]["aciklama"],
                   "esik": esik, "egitim_yillari": [int(t.yil.min()), int(t.yil.max())]},
@@ -257,10 +266,10 @@ def hazirla():
                     for ad, g in ilce_geometrileri(adlar).items()],
         "egitim": {"modeller": list(sonuc["modeller"]),
                    "secim_yillari": [int(t.yil.min()), min(om.TEST_YILLARI) - 1]},
-        "sinama": sinama_ozeti(json_oku(gv.SONUC_JSON), secili, t),
+        "sinama": sinama_ozeti(json_oku(GUVENILIRLIK_SONUC), secili, t),
         "onem": sonuc["onem"],
         "ornek": ornek_ozeti(t, ilce_df),
-        "gwr": gwr_ozeti(json_oku(gwr.SONUC_JSON), adlar),
+        "gwr": gwr_ozeti(json_oku(GWR_SONUC), adlar),
     }, model
 
 

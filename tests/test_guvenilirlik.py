@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from afet.dosya import json_oku
+from afet.yollar import GUVENILIRLIK_SONUC
 from hesap import guvenilirlik as gv
 from hesap import siniflandirma as sn
 from tests.test_siniflandirma import _sentetik
@@ -72,7 +73,8 @@ def test_ataklar_ardisik_gunleri_birlestirir():
     gun = ["2025-01-01", "2025-01-02", "2025-01-04", "2025-01-10", "2025-01-11"]
     g = pd.DataFrame({"c": [60, 80, 70, 90, 10], "a": [False, True, True, True, True]}, index=gun)
     at = gv.ataklar(g)
-    assert [(a["ilk"], a["son"], a["gun"]) for a in at] == [("2025-01-01", "2025-01-04", 3), ("2025-01-10", "2025-01-10", 1)]
+    assert [(a["ilk"], a["son"], a["gun"]) for a in at] == [("2025-01-01", "2025-01-04", 3),
+                                                            ("2025-01-10", "2025-01-10", 1)]
     assert [a["ilk_gun_alarm"] for a in at] == [False, True]
     assert [a["herhangi_alarm"] for a in at] == [True, True]
 
@@ -89,8 +91,11 @@ def test_hafta_blogu_ile_bootstrap():
 
 def test_calistir_yillar_ve_tahminli_donem():
     t = _sentetik()
-    sifir = lambda x: x.assign(**{k: 0.0 for k in ("yagis_mm", "yagis_max1s_mm", "yagis_max3s_mm")}).pipe(
-        lambda y: sn.hazirla(y.drop(columns=[c for c in y.columns if c.startswith("log_") or c in ("y", "olay")])))
+
+    def sifir(x):
+        y = x.assign(**{k: 0.0 for k in ("yagis_mm", "yagis_max1s_mm", "yagis_max3s_mm")})
+        return sn.hazirla(y.drop(columns=[c for c in y.columns if c.startswith("log_") or c in ("y", "olay")]))
+
     r = gv.calistir(t, {"sifir": (2025, sifir)}, test_yillari=[2024, 2025, 2026], modeller=["lojistik"], n=50)
     s = r["sonuclar"]["lojistik"]
     assert [k["test_yili"] for k in s["katmanlar"]] == [2024, 2025, 2026]
@@ -103,9 +108,9 @@ def test_calistir_yillar_ve_tahminli_donem():
     assert s["tahminli_donem"]["sifir"]["ap"] < s["tahminli_donem"]["gozlem"]["ap"]
 
 
-@pytest.mark.skipif(not os.path.exists(gv.SONUC_JSON), reason="güvenilirlik çalıştırılmadı")
+@pytest.mark.skipif(not os.path.exists(GUVENILIRLIK_SONUC), reason="güvenilirlik çalıştırılmadı")
 def test_sonuc_dosyasi_sozlesmesi():
-    r = json_oku(gv.SONUC_JSON)
+    r = json_oku(GUVENILIRLIK_SONUC)
     for ad, s in r["sonuclar"].items():
         assert [k["test_yili"] for k in s["katmanlar"]] == r["test_yillari"]
         for o in [s["tum_yillar"], *s["tahminli_donem"].values()]:

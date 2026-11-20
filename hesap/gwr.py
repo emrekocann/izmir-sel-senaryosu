@@ -50,15 +50,14 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score
 
+from afet.yollar import EK_DEGISKENLER_CSV, GWR_SONUC, ILCE_CSV, ILCE_GUN_CSV
 from hesap import ek_degiskenler as ed
 from hesap import gunlugu_kur, sonucu_yaz
 from hesap import guvenilirlik as gv
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
-from hesap.ilce_gun import CIKTI_DIR, ILCE_CSV, ILCE_GUN_CSV
 
 log = logging.getLogger("gwr")
-SONUC_JSON = os.path.join(CIKTI_DIR, "gwr_sonuc.json")
 DEGISKENLER = ["log_yagis", "log_dun", "log_onceki7g"]
 COK_NOKTA = ["log_max_nokta", "log_dun", "log_onceki7g"]     # sağlamlık: günün yağışı en yağışlı noktadan
 GLOBAL_EK = ["log_nufus", "kent_payi"]
@@ -119,7 +118,7 @@ class GWLR:
 
     def katsayilar(self):
         """İlçe → {sabit, değişken: standart katsayı}."""
-        return {i: ({"sabit": float(m.intercept_[0]), **dict(zip(self.kolonlar, map(float, m.coef_[0])))} if m else None)
+        return {i: {"sabit": float(m.intercept_[0]), **dict(zip(self.kolonlar, map(float, m.coef_[0])))} if m else None
                 for i, m in self.modeller.items()}
 
 
@@ -156,8 +155,8 @@ def yil_yil(t, d, k, test_yillari=gv.TEST_YILLARI, kolonlar=DEGISKENLER):
 
 
 def global_tanim():
-    """Aynı değişkenler + nüfus, kent payı; global lojistik (sn.ayarla biçiminde)."""
-    return (sn._lojistik, DEGISKENLER + GLOBAL_EK, sn.MODELLER["lojistik"][2], "global lojistik")
+    """Aynı değişkenler + nüfus, kent payı; global lojistik (sn.ModelTanimi)."""
+    return sn.MODELLER["lojistik"]._replace(kolonlar=DEGISKENLER + GLOBAL_EK, aciklama="global lojistik")
 
 
 def katsayi_araliklari(t, d, k, n=KATSAYI_BOOTSTRAP, tohum=gv.TOHUM, kolonlar=DEGISKENLER):
@@ -185,7 +184,10 @@ def harita_ozeti(t, d, k, n=KATSAYI_BOOTSTRAP, kolonlar=DEGISKENLER):
     a, b = DUYARLILIK_MM
     yagis = kolonlar[0]
     adim = {v: (np.log1p(b) - np.log1p(a)) / g.ss[v] for v in kolonlar}      # standart birimde 10 → 40 mm
-    carp = lambda v, x: round(float(np.exp(x * adim[v])), 2)
+
+    def carp(v, x):
+        return round(float(np.exp(x * adim[v])), 2)
+
     out = []
     for ilce, kk in kat.items():
         satir = pd.DataFrame({"ilce": [ilce, ilce], **{v: [0.0, 0.0] for v in kolonlar}})
@@ -194,7 +196,8 @@ def harita_ozeti(t, d, k, n=KATSAYI_BOOTSTRAP, kolonlar=DEGISKENLER):
         out.append({"ilce": ilce, "katsayi": {k2: round(v, 3) for k2, v in kk.items()} if kk else None,
                     "aralik_95": {v: aralik[(ilce, v)] for v in kolonlar if (ilce, v) in aralik},
                     "carpan_10_40": {v: {"deger": carp(v, kk[v]),
-                                         **({"aralik_95": [carp(v, x) for x in aralik[(ilce, v)]]} if (ilce, v) in aralik else {})}
+                                         **({"aralik_95": [carp(v, x) for x in aralik[(ilce, v)]]}
+                                            if (ilce, v) in aralik else {})}
                                      for v in kolonlar} if kk else None,
                     "p_10": round(float(p[0]), 4), "p_40": round(float(p[1]), 4)})
     return out
@@ -236,11 +239,13 @@ def calistir(t_ham, ilce_df, ek=None, bantlar=BANTLAR, test_yillari=gv.TEST_YILL
 
 def yazdir(r):
     print(f"\nBant seçimi (2020–24, yıl dışarıda AP): {r['bantlar']} → k = {r['bant']}")
-    print(f"\n{'model':9} {'AP':>6} {'ΔAP globale göre [%95]':>26} {'duyarlılık':>10} {'kesinlik':>8} {'atak ilk gün':>12} {'kıyı':>8}")
+    print(f"\n{'model':9} {'AP':>6} {'ΔAP globale göre [%95]':>26} {'duyarlılık':>10} {'kesinlik':>8} "
+          f"{'atak ilk gün':>12} {'kıyı':>8}")
     for ad, o in r["sonuclar"].items():
         f = o.get("ap_farki_globale_gore")
         print(f"{ad:9} {o['ap']:6.3f} {str(f) if f else '':>26} {o['duyarlilik']:10.2f} {o['kesinlik']:8.2f} "
-              f"{o['atak']['ilk_gun_alarmli']:>5}/{o['atak']['atak']:<6} {o['kiyi']['yakalanan']:>4}/{o['kiyi']['olay']}")
+              f"{o['atak']['ilk_gun_alarmli']:>5}/{o['atak']['atak']:<6} "
+              f"{o['kiyi']['yakalanan']:>4}/{o['kiyi']['olay']}")
     print("\nİlçe başına (bütün veri): 10 → 40 mm çarpanı [%95], P(40 mm, kuru)")
     for i in sorted(r["ilceler"], key=lambda x: -x["carpan_10_40"]["log_yagis"]["deger"]):
         c = i["carpan_10_40"]
@@ -250,9 +255,11 @@ def yazdir(r):
     if not c:
         return
     o, y = c["sonuc"], c["degiskenler"][0]
-    print(f"\nÇok noktalı yağışla (k = {r['bant']}): AP {o['ap']:.3f}, ΔAP tek noktaya göre {o['ap_farki_tek_noktaya_gore']}, "
+    print(f"\nÇok noktalı yağışla (k = {r['bant']}): AP {o['ap']:.3f}, "
+          f"ΔAP tek noktaya göre {o['ap_farki_tek_noktaya_gore']}, "
           f"duyarlılık {o['duyarlilik']:.2f}, kesinlik {o['kesinlik']:.2f}, "
-          f"atak ilk gün {o['atak']['ilk_gun_alarmli']}/{o['atak']['atak']}, kıyı {o['kiyi']['yakalanan']}/{o['kiyi']['olay']}")
+          f"atak ilk gün {o['atak']['ilk_gun_alarmli']}/{o['atak']['atak']}, "
+          f"kıyı {o['kiyi']['yakalanan']}/{o['kiyi']['olay']}")
     tek = {i["ilce"]: i for i in r["ilceler"]}
     print(f"  {'ilçe':12} {'günün yağışı: tek nokta':>32} {'çok nokta':>22}   {'önceki 7 gün: tek':>18} {'çok':>6}")
     for i in sorted(c["ilceler"], key=lambda x: -(x["katsayi"] or {}).get(y, 0)):
@@ -264,10 +271,10 @@ def yazdir(r):
 
 def main():
     gunlugu_kur()
-    ek = pd.read_csv(ed.EK_CSV) if os.path.exists(ed.EK_CSV) else None
+    ek = pd.read_csv(EK_DEGISKENLER_CSV) if os.path.exists(EK_DEGISKENLER_CSV) else None
     if ek is None:
-        log.warning("%s yok: çok noktalı sağlamlık sınaması atlanıyor (önce hesap.ek_degiskenler)", ed.EK_CSV)
-    sonucu_yaz(SONUC_JSON, calistir(pd.read_csv(ILCE_GUN_CSV), pd.read_csv(ILCE_CSV), ek), yazdir)
+        log.warning("%s yok: çok noktalı sağlamlık sınaması atlanıyor (önce hesap.ek_degiskenler)", EK_DEGISKENLER_CSV)
+    sonucu_yaz(GWR_SONUC, calistir(pd.read_csv(ILCE_GUN_CSV), pd.read_csv(ILCE_CSV), ek), yazdir)
 
 
 if __name__ == "__main__":

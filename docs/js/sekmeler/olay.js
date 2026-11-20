@@ -1,7 +1,7 @@
 // Sekme: 2 Şubat 2021 seli. Haberlerde su bastığı yazılan yerler ile modelin
 // karşılaştırması (hesap/sel_dogrulama.py → hesap/vitrin_hazirla.py).
 import { T, sayi } from '../cekirdek/dil.js';
-import { senaryoAdi, yerAdi, kacis, aralik, yuzde, yuzdeIsareti } from '../cekirdek/bicim.js';
+import { senaryoAdi, yerAdi, kacis, aralik, cm, yuzde, yuzdeIsareti } from '../cekirdek/bicim.js';
 import { secimDinle, senaryoSecimi, listeDinle, lejantOgesi, suLejanti } from '../cekirdek/arayuz.js';
 
 const RENK = { yakalandi: '#047857', kacirildi: '#dc2626' };
@@ -10,6 +10,8 @@ export function olaySekmesi({ vitrin, harita }) {
   const durum = { senaryo: vitrin.olay_senaryolari[0] };
   let icerik = null, katman = null;
   const sekiller = new Map();      // yer sırası → Leaflet katmanı
+  const esik = vitrin.esikler, kapali = cm(esik.yol_kapali_m), hucre = sayi(esik.hucre_m);
+  const enIslak = yuzdeIsareti(sayi(100 - esik.mahalle_yuzdelik));
 
   const turAdi = (tur) => ({
     mahalle: T('Mahalle', 'Neighbourhood'), cadde: T('Cadde', 'Street'),
@@ -59,8 +61,8 @@ export function olaySekmesi({ vitrin, harita }) {
       <ul>
         <li>${T(`<b>Mahalle puanı ${aralik(d.map((x) => x.mahalle_auc_yalniz_derinlik))}:</b> model, su basan ${ilk.mahalle_sayisi.haber} mahalleyi aynı ilçelerin öteki ${ilk.mahalle_sayisi.oteki} mahallesinden ayırt edemiyor (0,5 yazı-tura, 1 kusursuz).`,
                  `<b>Neighbourhood score ${aralik(d.map((x) => x.mahalle_auc_yalniz_derinlik))}:</b> the model cannot tell the ${ilk.mahalle_sayisi.haber} flooded neighbourhoods from the other ${ilk.mahalle_sayisi.oteki} in the same districts (0.5 is a coin toss, 1 is perfect).`)}</li>
-        <li>${T(`<b>Cadde puanı ${aralik(d.map((x) => x.cadde_auc))}:</b> zayıf bir işaret. 30 cm+ su görülen haber caddesi: ${aralik(haberCadde, 0)} / ${ilk.cadde_sayisi.haber}; öteki ${ilk.cadde_sayisi.oteki} caddede bu oran %${aralik(d.map((x) => x.cadde_kapali_oran.oteki * 100), 0)}.`,
-                 `<b>Street score ${aralik(d.map((x) => x.cadde_auc))}:</b> a weak signal. ${aralik(haberCadde, 0)} of the ${ilk.cadde_sayisi.haber} reported streets have 30 cm+ water, against ${aralik(d.map((x) => x.cadde_kapali_oran.oteki * 100), 0)}% of the other ${ilk.cadde_sayisi.oteki}.`)}</li>
+        <li>${T(`<b>Cadde puanı ${aralik(d.map((x) => x.cadde_auc))}:</b> zayıf bir işaret. ${kapali}+ su görülen haber caddesi: ${aralik(haberCadde, 0)} / ${ilk.cadde_sayisi.haber}; öteki ${ilk.cadde_sayisi.oteki} caddede bu oran %${aralik(d.map((x) => x.cadde_kapali_oran.oteki * 100), 0)}.`,
+                 `<b>Street score ${aralik(d.map((x) => x.cadde_auc))}:</b> a weak signal. ${aralik(haberCadde, 0)} of the ${ilk.cadde_sayisi.haber} reported streets have ${kapali}+ water, against ${aralik(d.map((x) => x.cadde_kapali_oran.oteki * 100), 0)}% of the other ${ilk.cadde_sayisi.oteki}.`)}</li>
       </ul></div>`;
   }
 
@@ -73,12 +75,12 @@ export function olaySekmesi({ vitrin, harita }) {
                            `What the model shows for the ${m.ilceler.length} central districts that flooded (${sayi(m.km2)} km², ${sayi(m.toplanma)} assembly areas):`)}</p>
       <div class="tablo-sar"><table>
         <tr><th></th>${vitrin.olay_senaryolari.map((s) => `<th class="s">${senaryoAdi(s)}</th>`).join('')}</tr>
-        ${satir(T("30 cm'den derin su", 'Water deeper than 30 cm'), 'su_30_km2', 1, ' km²')}
+        ${satir(T(`${kapali}'den derin su`, `Water deeper than ${kapali}`), 'su_30_km2', 1, ' km²')}
         ${satir(T("10 cm'den derin su", 'Water deeper than 10 cm'), 'su_10_km2', 1, ' km²')}
         ${satir(T('Düz ova, derinlik belirsiz', 'Flat plain, depth unknown'), 'belirsiz_km2', 1, ' km²')}
         ${satir(T('Su altında toplanma alanı', 'Assembly areas under water'), 'toplanma_su')}
         ${satir(T('Düz ovadaki toplanma alanı', 'Assembly areas on flat plain'), 'toplanma_belirsiz')}
-        ${satir(T('30 cm+ su noktası olan yol parçası', 'Road segments with a 30 cm+ point'), 'yol_parcasi_su')}
+        ${satir(T(`${kapali}+ su noktası olan yol parçası`, `Road segments with a ${kapali}+ point`), 'yol_parcasi_su')}
       </table></div>`;
   }
 
@@ -95,14 +97,14 @@ export function olaySekmesi({ vitrin, harita }) {
           <div><b>${kacis(yerAdi(yer.ad))}</b> ${rozet(yer)}</div>
           <div class="soluk">${turAdi(yer.tur)} · ${kacis(yerAdi(yer.ilce))} · ${modelSonucu(yer)}</div>
         </li>`).join('')}</ul>
-      <p class="kucuk">${T('"Model de gösterdi" ne demek: mahalle, modelin en ıslak gösterdiği %25 mahalle arasında; cadde ya da dere hattında modelde 30 cm\'den derin su olan bir nokta var. Konak Alt Geçidi OpenStreetMap\'te adıyla bulunmadığı için haritada yok.',
-                           '"Model shows it" means: the neighbourhood is among the 25% the model shows wettest; the street or stream has a point under more than 30 cm of water in the model. The Konak underpass is not named in OpenStreetMap, so it is not on the map.')}</p>
+      <p class="kucuk">${T(`"Model de gösterdi" ne demek: mahalle, modelin en ıslak gösterdiği ${enIslak} mahalle arasında; cadde ya da dere hattında modelde ${kapali}'den derin su olan bir nokta var. Konak Alt Geçidi OpenStreetMap'te adıyla bulunmadığı için haritada yok.`,
+                           `"Model shows it" means: the neighbourhood is among the ${enIslak} the model shows wettest; the street or stream has a point under more than ${kapali} of water in the model. The Konak underpass is not named in OpenStreetMap, so it is not on the map.`)}</p>
       <div class="kutu not"><b>${T('Model neden bazı yerlerde su göstermedi?', 'Why does the model show no water at some places?')}</b>
         <ul>
           <li>${T('<b>Kıyıdaki kanalizasyon taşkını:</b> su dereden değil, dolan şebekeden geldi. Modelde şebeke yok.',
                    '<b>Coastal sewer flooding:</b> the water came from a surcharged network, not a stream. The model has no sewer network.')}</li>
-          <li>${T('<b>Küçük kent dereleri:</b> 60 m\'lik yükseklik verisi, kapatılmış ya da beton kanala alınmış dar dereleri ayırt edemiyor.',
-                   '<b>Small urban creeks:</b> 60 m elevation data cannot resolve narrow, culverted or channelised creeks.')}</li>
+          <li>${T(`<b>Küçük kent dereleri:</b> ${hucre} m'lik yükseklik verisi, kapatılmış ya da beton kanala alınmış dar dereleri ayırt edemiyor.`,
+                   `<b>Small urban creeks:</b> ${hucre} m elevation data cannot resolve narrow, culverted or channelised creeks.`)}</li>
         </ul>
         <button type="button" class="baglanti" data-hakkinda="dogrulama">${T('Yöntem ve ayrıntılar', 'Method and details')} →</button>
       </div>

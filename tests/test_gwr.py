@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from afet.dosya import json_oku
+from afet.yollar import GWR_SONUC
 from hesap import gwr
 
 
@@ -63,14 +64,14 @@ def test_harita_ozeti_baska_yagis_kolonuyla():
     t = _veri().rename(columns={"log_yagis": "log_max_nokta"})
     h = {i["ilce"]: i for i in gwr.harita_ozeti(t, d, 4, 0, gwr.COK_NOKTA)}
     assert set(h["i0"]["katsayi"]) == {"sabit", *gwr.COK_NOKTA}
-    c = lambda i: h[i]["carpan_10_40"]["log_max_nokta"]["deger"]
-    assert c("i0") > c("i7") > 0
+    carpan = {i: h[i]["carpan_10_40"]["log_max_nokta"]["deger"] for i in ("i0", "i7")}
+    assert carpan["i0"] > carpan["i7"] > 0
     assert h["i0"]["p_40"] > h["i0"]["p_10"]
 
 
-@pytest.mark.skipif(not os.path.exists(gwr.SONUC_JSON), reason="GWR çalıştırılmadı")
+@pytest.mark.skipif(not os.path.exists(GWR_SONUC), reason="GWR çalıştırılmadı")
 def test_sonuc_dosyasi_sozlesmesi():
-    r = json_oku(gwr.SONUC_JSON)
+    r = json_oku(GWR_SONUC)
     assert str(r["bant"]) in r["bantlar"]
     assert {"gwr", "global", "lojistik"} == set(r["sonuclar"])
     assert len(r["ilceler"]) == 30

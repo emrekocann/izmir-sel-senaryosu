@@ -4,7 +4,7 @@ import numpy as np
 def test_mercator_satirlari_dogru_enlemi_okur():
     """Görüntü satırı Mercator'da eşit aralıklı; her satır kendi gerçek
     enlemindeki raster satırını taşımalı (kuzeye kayma olmamalı)."""
-    from afet.izgara import mercator_y, mercator_satir_enlemleri, mercator_satirlari
+    from afet.izgara import mercator_satir_enlemleri, mercator_satirlari, mercator_y
 
     kuzey, dy, n = 39.4, -0.001, 1600            # ~İzmir: 37.8–39.4°
     dizi = np.arange(n)                           # satır no = değer

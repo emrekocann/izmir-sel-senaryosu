@@ -6,6 +6,7 @@ dokunmaz; sınıf düzeyinde çağrılabilir ve çevrimdışı betikler de kulla
 Sorgu çalıştıranlar bir `Veritabani` örneği üzerinden çalışır (`depo`)."""
 import json
 import re
+from dataclasses import dataclass
 
 from loguru import logger
 
@@ -170,30 +171,30 @@ class AfetDeposu:
                 f"AND {takma}.senaryo = '{senaryo}' AND {takma}.kimlik = ")
 
     @classmethod
-    async def _sel_kolon_var(cls, conn, edge_table: str) -> bool:
+    async def _sel_kolon_var(cls, conn, kenar_tablosu: str) -> bool:
         """migration 006 uygulanmış mı (kolonlar tablo başına bir kez okunur)."""
-        if edge_table not in cls._sel_kolon:
-            cls._sel_kolon[edge_table] = {r["column_name"] for r in await conn.fetch(
+        if kenar_tablosu not in cls._sel_kolon:
+            cls._sel_kolon[kenar_tablosu] = {r["column_name"] for r in await conn.fetch(
                 "SELECT column_name FROM information_schema.columns WHERE table_name = $1",
-                edge_table)}
-        return "sel_duyarlilik" in cls._sel_kolon[edge_table]
+                kenar_tablosu)}
+        return "sel_duyarlilik" in cls._sel_kolon[kenar_tablosu]
 
     @classmethod
-    def baglanma_sql(cls, edge_table: str, point_sql: str) -> str:
-        """point_sql noktasına en yakın, BAGLANMA_HARIC dışı yol düğümünün id'sini
+    def baglanma_sql(cls, kenar_tablosu: str, nokta_sql: str) -> str:
+        """nokta_sql noktasına en yakın, BAGLANMA_HARIC dışı yol düğümünün id'sini
         veren skaler alt sorgu (hesap/toplanma_alanlari_yukle.py de kullanır)."""
         haric = ", ".join(f"'{h}'" for h in cls.BAGLANMA_HARIC)
         return f"""(SELECT v.id FROM (
-                        SELECT source, target FROM {edge_table}
+                        SELECT source, target FROM {kenar_tablosu}
                         WHERE COALESCE(highway, '') NOT IN ({haric})
-                        ORDER BY the_geom <-> {point_sql} LIMIT {cls.BAGLANMA_KENAR}
+                        ORDER BY the_geom <-> {nokta_sql} LIMIT {cls.BAGLANMA_KENAR}
                     ) e
-                    JOIN {edge_table}_vertices_pgr v ON v.id IN (e.source, e.target)
-                    ORDER BY v.the_geom <-> {point_sql} LIMIT 1)"""
+                    JOIN {kenar_tablosu}_vertices_pgr v ON v.id IN (e.source, e.target)
+                    ORDER BY v.the_geom <-> {nokta_sql} LIMIT 1)"""
 
     @classmethod
-    def _maliyet_sql(cls, edge_table, slope_k, trafik_var, sev, sel_k_f,
-                     senaryo_join=None, alt_gecit_kapali=False):
+    def _maliyet_sql(cls, kenar_tablosu, egim_k, trafik_var, siddet, sel_k_f,
+                     su_join_sql=None, alt_gecit_kapali=False):
         """pgr_dijkstra'nın kenar sorgusu (metin). Eğim (%) maliyeti artırır;
         son 24 saatte M≥3 deprem üssüne ~2 km'den yakın kenarlar 5 kat, ciddi
         trafik olayına (buyukluk≥2 ya da yol kapalı) ~300 m'den yakın kenarlar
@@ -201,20 +202,19 @@ class AfetDeposu:
         cezalandırılır. Cezalı kenarlar kenar başına EXISTS yerine GIST
         indeksli tek uzamsal birleştirmeyle önden toplanır (364 bin kenarda
         EXISTS dakikalar sürüyordu). ST_DWithin derecedir: 0.018° ≈ 2 km,
-        0.003° ≈ 300 m (ceza sezgiseldir, ölçüm değildir). senaryo_join
+        0.003° ≈ 300 m (ceza sezgiseldir, ölçüm değildir). su_join_sql
         (_senaryo_join) verilirse seçilen yağış senaryosunda su basan kenarlar
         kapalı, sığ sulu / belirsiz kenarlar pahalı sayılır."""
-        R = cls
         trafik_cte = f"""
             , trafik_ceza AS (
-                SELECT DISTINCT rn.id FROM {edge_table} rn
+                SELECT DISTINCT rn.id FROM {kenar_tablosu} rn
                 JOIN canli_trafik_olaylari t
                   ON (t.buyukluk >= 2 OR t.kategori = 'Yol Kapalı')
                  AND ST_DWithin(rn.the_geom, t.konum, 0.003)
             )""" if trafik_var else ""
         return f"""
             WITH deprem_ceza AS (
-                SELECT DISTINCT rn.id FROM {edge_table} rn
+                SELECT DISTINCT rn.id FROM {kenar_tablosu} rn
                 JOIN canli_deprem_verileri d
                   ON d.deprem_zamani > NOW() - INTERVAL '24 hours'
                  AND d.buyukluk >= 3.0
@@ -222,34 +222,33 @@ class AfetDeposu:
             ){trafik_cte}
             SELECT rn.id, rn.source, rn.target,
                    rn.length
-                   * (1 + COALESCE(rn.slope, 0) * {slope_k})
+                   * (1 + COALESCE(rn.slope, 0) * {egim_k})
                    * (CASE WHEN dc.id IS NOT NULL THEN 5.0 ELSE 1.0 END)
                    {"* (CASE WHEN tc.id IS NOT NULL THEN 3.0 ELSE 1.0 END)" if trafik_var else ""}
                    {f"* (1 + {sel_k_f:.3f} * COALESCE(rn.sel_duyarlilik, 0))" if sel_k_f > 0 else ""}
-                   {f"""* (CASE WHEN ss.kimlik IS NOT NULL AND ss.derinlik < {R.SENARYO_KAPALI_M}
-                              THEN {R.SENARYO_ISLAK_K} ELSE 1.0 END)""" if senaryo_join else ""}
-                   * {sev}
-                   {f"+ (CASE WHEN ss.derinlik >= {R.SENARYO_KAPALI_M} THEN {R.SENARYO_KAPALI_EK} ELSE 0 END)"
-                    if senaryo_join else ""}
-                   {f"+ (CASE WHEN rn.alt_gecit THEN {R.SENARYO_KAPALI_EK} ELSE 0 END)"
+                   {f"""* (CASE WHEN ss.kimlik IS NOT NULL AND ss.derinlik < {cls.SENARYO_KAPALI_M}
+                              THEN {cls.SENARYO_ISLAK_K} ELSE 1.0 END)""" if su_join_sql else ""}
+                   * {siddet}
+                   {f"+ (CASE WHEN ss.derinlik >= {cls.SENARYO_KAPALI_M} THEN {cls.SENARYO_KAPALI_EK} ELSE 0 END)"
+                    if su_join_sql else ""}
+                   {f"+ (CASE WHEN rn.alt_gecit THEN {cls.SENARYO_KAPALI_EK} ELSE 0 END)"
                     if alt_gecit_kapali else ""} AS cost
-            FROM {edge_table} rn
+            FROM {kenar_tablosu} rn
             LEFT JOIN deprem_ceza dc ON dc.id = rn.id
             {"LEFT JOIN trafik_ceza tc ON tc.id = rn.id" if trafik_var else ""}
-            {senaryo_join + "rn.id" if senaryo_join else ""}
+            {su_join_sql + "rn.id" if su_join_sql else ""}
         """
 
     @classmethod
-    def _senaryo_ozeti(cls, rows, senaryo, sen_yol, sen_alan, ag_kapali, atlanan, hedef_su):
+    def _senaryo_ozeti(cls, satirlar, senaryo, sen_yol, sen_alan, ag_kapali, atlanan, hedef_su):
         """Rotanın senaryodaki suyu: art arda gelen ıslak kenarlar tek "yer"
         sayılır (kenarın tamamı değil, en derin noktası suda olabilir — bu
         yüzden metre yerine yer sayısı ve en derin nokta raporlanır)."""
-        K = cls.SENARYO_KAPALI_M
         yer = {"derin": 0, "sig": 0}
         belirsiz_m, en_derin, onceki = 0.0, 0.0, None
-        for r in rows:
+        for r in satirlar:
             d = r["su_derinlik"]
-            sinif = (None if d is None else "derin" if d >= K else "sig" if d >= 0.1
+            sinif = (None if d is None else "derin" if d >= cls.SENARYO_KAPALI_M else "sig" if d >= 0.1
                      else "belirsiz")
             if sinif in yer and sinif != onceki:
                 yer[sinif] += 1
@@ -263,190 +262,221 @@ class AfetDeposu:
             "derin_yer": yer["derin"], "sig_yer": yer["sig"],
             "en_derin_m": round(en_derin, 1), "belirsiz_m": round(belirsiz_m),
             "alt_gecit_kapali": bool(ag_kapali),
-            "alt_gecit_rotada": sum(1 for r in rows if r["alt_gecit"]) if ag_kapali else 0,
+            "alt_gecit_rotada": sum(1 for r in satirlar if r["alt_gecit"]) if ag_kapali else 0,
             "atlanan_alan_su": atlanan["su"] if atlanan else 0,
             "atlanan_alan_belirsiz": atlanan["belirsiz"] if atlanan else 0,
             "hedef_su": dict(hedef_su) if hedef_su else None,
         }
 
-    async def akilli_rota(self, user_lon: float, user_lat: float,
-                               dest_lon: float = None, dest_lat: float = None,
-                               severity: float = 1.0, mode: str = "drive",
-                               sel_f: float = 0.0, senaryo: str = None,
-                               alt_gecit_dolu: bool = False):
+    async def akilli_rota(self, lon: float, lat: float, hedef_lon: float = None, hedef_lat: float = None,
+                          siddet: float = 1.0, mod: str = "drive", sel_f: float = 0.0, senaryo: str = None,
+                          alt_gecit_dolu: bool = False):
         """pgRouting ile risk ağırlıklı rota (maliyet: _maliyet_sql). Hedef
         verilmezse en yakın TOPLANMA_ADAY toplanma alanı arasından rota
         maliyeti en düşük olana gidilir (alan verisi yoksa il merkezine).
-        mode=walk yaya ağını kullanır. senaryo ('50_1': 50 mm / 1 saat)
+        mod=walk yaya ağını kullanır. senaryo ('50_1': 50 mm / 1 saat)
         verilirse o yağışta su basan yollar kapalı sayılır, su altındaki
         toplanma alanları aday olmaz (SENARYO_*); alt_gecit_dolu o senaryoda
         alt geçitlerin dolduğunu söyler (sel_senaryo özeti). Yol ağı ve
         pgRouting kurulmamışsa dürüst bir 'unavailable' cevabı döner."""
-        R = self
-        if mode not in R.ROTA_MODLARI:
+        if mod not in self.ROTA_MODLARI:
             return {"status": "error",
-                    "message": f"Geçersiz mod: {mode}. Seçenekler: "
-                               f"{', '.join(R.ROTA_MODLARI)}"}
-        edge_table, slope_k, trafik_var = R.ROTA_MODLARI[mode]
-        vid_col = f"{mode}_vid"   # toplanma_alanlari.drive_vid / walk_vid
-        hedefsiz = dest_lon is None or dest_lat is None
+                    "message": f"Geçersiz mod: {mod}. Seçenekler: {', '.join(self.ROTA_MODLARI)}"}
+        kenar_tablosu = self.ROTA_MODLARI[mod][0]
+        hedefsiz = hedef_lon is None or hedef_lat is None
         if hedefsiz:
-            dest_lon, dest_lat = MERKEZ_BOYLAM, MERKEZ_ENLEM
-        sev = max(float(severity), 0.1)
-        start_sql = R.baglanma_sql(edge_table, NOKTA.format("$1", "$2"))
+            hedef_lon, hedef_lat = MERKEZ_BOYLAM, MERKEZ_ENLEM
         try:
             async with self.db.baglan() as conn:
-                sel_var = await R._sel_kolon_var(conn, edge_table)
-                sel_f = min(max(float(sel_f), 0.0), 1.0) if sel_var and not senaryo else 0.0
-                # senaryo suyu bu mod ve toplanma alanları için yazılmış mı
-                sen_katman = await R._senaryo_katmanlari(conn) if senaryo else set()
-                sen_yol, sen_alan = mode in sen_katman, "toplanma" in sen_katman
-                yol_join = R._senaryo_join(mode, senaryo) if sen_yol else None
-                ag_kapali = sen_yol and alt_gecit_dolu and sel_var
-                cost_sql = R._maliyet_sql(edge_table, slope_k, trafik_var, sev,
-                                          R.SEL_K * sel_f, yol_join, ag_kapali)
-                sel_kol = ("rn.sel_duyarlilik, rn.sel_riskli_oran, rn.alt_gecit," if sel_var
-                           else "NULL::real AS sel_duyarlilik, NULL::real AS sel_riskli_oran, "
-                                "NULL::boolean AS alt_gecit,")
-                sel_kol += ("ss.derinlik AS su_derinlik, ss.belirsiz AS su_belirsiz," if sen_yol
-                            else "NULL::real AS su_derinlik, NULL::boolean AS su_belirsiz,")
-                sen_jn = yol_join + "rn.id" if sen_yol else ""
-                # su altındaki (≥ SENARYO_KAPALI_M) ya da düz ovadaki alan aday olmaz
-                alan_su = (f"s.kimlik = a.id AND s.katman = 'toplanma' AND s.senaryo = $3 "
-                           f"AND (s.derinlik >= {R.SENARYO_KAPALI_M} OR s.belirsiz)")
-                adaylar = []
-                if hedefsiz:
-                    try:
-                        haric = (f"AND NOT EXISTS (SELECT 1 FROM sel_senaryo_su s WHERE {alan_su})"
-                                 if sen_alan else "")
-                        adaylar = await conn.fetch(f"""
-                            SELECT a.id, a.adi, a.ilce, a.mahalle, a.yol, a.{vid_col} AS vid,
-                                   ST_X(a.konum) AS lon, ST_Y(a.konum) AS lat
-                            FROM toplanma_alanlari a
-                            WHERE a.{vid_col} IS NOT NULL {haric}
-                            ORDER BY a.konum <-> {NOKTA.format('$1', '$2')}
-                            LIMIT {R.TOPLANMA_ADAY};
-                        """, user_lon, user_lat, *([senaryo] if sen_alan else []))
-                    except Exception as e:   # migration 005 uygulanmamış
-                        logger.warning(f"Toplanma alanları okunamadı, il merkezine rota: {e}")
-
+                b = await self._rota_baglami(conn, mod, siddet, sel_f, senaryo, alt_gecit_dolu)
+                adaylar = await self._aday_alanlar(conn, b, lon, lat) if hedefsiz else []
                 hedef_alan = atlanan = hedef_su = None
                 if adaylar:
-                    # Çok hedefli Dijkstra: her adaya yol bulunur, toplam
-                    # maliyeti (agg_cost, yol sonu satırı edge=-1) en düşük seçilir
-                    rows = await conn.fetch(f"""
-                        WITH r AS (
-                            SELECT * FROM pgr_dijkstra($3, {start_sql}, $4::bigint[],
-                                                       directed := false)
-                        ), best AS (
-                            SELECT end_vid FROM r WHERE edge = -1
-                            ORDER BY agg_cost LIMIT 1
-                        )
-                        SELECT r.seq, r.node, r.edge, r.cost, r.end_vid, rn.length,
-                               rn.source, rn.target, {sel_kol}
-                               ST_AsGeoJSON(rn.the_geom)::json AS geometry
-                        FROM r JOIN best USING (end_vid)
-                        JOIN {edge_table} rn ON r.edge = rn.id
-                        {sen_jn}
-                        ORDER BY r.seq;
-                    """, user_lon, user_lat, cost_sql, [a["vid"] for a in adaylar])
-                    # Başlangıç zaten bir alanın düğümündeyse yol boş döner → en yakın aday
-                    end_vid = rows[0]["end_vid"] if rows else adaylar[0]["vid"]
-                    secilen = next(a for a in adaylar if a["vid"] == end_vid)
-                    hedef_alan = {k: secilen[k] for k in
-                                  ("id", "adi", "ilce", "mahalle", "yol", "lon", "lat")}
-                    hedef_alan["aday_sayisi"] = len(adaylar)
-                    if sen_alan:
-                        # seçilen alandan (kuş uçuşu) yakın olup suda kaldığı için atlananlar
-                        atlanan = await conn.fetchrow(f"""
-                            SELECT count(*) FILTER (WHERE s.derinlik >= {R.SENARYO_KAPALI_M}) AS su,
-                                   count(*) FILTER (WHERE s.derinlik < {R.SENARYO_KAPALI_M}) AS belirsiz
-                            FROM toplanma_alanlari a JOIN sel_senaryo_su s ON {alan_su}
-                            WHERE a.{vid_col} IS NOT NULL
-                              AND a.konum <-> {NOKTA.format('$1', '$2')} <
-                                  (SELECT konum <-> {NOKTA.format('$1', '$2')}
-                                   FROM toplanma_alanlari WHERE id = $4)
-                        """, user_lon, user_lat, senaryo, secilen["id"])
+                    satirlar, hedef_alan, atlanan, bitis = await self._adaylara_rota(conn, b, lon, lat, adaylar)
                 else:
-                    rows = await conn.fetch(f"""
-                        SELECT seq, node, edge, cost, rn.length, rn.source, rn.target, {sel_kol}
-                               ST_AsGeoJSON(rn.the_geom)::json AS geometry
-                        FROM pgr_dijkstra(
-                            $5, {start_sql},
-                            {R.baglanma_sql(edge_table, NOKTA.format('$3', '$4'))},
-                            directed := false
-                        ) r
-                        JOIN {edge_table} rn ON r.edge = rn.id
-                        {sen_jn}
-                        ORDER BY seq;
-                    """, user_lon, user_lat, dest_lon, dest_lat, cost_sql)
-                    if sen_alan and not hedefsiz:
-                        # kullanıcının seçtiği hedef bir toplanma alanıysa: suda mı?
-                        hedef_su = await conn.fetchrow(f"""
-                            SELECT s.derinlik, s.belirsiz FROM toplanma_alanlari a
-                            JOIN sel_senaryo_su s ON {alan_su}
-                            WHERE ST_DWithin(a.konum, {NOKTA.format('$1', '$2')}, 0.00001)
-                            LIMIT 1""", dest_lon, dest_lat, senaryo)
-
-                # Rotanın yol ağındaki ilk ve son düğümü: tıklanan nokta ve
-                # toplanma alanı ağın üstünde değildir, aradaki "yol dışı"
-                # kısım ön yüzde kesikli çizgiyle gösterilir
-                if rows:
-                    ilk = rows[0]["node"]
-                    son_kenar = rows[-1]
-                    son = (son_kenar["target"] if son_kenar["node"] == son_kenar["source"]
-                           else son_kenar["source"])
-                elif adaylar:
-                    ilk = son = end_vid
-                else:
-                    ilk = son = await conn.fetchval(f"SELECT {start_sql}", user_lon, user_lat)
-                dugumler = {r["id"]: {"lon": r["lon"], "lat": r["lat"]} for r in await conn.fetch(
-                    f"""SELECT id, ST_X(the_geom) AS lon, ST_Y(the_geom) AS lat
-                        FROM {edge_table}_vertices_pgr WHERE id = ANY($1::bigint[])""",
-                    [ilk, son])}
-
-                # Rotanın sel duyarlı kısmı (yağıştan bağımsız, arazi bazlı)
-                sel_riskli_m = sum(r["length"] * (r["sel_riskli_oran"] or 0) for r in rows)
-                alt_gecit = sum(1 for r in rows if r["alt_gecit"])
-                sen_ozet = (R._senaryo_ozeti(rows, senaryo, sen_yol, sen_alan, ag_kapali,
-                                             atlanan, hedef_su) if senaryo else None)
-                segments = []
-                for r in rows:
-                    seg = {k: v for k, v in dict(r).items() if k not in ("end_vid", "source", "target")}
-                    # asyncpg json kolonunu str döndürür — obje olarak sunulmalı
-                    if isinstance(seg.get("geometry"), str):
-                        seg["geometry"] = json.loads(seg["geometry"])
-                    segments.append(seg)
-                return {
-                    "status": "ok",
-                    "mode": mode,
-                    "cost_model": f"uzunluk × (1 + eğim×{slope_k}) × deprem_cezası"
-                                  + (" × trafik_cezası" if trafik_var else "")
-                                  + (f" × (1 + {R.SEL_K:g}·{sel_f:.2f}·sel_duyarlılık)"
-                                     if sel_f > 0 else "")
-                                  + (f" × sığ_su_cezası + su_basan_yol_cezası ({senaryo})"
-                                     if sen_yol else "")
-                                  + " × şiddet",
-                    "sel": {"veri_var": sel_var, "yagis_f": round(sel_f, 2),
-                            "riskli_m": round(sel_riskli_m), "alt_gecit": alt_gecit},
-                    # seçilen yağış senaryosunda rotadaki su (senaryo yoksa None)
-                    "senaryo": sen_ozet,
-                    # hedefsiz istekte seçilen toplanma alanı; yoksa None
-                    "toplanma_alani": hedef_alan,
-                    # yol ağına giriş/çıkış düğümleri (yol dışı bağlantı için)
-                    "ag_giris": dugumler.get(ilk),
-                    "ag_cikis": dugumler.get(son),
-                    "segments": segments,
-                }
+                    bitis = None
+                    satirlar = await self._hedefe_rota(conn, b, lon, lat, hedef_lon, hedef_lat)
+                    if b.sen_alan and not hedefsiz:
+                        hedef_su = await self._hedef_suyu(conn, b, hedef_lon, hedef_lat)
+                giris, cikis = await self._ag_uclari(conn, b, satirlar, lon, lat, bitis)
         except Exception as e:
-            logger.warning(f"Smart routing kullanılamıyor (yol ağı/pgRouting eksik): {e}")
+            logger.warning(f"Akıllı rota kullanılamıyor (yol ağı/pgRouting eksik): {e}")
             return {
                 "status": "unavailable",
-                "message": f"Yol ağı ({edge_table}) veya pgRouting uzantısı kurulu değil. "
+                "message": f"Yol ağı ({kenar_tablosu}) veya pgRouting uzantısı kurulu değil. "
                            "Kurulum: README 'Yol Ağı & Rota' bölümü.",
-                "user_location": {"lon": user_lon, "lat": user_lat},
-                "destination": {"lon": dest_lon, "lat": dest_lat},
+                "user_location": {"lon": lon, "lat": lat},
+                "destination": {"lon": hedef_lon, "lat": hedef_lat},
             }
+        return {
+            "status": "ok",
+            "mode": mod,
+            "cost_model": self._maliyet_aciklamasi(b),
+            "sel": {"veri_var": b.sel_var, "yagis_f": round(b.sel_f, 2),
+                    # rotanın sel duyarlı kısmı (yağıştan bağımsız, arazi bazlı)
+                    "riskli_m": round(sum(r["length"] * (r["sel_riskli_oran"] or 0) for r in satirlar)),
+                    "alt_gecit": sum(1 for r in satirlar if r["alt_gecit"])},
+            # seçilen yağış senaryosunda rotadaki su (senaryo yoksa None)
+            "senaryo": (self._senaryo_ozeti(satirlar, senaryo, b.sen_yol, b.sen_alan, b.ag_kapali,
+                                            atlanan, hedef_su) if senaryo else None),
+            # hedefsiz istekte seçilen toplanma alanı; yoksa None
+            "toplanma_alani": hedef_alan,
+            # yol ağına giriş/çıkış düğümleri (yol dışı bağlantı için)
+            "ag_giris": giris,
+            "ag_cikis": cikis,
+            "segments": [self._parca(r) for r in satirlar],
+        }
 
+    async def _rota_baglami(self, conn, mod, siddet, sel_f, senaryo, alt_gecit_dolu):
+        """İsteğin rota sorgularında ortak kullanılan parçaları (_RotaBaglami)."""
+        kenar_tablosu, egim_k, trafik_var = self.ROTA_MODLARI[mod]
+        sel_var = await self._sel_kolon_var(conn, kenar_tablosu)
+        sel_f = min(max(float(sel_f), 0.0), 1.0) if sel_var and not senaryo else 0.0
+        # senaryo suyu bu mod ve toplanma alanları için yazılmış mı
+        sen_katman = await self._senaryo_katmanlari(conn) if senaryo else set()
+        sen_yol, sen_alan = mod in sen_katman, "toplanma" in sen_katman
+        yol_join = self._senaryo_join(mod, senaryo) if sen_yol else None
+        ag_kapali = sen_yol and alt_gecit_dolu and sel_var
+        kolonlar = ("rn.sel_duyarlilik, rn.sel_riskli_oran, rn.alt_gecit," if sel_var
+                    else "NULL::real AS sel_duyarlilik, NULL::real AS sel_riskli_oran, NULL::boolean AS alt_gecit,")
+        kolonlar += ("ss.derinlik AS su_derinlik, ss.belirsiz AS su_belirsiz," if sen_yol
+                     else "NULL::real AS su_derinlik, NULL::boolean AS su_belirsiz,")
+        return _RotaBaglami(
+            mod=mod, kenar_tablosu=kenar_tablosu, egim_k=egim_k, trafik_var=trafik_var, senaryo=senaryo,
+            sel_var=sel_var, sel_f=sel_f, sen_yol=sen_yol, sen_alan=sen_alan, ag_kapali=ag_kapali,
+            maliyet_sql=self._maliyet_sql(kenar_tablosu, egim_k, trafik_var, max(float(siddet), 0.1),
+                                          self.SEL_K * sel_f, yol_join, ag_kapali),
+            kolonlar=kolonlar, su_join=yol_join + "rn.id" if sen_yol else "",
+            baslangic_sql=self.baglanma_sql(kenar_tablosu, NOKTA.format("$1", "$2")))
+
+    def _alan_su_kosulu(self):
+        """Su altındaki (≥ SENARYO_KAPALI_M) ya da düz ovadaki alan (senaryo: $3)."""
+        return (f"s.kimlik = a.id AND s.katman = 'toplanma' AND s.senaryo = $3 "
+                f"AND (s.derinlik >= {self.SENARYO_KAPALI_M} OR s.belirsiz)")
+
+    async def _aday_alanlar(self, conn, b, lon, lat):
+        """Kuş uçuşu en yakın TOPLANMA_ADAY alan; senaryoda suda kalanlar aday olmaz."""
+        haric = (f"AND NOT EXISTS (SELECT 1 FROM sel_senaryo_su s WHERE {self._alan_su_kosulu()})"
+                 if b.sen_alan else "")
+        try:
+            return await conn.fetch(f"""
+                SELECT a.id, a.adi, a.ilce, a.mahalle, a.yol, a.{b.mod}_vid AS vid,
+                       ST_X(a.konum) AS lon, ST_Y(a.konum) AS lat
+                FROM toplanma_alanlari a
+                WHERE a.{b.mod}_vid IS NOT NULL {haric}
+                ORDER BY a.konum <-> {NOKTA.format('$1', '$2')}
+                LIMIT {self.TOPLANMA_ADAY};
+            """, lon, lat, *([b.senaryo] if b.sen_alan else []))
+        except Exception as e:   # migration 005 uygulanmamış
+            logger.warning(f"Toplanma alanları okunamadı, il merkezine rota: {e}")
+            return []
+
+    async def _adaylara_rota(self, conn, b, lon, lat, adaylar):
+        """Çok hedefli Dijkstra: her adaya yol bulunur, toplam maliyeti (agg_cost,
+        yol sonu satırı edge=-1) en düşük seçilir → (satırlar, hedef alan, atlanan, bitiş düğümü)."""
+        satirlar = await conn.fetch(f"""
+            WITH r AS (
+                SELECT * FROM pgr_dijkstra($3, {b.baslangic_sql}, $4::bigint[], directed := false)
+            ), best AS (
+                SELECT end_vid FROM r WHERE edge = -1 ORDER BY agg_cost LIMIT 1
+            )
+            SELECT r.seq, r.node, r.edge, r.cost, r.end_vid, rn.length,
+                   rn.source, rn.target, {b.kolonlar}
+                   ST_AsGeoJSON(rn.the_geom)::json AS geometry
+            FROM r JOIN best USING (end_vid)
+            JOIN {b.kenar_tablosu} rn ON r.edge = rn.id
+            {b.su_join}
+            ORDER BY r.seq;
+        """, lon, lat, b.maliyet_sql, [a["vid"] for a in adaylar])
+        # Başlangıç zaten bir alanın düğümündeyse yol boş döner → en yakın aday
+        bitis = satirlar[0]["end_vid"] if satirlar else adaylar[0]["vid"]
+        secilen = next(a for a in adaylar if a["vid"] == bitis)
+        hedef_alan = {k: secilen[k] for k in ("id", "adi", "ilce", "mahalle", "yol", "lon", "lat")}
+        hedef_alan["aday_sayisi"] = len(adaylar)
+        atlanan = None
+        if b.sen_alan:
+            # seçilen alandan (kuş uçuşu) yakın olup suda kaldığı için atlananlar
+            atlanan = await conn.fetchrow(f"""
+                SELECT count(*) FILTER (WHERE s.derinlik >= {self.SENARYO_KAPALI_M}) AS su,
+                       count(*) FILTER (WHERE s.derinlik < {self.SENARYO_KAPALI_M}) AS belirsiz
+                FROM toplanma_alanlari a JOIN sel_senaryo_su s ON {self._alan_su_kosulu()}
+                WHERE a.{b.mod}_vid IS NOT NULL
+                  AND a.konum <-> {NOKTA.format('$1', '$2')} <
+                      (SELECT konum <-> {NOKTA.format('$1', '$2')} FROM toplanma_alanlari WHERE id = $4)
+            """, lon, lat, b.senaryo, secilen["id"])
+        return satirlar, hedef_alan, atlanan, bitis
+
+    async def _hedefe_rota(self, conn, b, lon, lat, hedef_lon, hedef_lat):
+        return await conn.fetch(f"""
+            SELECT seq, node, edge, cost, rn.length, rn.source, rn.target, {b.kolonlar}
+                   ST_AsGeoJSON(rn.the_geom)::json AS geometry
+            FROM pgr_dijkstra(
+                $5, {b.baslangic_sql},
+                {self.baglanma_sql(b.kenar_tablosu, NOKTA.format('$3', '$4'))},
+                directed := false
+            ) r
+            JOIN {b.kenar_tablosu} rn ON r.edge = rn.id
+            {b.su_join}
+            ORDER BY seq;
+        """, lon, lat, hedef_lon, hedef_lat, b.maliyet_sql)
+
+    async def _hedef_suyu(self, conn, b, hedef_lon, hedef_lat):
+        """Kullanıcının seçtiği hedef bir toplanma alanıysa senaryoda suda mı?"""
+        return await conn.fetchrow(f"""
+            SELECT s.derinlik, s.belirsiz FROM toplanma_alanlari a
+            JOIN sel_senaryo_su s ON {self._alan_su_kosulu()}
+            WHERE ST_DWithin(a.konum, {NOKTA.format('$1', '$2')}, 0.00001)
+            LIMIT 1""", hedef_lon, hedef_lat, b.senaryo)
+
+    async def _ag_uclari(self, conn, b, satirlar, lon, lat, bitis=None):
+        """Rotanın yol ağındaki ilk ve son düğümü ({lon, lat} ya da None): tıklanan
+        nokta ve toplanma alanı ağın üstünde değildir, aradaki "yol dışı" kısım
+        ön yüzde kesikli çizgiyle gösterilir. bitis: yol boşsa (başlangıç zaten
+        seçilen alanın düğümünde) o düğüm."""
+        if satirlar:
+            ilk, son_kenar = satirlar[0]["node"], satirlar[-1]
+            son = son_kenar["target"] if son_kenar["node"] == son_kenar["source"] else son_kenar["source"]
+        elif bitis is not None:
+            ilk = son = bitis
+        else:
+            ilk = son = await conn.fetchval(f"SELECT {b.baslangic_sql}", lon, lat)
+        dugumler = {r["id"]: {"lon": r["lon"], "lat": r["lat"]} for r in await conn.fetch(
+            f"""SELECT id, ST_X(the_geom) AS lon, ST_Y(the_geom) AS lat
+                FROM {b.kenar_tablosu}_vertices_pgr WHERE id = ANY($1::bigint[])""", [ilk, son])}
+        return dugumler.get(ilk), dugumler.get(son)
+
+    def _maliyet_aciklamasi(self, b):
+        return (f"uzunluk × (1 + eğim×{b.egim_k}) × deprem_cezası"
+                + (" × trafik_cezası" if b.trafik_var else "")
+                + (f" × (1 + {self.SEL_K:g}·{b.sel_f:.2f}·sel_duyarlılık)" if b.sel_f > 0 else "")
+                + (f" × sığ_su_cezası + su_basan_yol_cezası ({b.senaryo})" if b.sen_yol else "")
+                + " × şiddet")
+
+    @staticmethod
+    def _parca(satir):
+        """Rota satırı → yanıttaki parça (asyncpg json kolonunu str döndürür: nesneye çevrilir)."""
+        parca = {k: v for k, v in dict(satir).items() if k not in ("end_vid", "source", "target")}
+        if isinstance(parca.get("geometry"), str):
+            parca["geometry"] = json.loads(parca["geometry"])
+        return parca
+
+
+@dataclass(frozen=True)
+class _RotaBaglami:
+    """Bir rota isteğinin sorgularda ortak kullanılan parçaları (AfetDeposu._rota_baglami)."""
+    mod: str
+    kenar_tablosu: str
+    egim_k: float
+    trafik_var: bool
+    senaryo: str | None
+    sel_var: bool
+    sel_f: float
+    sen_yol: bool            # senaryo suyu bu modun yollarına yazılmış
+    sen_alan: bool           # … ve toplanma alanlarına
+    ag_kapali: bool          # senaryoda alt geçitler kapalı
+    maliyet_sql: str
+    kolonlar: str            # rota satırlarına eklenen sel / su kolonları
+    su_join: str             # kenarlara senaryo suyu (yoksa boş)
+    baslangic_sql: str
 
 depo = AfetDeposu(db)

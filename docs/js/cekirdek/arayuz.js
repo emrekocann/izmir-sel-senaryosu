@@ -1,6 +1,6 @@
 // Küçük arayüz parçaları: seçim düğmeleri, tıklanır listeler, lejant, sayı kutuları.
 import { T } from './dil.js';
-import { kacis, senaryoAdi, sureAdi } from './bicim.js';
+import { kacis, senaryoAdi, senaryoCoz, sureAdi } from './bicim.js';
 
 const SINIF_EN = ['Shallow (10–30 cm)', 'Knee-deep (30 cm–1 m)', 'Deep (1–2 m)', 'Very deep (2 m+)',
   'Flat plain: water arrives, depth unknown'];
@@ -26,6 +26,22 @@ export const sureSecimi = (sureler, saat) => secimHtml('saat', sureler.map((s) =
 /** Hazır senaryoların düğmeleri ("100 mm / 6 saat"). */
 export const senaryoSecimi = (grup, senaryolar, secili) =>
   secimHtml(grup, senaryolar.map((s) => [s, senaryoAdi(s)]), secili);
+
+/** Senaryo ve rota sekmelerinin yağış seçimi: süre düğmesi durum.saat'i, hazır
+ * senaryo düğmesi durum.sira ile durum.saat'i değiştirir; ardından sonra() çağrılır.
+ * bosluk: kaydırıcının başındaki "yağış yok" adımı (rota sekmesinde 1). */
+export function yagisSecimiDinle(kapsayici, { yagisMm, durum, kaydirici, bosluk = 0, sonra }) {
+  secimDinle(kapsayici, (grup, deger) => {
+    if (grup === 'saat') durum.saat = Number(deger);
+    if (grup === 'olay') {
+      const [mm, saat] = senaryoCoz(deger);
+      durum.sira = yagisMm.indexOf(mm) + bosluk;
+      durum.saat = saat;
+      kapsayici.querySelector(kaydirici).value = durum.sira;
+    }
+    sonra();
+  });
+}
 
 /** Listede `ozellik` taşıyan öğeye tıklanınca ya da Enter'a basılınca islev(özelliğin değeri). */
 export function listeDinle(kapsayici, ozellik, islev) {

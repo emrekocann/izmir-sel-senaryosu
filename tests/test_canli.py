@@ -13,10 +13,11 @@ import pandas as pd
 import pytest
 from sklearn.ensemble import HistGradientBoostingClassifier
 
+from afet.yollar import SITE_DIR
 from hesap import uyari_hazirla as uh
 from hesap.ilce_gun import gunluk_yagis
 
-CANLI_JS = Path(__file__).resolve().parents[1] / "docs" / "js" / "cekirdek" / "canli.js"
+CANLI_JS = Path(SITE_DIR) / "js" / "cekirdek" / "canli.js"
 YAGIS = ["yagis_mm", "yagis_max1s_mm", "yagis_max3s_mm", "yagis_dun_mm", "yagis_onceki3g_mm", "yagis_onceki7g_mm"]
 pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="Node yok")
 
@@ -64,7 +65,8 @@ def test_eksik_saat_ya_da_eksik_gecmis_tahmin_vermez():
     gecmis_eksik = list(temiz)
     gecmis_eksik[24 * 5] = None                              # önceki 7 günden birinde bir saat yok
     js = _js("[m.yagisGirdileri(v.s, v.temiz, '2026-01-10'), m.yagisGirdileri(v.s, v.hedef, '2026-01-10'),"
-             " m.yagisGirdileri(v.s, v.gecmis, '2026-01-10'), m.yagisGirdileri(v.s.slice(72), v.temiz.slice(72), '2026-01-10')]",
+             " m.yagisGirdileri(v.s, v.gecmis, '2026-01-10'),"
+             " m.yagisGirdileri(v.s.slice(72), v.temiz.slice(72), '2026-01-10')]",
              {"s": saatler, "temiz": temiz, "hedef": hedef_eksik, "gecmis": gecmis_eksik})
     assert js[0] is not None and js[1:] == [None, None, None]   # son: kayıt hedeften 7 gün öncesine gitmiyor
 
@@ -120,7 +122,8 @@ def test_yarinin_girdileri_tek_istek_ve_hata():
     """Sahte servisle: istenen adres, yarının günü, servis hatasının iletisi."""
     saat = pd.date_range("2026-11-13", "2026-11-21 23:00", freq="h").strftime("%Y-%m-%dT%H:%M").tolist()
     nokta = {"hourly": {"time": saat, "precipitation": [0.2] * len(saat)}}
-    model = {"tahmin_modeli": "ecmwf_ifs025", "ilceler": {"a": {"lat": 38.41234, "lon": 27.1}, "b": {"lat": 38.5, "lon": 27.2}}}
+    model = {"tahmin_modeli": "ecmwf_ifs025",
+             "ilceler": {"a": {"lat": 38.41234, "lon": 27.1}, "b": {"lat": 38.5, "lon": 27.2}}}
     js = _js("""(async () => {
       let adres;
       const tamam = await m.yarininGirdileri(v.model, { simdi: new Date('2026-11-20T09:00:00Z'),

@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from afet.dosya import json_oku
+from afet.yollar import TAHMIN_SINAMASI_SONUC
 from hesap import tahmin_sinamasi as ts
 from tests.test_siniflandirma import _sentetik
 
@@ -47,11 +48,11 @@ def test_uctan_uca_sentetik():
     assert r["yagis_uyumu"]["kusursuz"]["korelasyon"] == 1.0
 
 
-@pytest.mark.skipif(not os.path.exists(ts.SONUC_JSON), reason="sınama çalıştırılmadı")
+@pytest.mark.skipif(not os.path.exists(TAHMIN_SINAMASI_SONUC), reason="sınama çalıştırılmadı")
 def test_sonuc_dosyasi_sozlesmesi():
-    r = json_oku(ts.SONUC_JSON)
+    r = json_oku(TAHMIN_SINAMASI_SONUC)
     assert r["ana"] in r["tahmin_modelleri"]
-    for ad, k in r["sonuclar"].items():
+    for k in r["sonuclar"].values():
         assert set(k) == {"gozlem", "tahminsiz", *r["tahmin_modelleri"]}
     s = r["sonuclar"][r["secili"]]
     # tahmin, hiç tahmin olmamasından iyi; gözlemden çok kötü değil

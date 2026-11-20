@@ -1,4 +1,5 @@
 import pytest
+from pydantic import ValidationError
 
 
 @pytest.mark.asyncio
@@ -18,9 +19,7 @@ async def test_akilli_rota_imzasi():
     sig = inspect.signature(AfetDeposu.akilli_rota)
     params = sig.parameters
 
-    assert 'user_lon' in params
-    assert 'user_lat' in params
-    assert 'severity' in params
+    assert {"lon", "lat", "hedef_lon", "hedef_lat", "siddet", "mod", "senaryo"} <= set(params)
 
 def test_tomtom_kategori_adi():
     from afet.canli_veri import tomtom_kategori_adi
@@ -33,14 +32,13 @@ def test_tomtom_kategori_adi():
 
 
 def test_trafik_olayi_dogrulama():
-    import pytest as _pytest
     from afet.veritabani.kayitlar import TrafikOlayi
 
     t = TrafikOlayi(
         olay_id="abc", kategori="Kaza", lat=38.4, lon=27.1)
     assert t.buyukluk == 0 and t.gecikme_sn is None
 
-    with _pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         TrafikOlayi(
             olay_id="abc", kategori="Kaza", lat=38.4, lon=27.1, buyukluk=7)
 

@@ -1,6 +1,7 @@
 """Sel hesaplarının (duyarlılık haritası ve yağış senaryosu) ortak yükseklik /
 akış altyapısı. Çevrimdışı betikler kullanır; çalışma zamanında yüklenmez.
 
+  dem_karolari SRTM karolarını (1°×1°) indirir; yol ağı eğimi de bunları kullanır
   dem_mozaik   SRTM karolarını il çerçevesi + tampon için ~60 m'ye ortalar
   akis_agi     çukur doldurma, akış yönü, birikim, hücre alanları
   hand_hesapla en yakın dere hücresine göre yükseklik (HAND) ve o hücrenin indisi
@@ -9,7 +10,10 @@ akış altyapısı. Çevrimdışı betikler kullanır; çalışma zamanında yü
   osm_cizgileri  Geofabrik PBF dosyasından çerçevedeki seçili yollar / dereler
   yol_noktalari, raster_ornekle, yakin_mi  yol ağını ızgarayla eşleme
 """
+import contextlib
+import gzip
 import logging
+import math
 import os
 import time
 
@@ -18,7 +22,8 @@ import shapely
 from scipy import ndimage
 
 from afet import ag
-from afet.yollar import DEM_TIF, KOPRU_TUNEL, OSM_PBF, SEL_HAM_DIR
+from afet.dosya import atomik_yaz
+from afet.yollar import DEM_KARO_DIR, DEM_TIF, KOPRU_TUNEL, OSM_PBF
 
 log = logging.getLogger("dem")
 
@@ -28,26 +33,44 @@ DIRMAP = (64, 128, 1, 2, 4, 8, 16, 32)               # pysheds D8: K KD D GD G G
 VERI_YOK = -9999
 ORNEK_ARALIK = 0.00025         # yol örnekleme aralığı ≈ 25 m (derece)
 ALT_GECIT_MAX_M = 400          # bundan kısa tünel kentte alt geçittir
+# SRTM 1 açı-saniye karoları (AWS terrain-tiles, kimlik doğrulamasız)
+SRTM_URL = "https://s3.amazonaws.com/elevation-tiles-prod/skadi/{enlem}/{ad}.hgt.gz"
 
 
-def dem_mozaik(sinir):
+def dem_karolari(alan):
+    """Alanı (shapely) kapsayan 1°×1° SRTM karolarının yerel yolları; eksik
+    karo indirilir (DEM_KARO_DIR önbelleği)."""
+    os.makedirs(DEM_KARO_DIR, exist_ok=True)
+    bati, guney, dogu, kuzey = alan.bounds
+    yollar = []
+    for enlem in range(math.floor(guney), math.floor(kuzey) + 1):
+        for boylam in range(math.floor(bati), math.floor(dogu) + 1):
+            ad = f"N{enlem:02d}E{boylam:03d}"
+            hgt = os.path.join(DEM_KARO_DIR, f"{ad}.hgt")
+            if not os.path.exists(hgt):
+                log.info("DEM karosu indiriliyor: %s", ad)
+                gz = ag.getir(SRTM_URL.format(enlem=f"N{enlem:02d}", ad=ad), timeout=120, dogrula=gzip.decompress)
+                atomik_yaz(hgt, gzip.decompress(gz))
+            yollar.append(hgt)
+    return yollar
+
+
+def dem_mozaik(sinir, cikti=DEM_TIF):
     """SRTM karolarını il çerçevesi + tampon için ~60 m'ye ortalar (bir kez)."""
-    if os.path.exists(DEM_TIF):
+    if os.path.exists(cikti):
         return
     import rasterio
     from rasterio.enums import Resampling
     from rasterio.merge import merge
-    from hesap.yol_agi_kur import fetch_dem_tiles
-    os.makedirs(SEL_HAM_DIR, exist_ok=True)
+    os.makedirs(os.path.dirname(cikti) or ".", exist_ok=True)
     minx, miny, maxx, maxy = sinir.bounds
     b = (minx - TAMPON, miny - TAMPON, maxx + TAMPON, maxy + TAMPON)
-    ds = [rasterio.open(p) for p in fetch_dem_tiles(sinir.buffer(TAMPON))]
-    arr, tr = merge(ds, bounds=b, res=COZUNURLUK, resampling=Resampling.average, nodata=-32768)
-    for d in ds:
-        d.close()
+    with contextlib.ExitStack() as yigin:
+        karolar = [yigin.enter_context(rasterio.open(p)) for p in dem_karolari(sinir.buffer(TAMPON))]
+        arr, tr = merge(karolar, bounds=b, res=COZUNURLUK, resampling=Resampling.average, nodata=-32768)
     z = arr[0].astype(np.float32)
     z[(z <= 0) | (z < -1000)] = VERI_YOK          # deniz ve boşluklar: veri yok
-    with rasterio.open(DEM_TIF, "w", driver="GTiff", height=z.shape[0], width=z.shape[1],
+    with rasterio.open(cikti, "w", driver="GTiff", height=z.shape[0], width=z.shape[1],
                        count=1, dtype="float32", crs="EPSG:4326", transform=tr,
                        nodata=VERI_YOK, compress="deflate") as out:
         out.write(z, 1)
@@ -120,20 +143,20 @@ def kopru_tunel(sinir):
     """OSM yol köprüleri ve tünelleri (tek Overpass sorgusu, önbellekli):
     (köprüler, alt geçitler, uzun tüneller) çizgi listeleri."""
     minx, miny, maxx, maxy = sinir.bounds
-    elems = ag.overpass(f"""[out:json][timeout:180];
+    ogeler = ag.overpass(f"""[out:json][timeout:180];
         way[highway][~"^(bridge|tunnel)$"~"."]({miny},{minx},{maxy},{maxx});
         out tags geom;""", KOPRU_TUNEL, timeout=240)
     kopru, alt_gecit, uzun_tunel = [], [], []
-    for e in elems:
-        tg, geom = e.get("tags", {}), e.get("geometry") or []
-        if len(geom) < 2:
+    for oge in ogeler:
+        etiket, noktalar = oge.get("tags", {}), oge.get("geometry") or []
+        if len(noktalar) < 2:
             continue
-        line = shapely.LineString([(p["lon"], p["lat"]) for p in geom])
-        if tg.get("bridge", "no") != "no":
-            kopru.append(line)
-        elif tg.get("tunnel", "no") not in ("no", "building_passage", "passage"):
-            uzun = line.length * 111_320 * 0.79 > ALT_GECIT_MAX_M
-            (uzun_tunel if uzun else alt_gecit).append(line)
+        cizgi = shapely.LineString([(p["lon"], p["lat"]) for p in noktalar])
+        if etiket.get("bridge", "no") != "no":
+            kopru.append(cizgi)
+        elif etiket.get("tunnel", "no") not in ("no", "building_passage", "passage"):
+            uzun = cizgi.length * 111_320 * 0.79 > ALT_GECIT_MAX_M
+            (uzun_tunel if uzun else alt_gecit).append(cizgi)
     log.info("OSM: %d köprü, %d alt geçit, %d uzun tünel", len(kopru), len(alt_gecit), len(uzun_tunel))
     return kopru, alt_gecit, uzun_tunel
 

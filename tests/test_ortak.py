@@ -60,6 +60,27 @@ def test_getir_vazgecer(monkeypatch):
         ag.getir("https://a/", deneme=2)
 
 
+def test_bekleme_kotada_uzun_digerinde_artan():
+    from afet import ag
+    kota = urllib.error.HTTPError("https://a/", 429, "Too Many Requests", {}, None)
+    assert ag.bekleme_sn(kota, 1, 10) == 300
+    assert [ag.bekleme_sn(urllib.error.URLError("x"), i, 10) for i in (1, 2, 20)] == [10, 20, 120]
+
+
+def test_paylasilan_istemci_tek_ve_kapaninca_yenilenir():
+    from afet import ag
+    paylasilan = ag.PaylasilanIstemci()
+
+    async def senaryo():
+        ilk = paylasilan.al()
+        assert paylasilan.al() is ilk
+        await paylasilan.kapat()
+        assert ilk.is_closed and paylasilan.al() is not ilk
+        await paylasilan.kapat()
+
+    asyncio.run(senaryo())
+
+
 def test_sureli_onbellek_tek_uretim_ve_eski_veri():
     from afet.onbellek import SureliOnbellek
 

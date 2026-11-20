@@ -6,7 +6,9 @@ from hesap import ek_degiskenler as ed
 
 
 def _geo():
-    kare = lambda x0, y0, a: {"type": "Polygon", "coordinates": [[[x0, y0], [x0 + a, y0], [x0 + a, y0 + a], [x0, y0 + a], [x0, y0]]]}
+    def kare(x0, y0, a):
+        return {"type": "Polygon", "coordinates": [[[x0, y0], [x0 + a, y0], [x0 + a, y0 + a], [x0, y0 + a], [x0, y0]]]}
+
     return {"features": [{"properties": {"ILCEADI": "BÜYÜK"}, "geometry": kare(27.0, 38.0, 0.3)},
                          {"properties": {"ILCEADI": "KÜÇÜK"}, "geometry": kare(28.01, 38.01, 0.02)}]}
 

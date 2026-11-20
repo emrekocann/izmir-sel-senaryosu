@@ -33,20 +33,19 @@ her tahmin modelinin eksiksiz saatleri olan ilçe-günler.
 (ilk çalıştırmada tahmin arşivi itfaiye_veri/ önbelleğine indirilir)
 """
 import logging
-import os
 
 import numpy as np
 import pandas as pd
 
 from afet import ag
 from afet.dosya import json_oku
+from afet.yollar import ILCE_CSV, ILCE_GUN_CSV, SINIFLANDIRMA_SONUC, TAHMIN_SINAMASI_SONUC
 from hesap import gunlugu_kur, sonucu_yaz
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
-from hesap.ilce_gun import ILCE_CSV, ILCE_GUN_CSV, gunluk_yagis, saatlik_arsiv
+from hesap.ilce_gun import gunluk_yagis, saatlik_arsiv
 
 log = logging.getLogger("tahmin_sinamasi")
-SONUC_JSON = os.path.join(sn.CIKTI_DIR, "tahmin_sinamasi.json")
 TAHMIN_MODELLERI = {"ecmwf_ifs025": "ECMWF IFS 0.25°", "gfs_seamless": "GFS (NOAA)",
                     "best_match": "Open-Meteo karma"}
 ANA = "ecmwf_ifs025"
@@ -86,7 +85,7 @@ def tahminle_degistir(test, tahmin):
 
 def egitilmis(ad, sonuc):
     """siniflandirma_sonuc.json'daki parametrelerle model (kısaltılmış adlar geri açılır)."""
-    m = sn.MODELLER[ad][0]()
+    m = sn.MODELLER[ad].kur()
     gecerli = m.get_params()
     prm = {}
     for k, v in sonuc["modeller"][ad]["parametreler"].items():
@@ -100,9 +99,11 @@ def yagis_uyumu(gozlem, tahmin):
                                                    suffixes=("_g", "_t"))
     yagisli = b[b.yagis_mm_g >= 20]
     return {"korelasyon": round(float(np.corrcoef(b.yagis_mm_g, b.yagis_mm_t)[0, 1]), 3),
-            "ort_gozlem_mm": round(float(b.yagis_mm_g.mean()), 2), "ort_tahmin_mm": round(float(b.yagis_mm_t.mean()), 2),
+            "ort_gozlem_mm": round(float(b.yagis_mm_g.mean()), 2),
+            "ort_tahmin_mm": round(float(b.yagis_mm_t.mean()), 2),
             "yagisli_gun": int(len(yagisli)),
-            "yagisli_gunde_tahmin_orani": round(float(yagisli.yagis_mm_t.sum() / max(yagisli.yagis_mm_g.sum(), 1e-9)), 3)}
+            "yagisli_gunde_tahmin_orani": round(float(yagisli.yagis_mm_t.sum()
+                                                      / max(yagisli.yagis_mm_g.sum(), 1e-9)), 3)}
 
 
 def calistir(t, tahminler, sonuc, modeller=None):
@@ -122,7 +123,7 @@ def calistir(t, tahminler, sonuc, modeller=None):
                 "tahminsiz": tahminle_degistir(test, sifir)}
     out = {}
     for ad in modeller:
-        kolonlar = sn.MODELLER[ad][1]
+        kolonlar = sn.MODELLER[ad].kolonlar
         esik = sonuc["modeller"][ad]["esik"]
         m = egitilmis(ad, sonuc).fit(egitim[kolonlar], egitim.olay)
         out[ad] = {}
@@ -152,23 +153,25 @@ def yazdir(r):
         print(f"  {r['tahmin_modelleri'][k]:18} r {u['korelasyon']:.2f}  ≥20 mm günlerde tahmin/gözlem "
               f"{u['yagisli_gunde_tahmin_orani']:.2f} ({u['yagisli_gun']} gün)")
     kaynaklar = ["gozlem", *r["tahmin_modelleri"], "tahminsiz"]
-    print(f"\n{'model':9} {'girdi':12} {'AUC':>6} {'AP':>6} {'kesinlik':>8} {'duyarlılık':>10} {'büyük gün':>10} {'alarm günü':>10}")
+    print(f"\n{'model':9} {'girdi':12} {'AUC':>6} {'AP':>6} {'kesinlik':>8} {'duyarlılık':>10} "
+          f"{'büyük gün':>10} {'alarm günü':>10}")
     for ad, k in r["sonuclar"].items():
         for kaynak in kaynaklar:
             o = k[kaynak]
-            print(f"{ad:9} {kaynak[:12]:12} {o['auc']:6.3f} {o['ap']:6.3f} {o['kesinlik']:8.2f} {o['duyarlilik']:10.2f} "
+            print(f"{ad:9} {kaynak[:12]:12} {o['auc']:6.3f} {o['ap']:6.3f} "
+                  f"{o['kesinlik']:8.2f} {o['duyarlilik']:10.2f} "
                   f"{o['il']['alarmli']:>4}/{o['il']['buyuk_olay_gunu']:<5} {o['il']['alarm_gunu']:>10}")
 
 
 def main():
     gunlugu_kur()
-    sonuc = json_oku(sn.SONUC_JSON)
+    sonuc = json_oku(SINIFLANDIRMA_SONUC)
     t = pd.read_csv(ILCE_GUN_CSV)
     ilce_df = pd.read_csv(ILCE_CSV)
     bas = pd.Timestamp(f"{min(om.TEST_YILLARI)}-01-01").date()
     bit = pd.Timestamp(t.gun.max()).date()
     tahminler = {k: tahmin_gunluk(tahmin_arsivi(ilce_df, k, bas, bit)) for k in TAHMIN_MODELLERI}
-    sonucu_yaz(SONUC_JSON, calistir(t, tahminler, sonuc), yazdir)
+    sonucu_yaz(TAHMIN_SINAMASI_SONUC, calistir(t, tahminler, sonuc), yazdir)
 
 
 if __name__ == "__main__":

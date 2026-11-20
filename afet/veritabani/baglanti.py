@@ -31,13 +31,13 @@ class Veritabani:
             await okuma.close()
             raise
         self.okuma_havuzu, self.yazma_havuzu = okuma, yazma
+        logger.success("PostGIS bağlantısı kuruldu.")
 
     async def ac(self, deneme: int = 5):
         """Havuzları açar; olmazsa `deneme` kez 2 sn arayla dener."""
         for i in range(1, deneme + 1):
             try:
                 await self._havuzlari_ac()
-                logger.success("PostGIS bağlantısı kuruldu.")
                 return
             except Exception as e:
                 logger.warning(f"Bağlantı denemesi {i}/{deneme} başarısız: {e}")
@@ -55,7 +55,6 @@ class Veritabani:
             self._son_deneme = time.monotonic()
             try:
                 await self._havuzlari_ac()
-                logger.success("PostGIS bağlantısı kuruldu.")
             except Exception as e:
                 logger.warning(f"PostGIS hâlâ kapalı: {e}")
 

@@ -36,6 +36,7 @@ BANT_RENK = [(56, 189, 248, 120), (37, 99, 235, 175), (30, 27, 140, 215)]
 # Bantların altı (düşük risk): il içi boş görünmesin diye soluk ton
 DUSUK_RENK = (186, 214, 236, 110)
 
+
 def yagis_katsayisi(maks_saatlik, toplam_24):
     """(f, seviye adı) — saatlik şiddet + 24 saat toplamı."""
     for ust, ad, f in YAGIS_SEVIYELERI:
@@ -168,7 +169,8 @@ class SelRiski(IzgaraKatmani):
         if tur not in self._png:
             s = self.veri
             # 0 = il dışı, 1 = düşük, 2.. = bantlar (s > 0 il içi; v = 0 yalnız dışarıda)
-            sinif = np.where(self._deger("duyarlilik", None) > 0, np.digitize(self._deger(tur, yagis), BANT_ESIK) + 1, 0)
+            bant = np.digitize(self._deger(tur, yagis), BANT_ESIK) + 1
+            sinif = np.where(self._deger("duyarlilik", None) > 0, bant, 0)
             # Leaflet görüntüyü Mercator'da doğrusal gerer → satırlar Mercator'a
             # (yarı çözünürlük: adım 2·dy; sınırlar tam ızgaranınki)
             b = mercator_satirlari(sinif, s["kuzey"], 2 * s["dy"], guney=self.sinirlar()[1], kat=2)

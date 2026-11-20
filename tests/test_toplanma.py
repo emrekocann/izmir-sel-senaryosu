@@ -4,7 +4,7 @@ def test_satir_coz_gecerli_satir():
     row = {"ILCE": "ÇEŞME", "KAPINO": "", "ENLEM": "38.3597", "ACIKLAMA": "3509-024-01",
            "MAHALLE": "ÜNİVERSİTE", "ADI": "1 NO LU AFET VE ACİL DURUM TOPLANMA ALANI",
            "BOYLAM": "26.3096", "YOL": "4261/1 Sk."}
-    kod, adi, ilce, mahalle, yol, kapino, lon, lat = satir_coz(row)
+    kod, _, ilce, mahalle, yol, kapino, lon, lat = satir_coz(row)
     assert (kod, ilce, mahalle, yol) == ("3509-024-01", "ÇEŞME", "ÜNİVERSİTE", "4261/1 Sk.")
     assert kapino is None            # boş alanlar NULL olur
     assert (lon, lat) == (26.3096, 38.3597)

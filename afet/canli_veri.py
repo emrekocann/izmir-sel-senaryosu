@@ -13,6 +13,8 @@ from afet.veritabani.depo import depo
 from afet.veritabani.kayitlar import DepremKaydi, TrafikOlayi
 
 TR_SAATI = datetime.timezone(datetime.timedelta(hours=3))
+KANDILLI_URL = "https://api.orhanaydogdu.com.tr/deprem/kandilli/live"
+TOMTOM_OLAY_URL = "https://api.tomtom.com/traffic/services/5/incidentDetails"
 
 # TomTom iconCategory → Türkçe kategori (v5 Incident Details)
 TOMTOM_KATEGORI = {
@@ -30,7 +32,7 @@ def tomtom_kategori_adi(icon_category) -> str:
 
 
 async def depremleri_getir(client):
-    r = await client.get("https://api.orhanaydogdu.com.tr/deprem/kandilli/live", timeout=10)
+    r = await client.get(KANDILLI_URL, timeout=10)
     data = r.json()
     if not data.get("status"):
         return
@@ -69,7 +71,7 @@ async def trafik_olaylarini_getir(client):
     olaylar = []
     for bbox in ceyrekler:
         try:
-            r = await client.get("https://api.tomtom.com/traffic/services/5/incidentDetails", params={
+            r = await client.get(TOMTOM_OLAY_URL, params={
                 "key": ayarlar.tomtom_api_key, "bbox": ",".join(f"{v:.4f}" for v in bbox),
                 "fields": fields, "language": "tr-TR"}, timeout=15)
             r.raise_for_status()

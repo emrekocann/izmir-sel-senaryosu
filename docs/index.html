@@ -114,7 +114,7 @@
 </ul>
 <div class="tablo-sar"><table>
   <tr><th><span class="tr">Veri</span><span class="en">Data</span></th><th><span class="tr">Kaynak</span><span class="en">Source</span></th><th><span class="tr">Ayrıntı</span><span class="en">Detail</span></th></tr>
-  <tr><td><span class="tr">Yükseklik</span><span class="en">Elevation</span></td><td>SRTM</td><td>~60 m</td></tr>
+  <tr><td><span class="tr">Yükseklik</span><span class="en">Elevation</span></td><td>SRTM</td><td>~<span data-doldur="hucre-m"></span> m</td></tr>
   <tr><td><span class="tr">Arazi örtüsü</span><span class="en">Land cover</span></td><td>ESA WorldCover</td><td>10 m</td></tr>
   <tr><td><span class="tr">Yollar, dereler, köprüler</span><span class="en">Roads, streams, bridges</span></td><td>OpenStreetMap</td><td><span class="tr">367 bin araç, 553 bin yaya yol parçası</span><span class="en">367k drive, 553k walk edges</span></td></tr>
   <tr><td><span class="tr">Toplanma alanları</span><span class="en">Assembly areas</span></td><td><span class="tr">İBB Açık Veri</span><span class="en">İzmir Municipality open data</span></td><td>2.380</td></tr>
@@ -130,18 +130,18 @@
       <tr><td><span class="tr">Haberdeki yerlerden modelin de su gösterdiği</span><span class="en">Reported places where the model also shows water</span></td><td class="s"><span data-doldur="yakalanan"></span> / <span data-doldur="yer-sayisi"></span></td></tr>
       <tr><td><span class="tr">Mahalle puanı</span><span class="en">Neighbourhood score</span></td><td class="s" data-doldur="mahalle-puani"></td></tr>
       <tr><td><span class="tr">Cadde puanı</span><span class="en">Street score</span></td><td class="s" data-doldur="cadde-puani"></td></tr>
-      <tr><td><span class="tr">30 cm+ su görülen haber caddesi</span><span class="en">Reported streets with 30 cm+ water</span></td><td class="s" data-doldur="haber-cadde"></td></tr>
-      <tr><td><span class="tr">Öteki caddelerde 30 cm+ su</span><span class="en">Other streets with 30 cm+ water</span></td><td class="s" data-doldur="oteki-cadde"></td></tr>
+      <tr><td><span class="tr"><span data-doldur="kapali-cm"></span>+ su görülen haber caddesi</span><span class="en">Reported streets with <span data-doldur="kapali-cm"></span>+ water</span></td><td class="s" data-doldur="haber-cadde"></td></tr>
+      <tr><td><span class="tr">Öteki caddelerde <span data-doldur="kapali-cm"></span>+ su</span><span class="en">Other streets with <span data-doldur="kapali-cm"></span>+ water</span></td><td class="s" data-doldur="oteki-cadde"></td></tr>
     </table></div>
 <div class="kutu kotu">
   <p><b><span class="tr">Model neden bazı yerlerde su göstermedi?</span><span class="en">Why does the model show no water at some places?</span></b></p>
   <ul class="tr">
     <li><b>Kıyıdaki kanalizasyon taşkını</b> (Alsancak, Güzelyalı, Mithatpaşa ve Cemal Gürsel caddeleri): su dereden değil, dolan şebekeden geldi. Modelde şebeke yok.</li>
-    <li><b>Küçük kent dereleri</b> (Soğukkuyu, Çetin Emeç'teki Hacı Ahmet Deresi): 60 m'lik yükseklik verisi, kapatılmış ya da beton kanala alınmış dar dereleri ayırt edemiyor.</li>
+    <li><b>Küçük kent dereleri</b> (Soğukkuyu, Çetin Emeç'teki Hacı Ahmet Deresi): <span data-doldur="hucre-m"></span> m'lik yükseklik verisi, kapatılmış ya da beton kanala alınmış dar dereleri ayırt edemiyor.</li>
   </ul>
   <ul class="en">
     <li><b>Coastal sewer flooding</b> (Alsancak, Güzelyalı, Mithatpaşa and Cemal Gürsel streets): the water came from a surcharged network, not a stream. The model has no sewer network.</li>
-    <li><b>Small urban creeks</b> (Soğukkuyu; Hacı Ahmet creek in Çetin Emeç): 60 m elevation data cannot resolve narrow, culverted or channelised creeks.</li>
+    <li><b>Small urban creeks</b> (Soğukkuyu; Hacı Ahmet creek in Çetin Emeç): <span data-doldur="hucre-m"></span> m elevation data cannot resolve narrow, culverted or channelised creeks.</li>
   </ul>
 </div>
 

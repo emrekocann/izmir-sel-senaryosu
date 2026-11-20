@@ -1,7 +1,8 @@
-"""JSON dosyası okuma / yazma — betiklerin ortak biçimi.
+"""Dosya okuma / yazma — betiklerin ortak biçimi.
 
-Yayın sitesine giden dosyalar sıkışık (boşluksuz), insanın okuyacağı sonuç
-dosyaları girintili yazılır; Türkçe karakterler kaçışsız kalır."""
+JSON: yayın sitesine giden dosyalar sıkışık (boşluksuz), insanın okuyacağı
+sonuç dosyaları girintili yazılır; Türkçe karakterler kaçışsız kalır.
+İndirilen dosyalar atomik yazılır: yarıda kalan indirme önbellekte kalmaz."""
 import json
 import os
 
@@ -19,3 +20,11 @@ def json_yaz(yol, veri, okunur: bool = False) -> int:
     with open(yol, "w", encoding="utf-8") as f:
         json.dump(veri, f, ensure_ascii=False, **bicim)
     return os.path.getsize(yol)
+
+
+def atomik_yaz(yol, govde: bytes):
+    """govde'yi önce geçici dosyaya, sonra tek adımda yol'a yazar (klasörü yoksa açar)."""
+    os.makedirs(os.path.dirname(yol) or ".", exist_ok=True)
+    with open(yol + ".tmp", "wb") as f:
+        f.write(govde)
+    os.replace(yol + ".tmp", yol)

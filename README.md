@@ -61,7 +61,7 @@ docs/         Yayın sitesi (GitHub Pages), derleme adımı yok:
                 css/app.css       düzen ve tema
                 js/main.js        giriş: veri, harita, sekme yönetimi
                 js/cekirdek/      dil, biçim, veri, harita, arayüz yardımcıları; rota motoru, canlı tahmin
-                js/sekmeler/      her sekme bir modül (senaryo, olay, rota, denetim, uyari)
+                js/sekmeler/      her sekme bir modül (senaryo, olay, rota, denetim, uyari; uyarının açıklama metni uyari_aciklama.js)
                 veri/             önceden hesaplanmış veri (JSON, PNG, CSV)
 hesap/        Çevrimdışı hesap betikleri — kökten "python -m hesap.<betik>" ile çalışır
               (yol ağı, sınır, sel duyarlılığı, senaryolar, doğrulama, yayın verisi)
@@ -428,7 +428,7 @@ venv/bin/python -m hesap.guvenilirlik   # ~10 dk; sonuç egitim/guvenilirlik.jso
 - **Kendin dene:** seçilen günlük yağış ve önceki hafta (kuru / ıslak) için hazır olasılık tablosu. "Islak" geçmiş, olay günlerinde gözlenen önceki gün yağışlarının ortancasıdır (önceki 7 günde ~44 mm).
 - **Hangi yağış etkili?:** GWR'nin ilçe ilçe sonuçları (aşağıda).
 
-Altında yıl yıl sınama sonuçları, sel dalgaları ve Foça örneği. Veri: `venv/bin/python -m hesap.uyari_hazirla` → `docs/veri/uyari.json` ve `docs/veri/uyari_model.json` (modelin karar ağaçları ve ilçelerin sabit girdileri). Betik, dışa aktarılan modelin bütün eğitim satırlarında sklearn ile aynı olasılığı ve aynı alarmı verdiğini denetlemeden yazmaz. `tests/test_canli.py`, tarayıcı modülünü Node ile çalıştırıp girdileri ve olasılığı Python hesabıyla karşılaştırır.
+Altında yıl yıl sınama sonuçları, sel dalgaları ve Foça örneği (`docs/js/sekmeler/uyari_aciklama.js`). Veri: `venv/bin/python -m hesap.uyari_hazirla` → `docs/veri/uyari.json` ve `docs/veri/uyari_model.json` (modelin karar ağaçları ve ilçelerin sabit girdileri). Betik, dışa aktarılan modelin bütün eğitim satırlarında sklearn ile aynı olasılığı ve aynı alarmı verdiğini denetlemeden yazmaz. `tests/test_canli.py`, tarayıcı modülünü Node ile çalıştırıp girdileri ve olasılığı Python hesabıyla karşılaştırır.
 
 ### 🌬️ Ek değişkenler: çok noktalı yağış ve lodos (`hesap/ek_degiskenler.py`)
 

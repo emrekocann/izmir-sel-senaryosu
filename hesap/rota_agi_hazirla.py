@@ -40,8 +40,8 @@ from scipy.sparse.csgraph import connected_components
 
 from afet.dosya import json_yaz
 from afet.veritabani.baglanti import db
-from afet.veritabani.depo import AfetDeposu as R
-from afet.yollar import ROTA_VERI_DIR
+from afet.veritabani.depo import AfetDeposu
+from afet.yollar import ROTA_AGI, ROTA_VERI_DIR
 from hesap import gunlugu_kur
 from hesap.sel_dogrulama import ilceler_ve_mahalleler
 
@@ -52,11 +52,11 @@ ILCELER = ["Balçova", "Bayrakli", "Bornova", "Buca", "Çiğli", "Gaziemir", "G�
            "Karabağlar", "Karşiyaka", "Konak", "Narlidere"]
 OLCEK = 100_000              # derece → tamsayı (1e-5° ≈ 1 m)
 SADELESTIR = 0.00003         # ~3 m: kenar geometrisi sadeleştirme (uçlar korunur)
-EGIM_K = R.ROTA_MODLARI["drive"][1]
-ISLAK_K = R.SENARYO_ISLAK_K
-KAPALI_M = R.SENARYO_KAPALI_M
-KAPALI_EK = R.SENARYO_KAPALI_EK
-BAGLANMA_HARIC = set(R.BAGLANMA_HARIC)
+EGIM_K = AfetDeposu.ROTA_MODLARI["drive"][1]
+ISLAK_K = AfetDeposu.SENARYO_ISLAK_K
+KAPALI_M = AfetDeposu.SENARYO_KAPALI_M
+KAPALI_EK = AfetDeposu.SENARYO_KAPALI_EK
+BAGLANMA_HARIC = set(AfetDeposu.BAGLANMA_HARIC)
 ISE_YARAMAZ = ("demolished", "escape", "emergency_bay")
 
 
@@ -191,8 +191,9 @@ async def oku(alan):
     return kenarlar, alanlar, su
 
 
-def ag_kur(kenarlar, alanlar):
-    """Zincirlenmiş ağ ve dosyaya yazılacak sözlük."""
+def _suz(kenarlar):
+    """Çift yönlü ikizler atılır, en büyük bağlı bileşen kalır →
+    (kenarlar, kimlik, kaynak, hedef, atılan ikiz kimliği → tutulan)."""
     kimlik = np.array([r["id"] for r in kenarlar])
     kaynak = np.array([r["source"] for r in kenarlar])
     hedef = np.array([r["target"] for r in kenarlar])
@@ -202,64 +203,82 @@ def ag_kur(kenarlar, alanlar):
     kenarlar = [r for r, t in zip(kenarlar, tut) if t]
     kimlik, kaynak, hedef = kimlik[tut], kaynak[tut], hedef[tut]
     sec = en_buyuk_bilesen(kaynak, hedef)
-    kenarlar = [r for r, s in zip(kenarlar, sec) if s]
-    kimlik, kaynak, hedef = kimlik[sec], kaynak[sec], hedef[sec]
     log.info("En büyük bileşen: %d / %d yol parçası", sec.sum(), len(sec))
+    return [r for r, s in zip(kenarlar, sec) if s], kimlik[sec], kaynak[sec], hedef[sec], ikiz_kimlik
 
-    uzunluk = np.array([r["length"] for r in kenarlar])
-    taban = uzunluk * (1 + np.array([r["slope"] for r in kenarlar]) * EGIM_K)
-    ayri = np.array([r["highway"] in BAGLANMA_HARIC for r in kenarlar])
-    alt = np.array([r["alt_gecit"] for r in kenarlar])
-    geo = [shapely.get_coordinates(shapely.from_wkb(r["wkb"])) for r in kenarlar]
 
-    dugumler = set(kaynak) | set(hedef)
-    alanlar = [a for a in alanlar if a["drive_vid"] in dugumler]
-    zincirler = zincirle(kaynak, hedef, {a["drive_vid"] for a in alanlar}, ayri)
-
-    # düğüm konumu: kenar geometrisinin ucu
+def _dugum_sirasi(zincirler, kaynak, hedef, geo):
+    """Zincir uçlarının dosyadaki sırası ve ölçekli tamsayı konumları (kenar
+    geometrisinin ucundan)."""
     konum = {}
-    for i in range(len(kenarlar)):
-        konum.setdefault(kaynak[i], geo[i][0])
-        konum.setdefault(hedef[i], geo[i][-1])
+    for i, g in enumerate(geo):
+        konum.setdefault(kaynak[i], g[0])
+        konum.setdefault(hedef[i], g[-1])
     sira = {}
     for u, v, _ in zincirler:
         for d in (u, v):
             sira.setdefault(d, len(sira))
-    xy = np.round(np.array([konum[d] for d in sira]) * OLCEK).astype(np.int64)
+    return sira, np.round(np.array([konum[d] for d in sira]) * OLCEK).astype(np.int64)
 
-    a, b, m, c, ag_sayi, otoyol, ic_sayi, ic = [], [], [], [], [], [], [], []
+
+def _zincir_cizgisi(parcalar, geo):
+    """Zincirin parçalarını baştan sona tek çizgide birleştirir (ortak uçlar bir kez)."""
+    nokta = [geo[e][::-1] if ters else geo[e] for e, ters in parcalar]
+    return np.vstack([nokta[0]] + [p[1:] for p in nokta[1:]])
+
+
+def _kenar_dizileri(zincirler, sira, xy, nitelik, geo):
+    """Zincir başına dosya dizileri: uçlar, uzunluk, maliyet, alt geçit sayısı,
+    otoyol zincirleri, iç noktalar (önceki noktaya göre fark kodlu)."""
+    out = {k: [] for k in ("kenar_a", "kenar_b", "kenar_m", "kenar_maliyet", "alt_gecit", "otoyol", "ic_sayi", "ic")}
     for z, (u, v, parcalar) in enumerate(zincirler):
-        a.append(sira[u]); b.append(sira[v])
         idx = [e for e, _ in parcalar]
-        m.append(round(float(uzunluk[idx].sum())))
-        c.append(round(float(taban[idx].sum())))
-        ag_sayi.append(int(alt[idx].sum()))
-        if ayri[idx[0]]:
-            otoyol.append(z)
-        nokta = [geo[e][::-1] if ters else geo[e] for e, ters in parcalar]
-        cizgi = np.vstack([nokta[0]] + [p[1:] for p in nokta[1:]])
-        icteki = np.round(cizgi[1:-1] * OLCEK).astype(np.int64)
+        out["kenar_a"].append(sira[u])
+        out["kenar_b"].append(sira[v])
+        out["kenar_m"].append(round(float(nitelik["uzunluk"][idx].sum())))
+        out["kenar_maliyet"].append(round(float(nitelik["taban"][idx].sum())))
+        out["alt_gecit"].append(int(nitelik["alt"][idx].sum()))
+        if nitelik["ayri"][idx[0]]:
+            out["otoyol"].append(z)
+        icteki = np.round(_zincir_cizgisi(parcalar, geo)[1:-1] * OLCEK).astype(np.int64)
         onceki = xy[sira[u]]
-        for p in icteki:                         # önceki noktaya göre fark
-            ic.extend((p - onceki).tolist())
+        for p in icteki:
+            out["ic"].extend((p - onceki).tolist())
             onceki = p
-        ic_sayi.append(len(icteki))
+        out["ic_sayi"].append(len(icteki))
+    return out
 
-    alan_kayit = [[sira[a_["drive_vid"]], round(a_["lon"], 5), round(a_["lat"], 5), a_["id"],
-                   a_["adi"] or "", a_["ilce"] or "", a_["mahalle"] or ""] for a_ in alanlar]
+
+def ag_kur(kenarlar, alanlar):
+    """Zincirlenmiş ağ ve dosyaya yazılacak sözlük → (ağ, zincirler, kimlik,
+    taban maliyet, kenar kimliği → zincir, atılan ikiz → tutulan)."""
+    kenarlar, kimlik, kaynak, hedef, ikiz_kimlik = _suz(kenarlar)
+    uzunluk = np.array([r["length"] for r in kenarlar])
+    nitelik = {"uzunluk": uzunluk,
+               "taban": uzunluk * (1 + np.array([r["slope"] for r in kenarlar]) * EGIM_K),
+               "ayri": np.array([r["highway"] in BAGLANMA_HARIC for r in kenarlar]),
+               "alt": np.array([r["alt_gecit"] for r in kenarlar])}
+    geo = [shapely.get_coordinates(shapely.from_wkb(r["wkb"])) for r in kenarlar]
+
+    dugumler = set(kaynak) | set(hedef)
+    alanlar = [a for a in alanlar if a["drive_vid"] in dugumler]
+    zincirler = zincirle(kaynak, hedef, {a["drive_vid"] for a in alanlar}, nitelik["ayri"])
+    sira, xy = _dugum_sirasi(zincirler, kaynak, hedef, geo)
+    k = _kenar_dizileri(zincirler, sira, xy, nitelik, geo)
     ag = {
         "olcek": OLCEK,
         "ilceler": ILCELER,
         "dugum_x": fark_kodla(xy[:, 0]), "dugum_y": fark_kodla(xy[:, 1]),
-        "kenar_a": a, "kenar_b": b, "kenar_m": m, "kenar_maliyet": c,
-        "ic_sayi": ic_sayi, "ic": ic,
-        "otoyol": fark_kodla(otoyol),
-        "alt_gecit": {str(z): n for z, n in enumerate(ag_sayi) if n},
-        "alanlar": alan_kayit,
+        "kenar_a": k["kenar_a"], "kenar_b": k["kenar_b"], "kenar_m": k["kenar_m"],
+        "kenar_maliyet": k["kenar_maliyet"], "ic_sayi": k["ic_sayi"], "ic": k["ic"],
+        "otoyol": fark_kodla(k["otoyol"]),
+        "alt_gecit": {str(z): n for z, n in enumerate(k["alt_gecit"]) if n},
+        "alanlar": [[sira[a["drive_vid"]], round(a["lon"], 5), round(a["lat"], 5), a["id"],
+                     a["adi"] or "", a["ilce"] or "", a["mahalle"] or ""] for a in alanlar],
         "maliyet": {"egim_k": EGIM_K, "islak_k": ISLAK_K, "kapali_m": KAPALI_M, "kapali_ek": KAPALI_EK},
     }
     zincir_kimlik = {int(kimlik[e]): z for z, (_, _, p) in enumerate(zincirler) for e, _ in p}
-    return ag, zincirler, kimlik, taban, zincir_kimlik, ikiz_kimlik
+    return ag, zincirler, kimlik, nitelik["taban"], zincir_kimlik, ikiz_kimlik
 
 
 def senaryo_dosyalari(su_satirlari, zincirler, kimlik, taban, zincir_kimlik, alan_kimlikleri,
@@ -289,8 +308,11 @@ def senaryo_dosyalari(su_satirlari, zincirler, kimlik, taban, zincir_kimlik, ala
         e, ek, d, n, s = [], [], [], [], []
         for z in etkilenen:
             ekm, en_derin, derin, islak = su_ozeti(zincirler[z][2], taban, su)
-            e.append(z); ek.append(round(ekm)); d.append(round(en_derin * 10))
-            n.append(derin); s.append(islak)
+            e.append(z)
+            ek.append(round(ekm))
+            d.append(round(en_derin * 10))
+            n.append(derin)
+            s.append(islak)
         cikti[sen] = {"kenar": fark_kodla(e), "ek": ek, "derin_dm": d, "derin_parca": n,
                       "sig_parca": s, "kapali_alan": sorted(alan_kapali[sen])}
     return cikti
@@ -306,8 +328,6 @@ def kapsam_siniri(alan):
     return json.loads(shapely.to_geojson(shapely.set_precision(g, 1e-5)))
 
 
-def yaz(ad, veri):
-    return json_yaz(os.path.join(ROTA_VERI_DIR, ad), veri)
 
 
 async def calistir():
@@ -317,13 +337,13 @@ async def calistir():
     log.info("%d yol parçası, %d toplanma alanı, %d su satırı", len(kenarlar), len(alanlar), len(su))
     ag, zincirler, kimlik, taban, zincir_kimlik, ikiz = ag_kur(kenarlar, alanlar)
     ag["kapsam"] = kapsam_siniri(alan)
-    boyut = yaz("ag.json", ag)
+    boyut = json_yaz(ROTA_AGI, ag)
     log.info("ag.json: %d düğüm, %d kenar, %d alan, %.1f MB", len(ag["dugum_x"]),
              len(ag["kenar_a"]), len(ag["alanlar"]), boyut / 1e6)
     dosyalar = senaryo_dosyalari(su, zincirler, kimlik, taban, zincir_kimlik,
                                  {a[3] for a in ag["alanlar"]}, ikiz)
     for sen, veri in dosyalar.items():
-        b = yaz(f"su_{sen}.json", veri)
+        b = json_yaz(os.path.join(ROTA_VERI_DIR, f"su_{sen}.json"), veri)
         log.info("su_%s.json: %d ıslak kenar, %d kapalı alan, %.0f kB", sen, len(veri["ek"]),
                  len(veri["kapali_alan"]), b / 1e3)
 

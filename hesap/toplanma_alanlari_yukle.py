@@ -42,7 +42,10 @@ def satir_coz(row):
         return None
     if not (-90 <= lat <= 90 and -180 <= lon <= 180):
         return None
-    temiz = lambda k: (row.get(k) or "").strip() or None
+
+    def temiz(k):
+        return (row.get(k) or "").strip() or None
+
     return (temiz("ACIKLAMA"), temiz("ADI") or "Toplanma Alanı",
             temiz("ILCE") or "", temiz("MAHALLE"), temiz("YOL"),
             temiz("KAPINO"), lon, lat)

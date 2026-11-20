@@ -1,7 +1,7 @@
-// Sekme: toplanma alanı denetimi. 2.380 alanın yerinde kontrol için
+// Sekme: toplanma alanı denetimi. Belediyenin toplanma alanlarının yerinde kontrol için
 // önceliklendirilmesi (hesap/toplanma_denetimi.py). Ön eleme listesidir.
 import { T, sayi } from '../cekirdek/dil.js';
-import { alanAdi, baslik, kacis, mesafe } from '../cekirdek/bicim.js';
+import { alanAdi, baslik, cm, kacis, mesafe, senaryoAdi, senaryoCoz } from '../cekirdek/bicim.js';
 import { sayiKutulari, listeDinle, lejantOgesi } from '../cekirdek/arayuz.js';
 import { DENETIM_CSV } from '../cekirdek/veri.js';
 
@@ -9,7 +9,16 @@ import { DENETIM_CSV } from '../cekirdek/veri.js';
 const RENK = ['#10b981', '#b91c1c', '#ea580c', '#eab308', '#94a3b8'];
 const CIZIM_SIRASI = [0, 4, 3, 2, 1];     // işaretsizler altta, öncelikliler üstte
 
-export function denetimSekmesi({ denetim, harita }) {
+export function denetimSekmesi({ denetim, vitrin, harita }) {
+  /** Öncelik ölçütleri denetim.json'daki senaryo listelerinden: 1. öncelik en
+   * uzun süreli hafif yağışlar (en büyüğü yazılır), 2. öncelik olaya yakın yağışlar. */
+  function olcutler() {
+    const birinci = denetim.senaryolar.oncelik_1.map(senaryoCoz);
+    const mm = Math.max(...birinci.map(([p]) => p)), saat = Math.max(...birinci.map(([, s]) => s));
+    const ikinci = denetim.senaryolar.oncelik_2.map(senaryoAdi);
+    return { mm, saat, ikinciTr: ikinci.join(' ya da '), ikinciEn: ikinci.join(' or ') };
+  }
+
   const durum = { arama: '' };
   let icerik = null, katman = null, vurgu = null;
   const isaretler = new Map();      // liste sırası → tıklanabilir işaret
@@ -56,6 +65,7 @@ export function denetimSekmesi({ denetim, harita }) {
   function ciz() {
     const s = denetim.sayim, y = denetim.dere_yakin;
     const pay = (grup) => sayi((grup.yakin / grup.toplam) * 100);
+    const o = olcutler(), su = cm(vitrin.esikler.yol_kapali_m), hucre = sayi(vitrin.esikler.hucre_m);
     icerik.innerHTML = `
       <h2>${T('Toplanma alanı denetimi', 'Assembly-area audit')}</h2>
       <p>${T(`İzmir Büyükşehir Belediyesi'nin ${sayi(denetim.toplam)} afet ve acil durum toplanma alanını modelin su derinliğiyle tek tek karşılaştırdım. Çıktı bir <b>ön eleme listesi</b>: "şu alanlar güvensiz" demiyor, "yerinde ilk önce şunlara bakın" diyor.`,
@@ -65,9 +75,9 @@ export function denetimSekmesi({ denetim, harita }) {
         [sayi(s['3']), T('3. öncelik', 'priority 3')], [sayi(s.ova), T('düz ovada', 'on flat plain')],
       ])}
       <div class="tablo-sar"><table>
-        <tr><th></th><th>${T("Alanın bulunduğu yerde 30 cm'den derin su", 'More than 30 cm of water at the area')}</th></tr>
-        <tr><td><span class="rozet oncelik-1">1</span></td><td>${T("Yağış 24 saate yayılsa bile 100 mm ya da daha azında: şiddetli sağanak gerekmeden su alıyor.", 'At 100 mm or less even spread over 24 hours: floods without an intense downpour.')}</td></tr>
-        <tr><td><span class="rozet oncelik-2">2</span></td><td>${T("2 Şubat 2021'e yakın yağışta (100 mm / 6 saat ya da 150 mm / 24 saat).", 'In rain close to 2 February 2021 (100 mm / 6 h or 150 mm / 24 h).')}</td></tr>
+        <tr><th></th><th>${T(`Alanın bulunduğu yerde ${su}'den derin su`, `More than ${su} of water at the area`)}</th></tr>
+        <tr><td><span class="rozet oncelik-1">1</span></td><td>${T(`Yağış ${o.saat} saate yayılsa bile ${o.mm} mm ya da daha azında: şiddetli sağanak gerekmeden su alıyor.`, `At ${o.mm} mm or less even spread over ${o.saat} hours: floods without an intense downpour.`)}</td></tr>
+        <tr><td><span class="rozet oncelik-2">2</span></td><td>${T(`2 Şubat 2021'e yakın yağışta (${o.ikinciTr}).`, `In rain close to 2 February 2021 (${o.ikinciEn}).`)}</td></tr>
         <tr><td><span class="rozet oncelik-3">3</span></td><td>${T('Yalnız daha şiddetli senaryolarda.', 'Only in more severe scenarios.')}</td></tr>
       </table></div>
       <h3>${T('1. ve 2. öncelikli alanlar', 'Priority 1 and 2 areas')} (${denetim.liste.length})</h3>
@@ -78,8 +88,8 @@ export function denetimSekmesi({ denetim, harita }) {
         <ul>
           <li>${T('<b>Model burada kanıt değil, işaret.</b> Aynı model 2021 selinde su basan mahalleleri ayırt edemedi. Liste, sahada bakılacak yerleri daraltmak içindir.',
                    '<b>The model is a pointer here, not evidence.</b> It could not single out the neighbourhoods flooded in 2021. The list narrows down where to look on site.')}</li>
-          <li>${T('<b>Her alan tek bir noktadır</b> ve su derinliği 60 m\'lik hücrelerden gelir. Büyük bir parkın yalnız bir köşesi dere kenarında olabilir.',
-                   '<b>Each area is a single point</b> and depth comes from 60 m cells. Only one corner of a large park may lie next to a stream.')}</li>
+          <li>${T(`<b>Her alan tek bir noktadır</b> ve su derinliği ${hucre} m'lik hücrelerden gelir. Büyük bir parkın yalnız bir köşesi dere kenarında olabilir.`,
+                   `<b>Each area is a single point</b> and depth comes from ${hucre} m cells. Only one corner of a large park may lie next to a stream.`)}</li>
           <li>${T(`<b>Bağımsız sağlama:</b> model dereleri yükseklik verisinden türetir, OpenStreetMap'i kullanmaz. Öncelikli ${y.oncelikli.toplam} alanın ${y.oncelikli.yakin} tanesi (%${pay(y.oncelikli)}) OSM'de çizili bir dereye ${denetim.dere_yakin_m} m'den yakın; öteki alanlarda bu oran %${pay(y.oteki)}. Öncelikli alanlar derelere belirgin biçimde daha yakın, ama çoğunun yanında haritada çizili bir dere yok.`,
                    `<b>Independent check:</b> the model derives streams from elevation and does not use OpenStreetMap. ${y.oncelikli.yakin} of the ${y.oncelikli.toplam} priority areas (${pay(y.oncelikli)}%) lie within ${denetim.dere_yakin_m} m of a waterway drawn in OSM, against ${pay(y.oteki)}% of the rest. Priority areas are clearly closer to streams, but most have no mapped stream nearby.`)}</li>
           <li>${T('<b>Kıyıdaki kanalizasyon taşkını listede yok.</b> Model onu göremiyor.', '<b>Coastal sewer flooding is not in the list.</b> The model cannot see it.')}</li>

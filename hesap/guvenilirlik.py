@@ -46,7 +46,6 @@ hesap/siniflandirma.py ve hesap/tahmin_sinamasi.py tek bir test dönemine
 """
 import datetime as dt
 import logging
-import os
 import time
 
 import numpy as np
@@ -54,14 +53,14 @@ import pandas as pd
 from sklearn.base import clone
 from sklearn.metrics import average_precision_score
 
+from afet.yollar import GUVENILIRLIK_SONUC, ILCE_CSV, ILCE_GUN_CSV
 from hesap import gunlugu_kur, sonucu_yaz
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
 from hesap import tahmin_sinamasi as ts
-from hesap.ilce_gun import ILCE_CSV, ILCE_GUN_CSV, gunluk_yagis, yagis_arsivi
+from hesap.ilce_gun import gunluk_yagis, yagis_arsivi
 
 log = logging.getLogger("guvenilirlik")
-SONUC_JSON = os.path.join(sn.CIKTI_DIR, "guvenilirlik.json")
 
 TEST_YILLARI = [2022, 2023, 2024, 2025, 2026]
 TAHMIN_ILK_YIL = 2024                 # geçmiş tahmin arşivinin başladığı yıl
@@ -211,9 +210,9 @@ def tahmin_tablosu(x, p, esik):
 def katman(t, yil, ad, girdiler=None, tanim=None):
     """yil'dan önceki yıllarla ayarla + eğit, yil'i her girdiyle tahmin et.
     girdiler: {ad: (DataFrame) -> DataFrame} test satırlarını dönüştürür;
-    tanim: sn.MODELLER biçiminde model tanımı (verilmezse sn.MODELLER[ad])."""
+    tanim: sn.ModelTanimi (verilmezse sn.MODELLER[ad])."""
     tanim = tanim or sn.MODELLER[ad]
-    kolonlar = tanim[1]
+    kolonlar = tanim.kolonlar
     egitim, test = t[t.yil < yil], t[t.yil == yil]
     m, prm, _, esik = sn.ayarla(ad, egitim, {ad: tanim})
     m = clone(m).fit(egitim[kolonlar], egitim.olay)
@@ -277,7 +276,8 @@ def calistir(t, girdiler=None, test_yillari=TEST_YILLARI, modeller=MODELLER, n=B
         "yontem": "her test yılı yalnız önceki yıllarla eğitilir; ızgara araması ve eşik her katmanda yeniden",
         "test_yillari": test_yillari, "bootstrap": f"haftalar yerine koyarak, {n} tekrar, %95 yüzdelik",
         "atak": f"il genelinde ≥ {om.OLAY_CAGRI} çağrılı günler, aralarında ≤ {ATAK_BOSLUK} gün boşlukla tek atak",
-        "oglen_uyarisi": "D 00–11: 1 gün önceki koşu; D 12–23: 2 gün önceki koşu; D-1 12–23: gözlem yerine 1 gün önceki koşu",
+        "oglen_uyarisi": ("D 00–11: 1 gün önceki koşu; D 12–23: 2 gün önceki koşu; "
+                          "D-1 12–23: gözlem yerine 1 gün önceki koşu"),
         "canli_sayfa": "öğlen uyarısı; önceki günlerin yağışı arşivden değil tahmin modelinin 0. gün kaydından",
         "sonuclar": sonuc,
     }
@@ -286,10 +286,12 @@ def calistir(t, girdiler=None, test_yillari=TEST_YILLARI, modeller=MODELLER, n=B
 def yazdir(r):
     for ad, s in r["sonuclar"].items():
         print(f"\n{ad} — yıl yıl (gözlenen yağış):")
-        print(f"  {'yıl':5} {'olay':>5} {'AUC':>6} {'AP':>6} {'kesinlik':>8} {'duyarlılık':>10} {'büyük gün':>10} {'alarm günü':>10}")
+        print(f"  {'yıl':5} {'olay':>5} {'AUC':>6} {'AP':>6} {'kesinlik':>8} {'duyarlılık':>10} "
+              f"{'büyük gün':>10} {'alarm günü':>10}")
         for k in s["katmanlar"]:
             print(f"  {k['test_yili']:<5} {k['olay']:5} {k['auc']:6.3f} {k['ap']:6.3f} {k['kesinlik']:8.2f} "
-                  f"{k['duyarlilik']:10.2f} {k['il']['alarmli']:>4}/{k['il']['buyuk_olay_gunu']:<5} {k['il']['alarm_gunu']:>10}")
+                  f"{k['duyarlilik']:10.2f} {k['il']['alarmli']:>4}/{k['il']['buyuk_olay_gunu']:<5} "
+                  f"{k['il']['alarm_gunu']:>10}")
         print("  birleşik (%95 aralık):")
         for kaynak, o in {"tüm yıllar": s["tum_yillar"], **s["tahminli_donem"]}.items():
             a = o["aralik_95"]
@@ -319,7 +321,7 @@ def main():
         "tahminsiz": (TAHMIN_ILK_YIL, lambda x: ts.tahminle_degistir(
             x, x[["ilce", "gun"]].assign(**{k: 0.0 for k in ts.GUNUN_YAGISI}))),
     }
-    sonucu_yaz(SONUC_JSON, calistir(t, girdiler), yazdir)
+    sonucu_yaz(GUVENILIRLIK_SONUC, calistir(t, girdiler), yazdir)
 
 
 if __name__ == "__main__":

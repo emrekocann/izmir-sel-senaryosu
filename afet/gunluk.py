@@ -6,9 +6,7 @@ import sys
 
 from loguru import logger
 
-from afet.yollar import KOK
-
-GUNLUK_DIR = os.path.join(KOK, "logs")
+from afet.yollar import GUNLUK_DIR
 
 
 def kur():

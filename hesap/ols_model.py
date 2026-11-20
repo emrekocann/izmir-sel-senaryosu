@@ -48,18 +48,16 @@ yıl neredeyse hiç kullanılmamış (çağrıların %11'i, sonraki yıllarda %5
 ölçüleri, ilçe artıkları). Çalıştırma: venv/bin/python -m hesap.ols_model
 """
 import logging
-import os
 
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
+from afet.yollar import ILCE_GUN_CSV, OLS_SONUC
 from hesap import gunlugu_kur, sonucu_yaz
-from hesap.ilce_gun import CIKTI_DIR, ILCE_GUN_CSV
 
 log = logging.getLogger("ols")
-SONUC_JSON = os.path.join(CIKTI_DIR, "ols_sonuc.json")
 
 ILK_YIL = 2020
 TEST_YILLARI = (2025, 2026)
@@ -246,7 +244,7 @@ def yazdir(r):
 def main():
     gunlugu_kur()
     r = calistir(pd.read_csv(ILCE_GUN_CSV))
-    sonucu_yaz(SONUC_JSON, r, yazdir)
+    sonucu_yaz(OLS_SONUC, r, yazdir)
 
 
 if __name__ == "__main__":

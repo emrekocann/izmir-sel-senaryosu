@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from afet.dosya import json_oku
+from afet.yollar import OLS_SONUC
 from hesap import ols_model as om
 
 
@@ -52,9 +53,9 @@ def test_olculer_olay_gunlerini_il_toplamiyla_sayar():
     assert o["olay_gunu"] == 2 and o["olay_gercek_toplam"] == 120 and o["olay_tahmin_toplam"] == 70
 
 
-@pytest.mark.skipif(not os.path.exists(om.SONUC_JSON), reason="model eğitilmedi")
+@pytest.mark.skipif(not os.path.exists(OLS_SONUC), reason="model eğitilmedi")
 def test_sonuc_dosyasi_sozlesmesi():
-    r = json_oku(om.SONUC_JSON)
+    r = json_oku(OLS_SONUC)
     assert [k["ad"] for k in r["katsayilar"]] == ["const"] + om.OZELLIKLER
     assert max(r["vif"].values()) < 5                         # çoklu doğrusallık giderildi
     for s in ("zaman_sinamasi", "mekan_sinamasi"):

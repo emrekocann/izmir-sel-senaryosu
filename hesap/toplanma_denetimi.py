@@ -47,7 +47,7 @@ from afet.sel.risk import BANT_ESIK
 from afet.sinir import il_poligonu
 from afet.veritabani.baglanti import db
 from afet.veritabani.depo import AfetDeposu
-from afet.yollar import DENETIM_CSV, DUYARLILIK, OSM_DERELER, SITE_VERI_DIR
+from afet.yollar import DENETIM_CSV, DENETIM_JSON, DUYARLILIK, OSM_DERELER, SITE_DENETIM_CSV
 from hesap import gunlugu_kur
 from hesap.dem_hidroloji import osm_cizgileri, raster_ornekle
 
@@ -84,12 +84,16 @@ def en_kucuk_yagis(su):
     return p, max(x[1] for x in derin if x[0] == p)
 
 
+def _dere_mi(etiket):
+    """osm_cizgileri seçicisi: dere / kanal hattı (değilse None: atlanır)."""
+    return True if etiket.get("waterway") in OSM_DERE_TURLERI else None
+
+
 def osm_dereleri():
     """İl çerçevesindeki OSM dere / kanal hatları (Geofabrik dosyasından bir
     kez okunur, ~1 dk; önbellekli)."""
     if not os.path.exists(OSM_DERELER):
-        dere_mi = lambda t: True if t.get("waterway") in OSM_DERE_TURLERI else None
-        json_yaz(OSM_DERELER, [xy for _, _, xy in osm_cizgileri(il_poligonu().bounds, dere_mi)])
+        json_yaz(OSM_DERELER, [xy for _, _, xy in osm_cizgileri(il_poligonu().bounds, _dere_mi)])
     return [shapely.LineString(h) for h in json_oku(OSM_DERELER)]
 
 
@@ -97,8 +101,7 @@ def dereye_uzaklik_m(lon, lat, dereler):
     """Noktaların en yakın dere hattına uzaklığı (m). Boylam, il ortalama
     enleminin kosinüsüyle ölçeklenir (yerel düzlem yaklaşımı)."""
     k = np.cos(np.radians(np.mean(lat)))
-    olcek = lambda c: c * [k, 1.0]
-    agac = shapely.STRtree(shapely.transform(dereler, olcek))
+    agac = shapely.STRtree(shapely.transform(dereler, lambda c: c * [k, 1.0]))
     _, uzaklik = agac.query_nearest(shapely.points(np.asarray(lon) * k, lat), return_distance=True,
                                     all_matches=False)
     return uzaklik * 111_320.0
@@ -174,7 +177,7 @@ def yaz(satirlar):
             w.writerow({**r, "oncelik": ONCELIK_AD[r["oncelik"]], "lat": round(r["lat"], 6),
                         "lon": round(r["lon"], 6), "duyarli": int(r["duyarli"]),
                         "erisim_kapali": int(r["erisim_kapali"])})
-    shutil.copy(DENETIM_CSV, os.path.join(SITE_VERI_DIR, "toplanma_denetimi.csv"))
+    shutil.copy(DENETIM_CSV, SITE_DENETIM_CSV)
 
     say = Counter(ONCELIK_AD[r["oncelik"]] for r in satirlar)
     ilce = {}
@@ -205,7 +208,7 @@ def yaz(satirlar):
                    } | {"su_m": max(r[f"su_{s}_m"] for s in ONCELIK_2)}
                   for r in isaretli if r["oncelik"] in (1, 2)],
     }
-    json_yaz(os.path.join(SITE_VERI_DIR, "denetim.json"), ozet)
+    json_yaz(DENETIM_JSON, ozet)
     return ozet, len(isaretli)
 
 

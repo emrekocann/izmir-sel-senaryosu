@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import pytest
 
+from afet.yollar import ILCE_GUN_CSV
 from hesap import ilce_gun as ig
 
 
@@ -58,9 +59,9 @@ def test_cagrisiz_gunler_sifir_satir_olarak_kalir():
     assert len(t) == 3
 
 
-@pytest.mark.skipif(not os.path.exists(ig.ILCE_GUN_CSV), reason="veri seti üretilmedi")
+@pytest.mark.skipif(not os.path.exists(ILCE_GUN_CSV), reason="veri seti üretilmedi")
 def test_uretilen_veri_seti_sozlesmesi():
-    t = pd.read_csv(ig.ILCE_GUN_CSV)
+    t = pd.read_csv(ILCE_GUN_CSV)
     assert t.ilce.nunique() == 30
     assert not t.duplicated(["ilce", "gun"]).any()
     assert t.groupby("ilce").size().nunique() == 1               # her ilçe her gün

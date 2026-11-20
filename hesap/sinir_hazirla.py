@@ -71,8 +71,8 @@ def kara_alani(kiyi):
     """Kutudaki kara: kutu kenarı + kıyı çizgisiyle bölünen yüzlerden, kıyı
     yolunun solunda kalanlar (kıyıya değmeyen yüz: kara)."""
     kutu = box(*KUTU)
-    ag = unary_union([kutu.boundary] + [k.intersection(kutu) for k in kiyi])
-    yuzler = list(polygonize(ag))
+    cizgiler = unary_union([kutu.boundary] + [k.intersection(kutu) for k in kiyi])
+    yuzler = list(polygonize(cizgiler))
     agac = shapely.STRtree(yuzler)
     kara, deniz = np.zeros(len(yuzler)), np.zeros(len(yuzler))
     e = 2e-5
@@ -129,20 +129,40 @@ def paylastir(il, ilceler):
     return sonuc
 
 
-def main():
-    gunlugu_kur()
+# TKGM bazı adlarda "ı" yerine "i" yazar (Bayindir, Kinik …)
+AD_DUZELTME = {"Bayindir": "Bayındır", "Bayrakli": "Bayraklı", "Karşiyaka": "Karşıyaka",
+               "Kinik": "Kınık", "Narlidere": "Narlıdere", "Torbali": "Torbalı"}
+
+
+def km2(g):
+    """Derece alanı → km² (il ortalama enleminde)."""
+    return g.area * 111.32 ** 2 * np.cos(np.radians(38.4))
+
+
+def buyuk_harf(ad):
+    """TKGM ilçe adı → geojson'daki büyük harfli Türkçe ad (BAYINDIR, İZMİR…)."""
+    return AD_DUZELTME.get(ad, ad).replace("i", "İ").replace("ı", "I").upper()
+
+
+def kaynaklari_getir():
+    """TKGM il / ilçe sınırları, OSM kıyı çizgisi ve OSM il ilişkisi (önbellekli)
+    → (iller, ilçe özellikleri, kıyı çizgileri, OSM il poligonu)."""
     os.makedirs(SINIR_HAM_DIR, exist_ok=True)
     iller = _getir(TKGM_URL + "ilListe", "tkgm/il")["features"]
     ilce_f = _getir(TKGM_URL + f"ilceListe/{TKGM_IL_ID}", "tkgm/izmir_ilce")["features"]
     w, s, e, n = KUTU
     kiyi = [LineString([(p["lon"], p["lat"]) for p in yol["geometry"]])
-            for yol in _overpass(f'[out:json][timeout:170];way["natural"="coastline"]({s},{w},{n},{e});out geom;', "kiyi")]
+            for yol in _overpass(f'[out:json][timeout:170];way["natural"="coastline"]({s},{w},{n},{e});out geom;',
+                                 "kiyi")]
     osm_il = iliski_poligonu(_overpass(
         f'[out:json][timeout:170];rel["ISO3166-2"="{OSM_IL_KODU}"]["admin_level"="4"];out geom;', "il")[0])
     log.info("TKGM: %d ilçe; OSM: %d kıyı yolu", len(ilce_f), len(kiyi))
+    return iller, ilce_f, kiyi, osm_il
 
+
+def il_alani(iller, tkgm, kiyi, osm_il):
+    """İl kara alanı: TKGM ilçelerinin dış kabuğu + kıyıdaki eksik + adalar."""
     kara = kara_alani(kiyi)
-    tkgm = {f["properties"]["text"]: shapely.make_valid(shape(f["geometry"])) for f in ilce_f}
     T = dis_kabuk(unary_union(list(tkgm.values())))
     komsu = unary_union([shape(f["geometry"]) for f in iller          # bazı illerde geometri boş gelir
                          if f["geometry"] and f["properties"]["id"] != TKGM_IL_ID
@@ -156,30 +176,32 @@ def main():
     # Adalar: OSM'de İzmir ilişkisi içinde kalan, ana karaya değmeyen kara parçaları
     adalar = [p for p in getattr(kara, "geoms", [kara])
               if not p.intersects(ana) and p.representative_point().within(osm_il)]
-    il = shapely.make_valid(unary_union([ana] + adalar))
-    km2 = lambda g: g.area * 111.32 ** 2 * np.cos(np.radians(38.4))
     log.info("İl: ana kara %.0f km², %d ada %.1f km²; TKGM kara sınırı aynen korunur",
              km2(ana), len(adalar), sum(km2(a) for a in adalar))
+    return shapely.make_valid(unary_union([ana] + adalar))
 
-    ilceler = paylastir(il, tkgm)
-    adlar = sorted(ilceler)
-    G = shapely.set_precision(shapely.coverage_simplify(np.array([ilceler[a] for a in adlar]), SADELESTIRME), 1e-5)
-    il = shapely.set_precision(unary_union(G), 1e-5)
 
-    # TKGM bazı adlarda "ı" yerine "i" yazar (Bayindir, Kinik …)
-    duzelt = {"Bayindir": "Bayındır", "Bayrakli": "Bayraklı", "Karşiyaka": "Karşıyaka",
-              "Kinik": "Kınık", "Narlidere": "Narlıdere", "Torbali": "Torbalı"}
-    buyuk = lambda t: duzelt.get(t, t).replace("i", "İ").replace("ı", "I").upper()
-    ozellik = [{"type": "Feature", "properties": {"ILADI": "İZMİR", "ILCEADI": buyuk(a)},
-                "geometry": json.loads(shapely.to_geojson(g))} for a, g in zip(adlar, G)]
+def yaz(adlar, ilce_geo, il):
+    ozellik = [{"type": "Feature", "properties": {"ILADI": "İZMİR", "ILCEADI": buyuk_harf(a)},
+                "geometry": json.loads(shapely.to_geojson(g))} for a, g in zip(adlar, ilce_geo)]
     json_yaz(ILCE_SINIRLARI, {"type": "FeatureCollection", "features": ozellik})
     json_yaz(IL_SINIRI, {"type": "FeatureCollection", "features": [{
         "type": "Feature",
         "properties": {"name": "İzmir", "kaynak": "TKGM MEGSİS ilçe sınırları + OSM kıyı çizgisi, ilçe birleşimi"},
         "geometry": json.loads(shapely.to_geojson(il))}]})
-    log.info("Yazıldı: %d ilçe, kara alanı ~%.0f km², %d köşe; ilçe alanları: %s", len(G), km2(il),
-             shapely.get_num_coordinates(il), {a: round(km2(g)) for a, g in zip(adlar, G)})
+    log.info("Yazıldı: %d ilçe, kara alanı ~%.0f km², %d köşe; ilçe alanları: %s", len(ilce_geo), km2(il),
+             shapely.get_num_coordinates(il), {a: round(km2(g)) for a, g in zip(adlar, ilce_geo)})
 
+
+def main():
+    gunlugu_kur()
+    iller, ilce_f, kiyi, osm_il = kaynaklari_getir()
+    tkgm = {f["properties"]["text"]: shapely.make_valid(shape(f["geometry"])) for f in ilce_f}
+    ilceler = paylastir(il_alani(iller, tkgm, kiyi, osm_il), tkgm)
+    adlar = sorted(ilceler)
+    ilce_geo = shapely.set_precision(shapely.coverage_simplify(np.array([ilceler[a] for a in adlar]), SADELESTIRME),
+                                     1e-5)
+    yaz(adlar, ilce_geo, shapely.set_precision(unary_union(ilce_geo), 1e-5))
 
 if __name__ == "__main__":
     main()

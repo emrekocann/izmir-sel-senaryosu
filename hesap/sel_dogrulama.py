@@ -110,6 +110,18 @@ def adli_caddeler(cizgiler, ilce, ekler=()):
     return out
 
 
+def adli_dere(cizgiler, ad):
+    """OSM'de bu adı taşıyan dere çizgilerinin birleşimi (yoksa boş geometri)."""
+    return shapely.union_all([shapely.geometry.shape(f["geometry"]) for f in cizgiler
+                              if f["properties"]["tur"] == "dere" and f["properties"]["ad"] == ad])
+
+
+def mahalle_payi(mah_et, mah_n, maske):
+    """Her mahallenin (1…n) ızgara hücrelerinde maskenin payı; mah_n: mahalle başına hücre."""
+    return (np.bincount(mah_et.ravel(), weights=maske.ravel(), minlength=len(mah_n))
+            / np.maximum(mah_n, 1))[1:]
+
+
 def cizgi_skoru(dizi, tr, g, haric_cizgiler):
     """Çizgi boyunca ~25 m'de bir: en derin nokta (m), 30 cm+ var mı,
     10 cm+ ıslak pay, düz ova (belirsiz) var mı. Köprü üstü sayılmaz."""
@@ -142,87 +154,91 @@ def yuzdelik(deger, nufus):
     return round(float(((nufus < deger).sum() + 0.5 * (nufus == deger).sum()) / len(nufus) * 100))
 
 
-def dogrula(olay_yolu):
-    olay = json_oku(olay_yolu)
-    ozet = json_oku(SENARYO_OZETI)
-    tr = Affine(ozet["dx"], 0, ozet["bati"], 0, ozet["dy"], ozet["kuzey"])
-    npz = np.load(SENARYO)
-    yerler = olay["yerler"]
-    ilce_adlari = sorted({y["ilce"] for y in yerler} | {"Bornova"})
-    ilce, mahalleler = ilceler_ve_mahalleler(ilce_adlari)
-    cizgiler = osm_adli_cizgiler()
-    # haberdeki ad OSM'de farklıysa (ör. "Caddesi" ↔ "Sokak") osm_ad kullanılır
-    for y in yerler:
-        y["osm"] = y.get("osm_ad", y["ad"])
-    caddeler = adli_caddeler(cizgiler, ilce, {y["osm"] for y in yerler if y["tur"] == "cadde"})
-    kopru, _, uzun_tunel = kopru_tunel(il_poligonu())
-    haric = kopru + uzun_tunel
+class OlayDogrulamasi:
+    """Haberdeki yerler × senaryo su derinliği. Kurulurken bir kez: mahalle
+    ızgarası, adlı caddeler, köprü / tünel hariç tutması; senaryo_sonucu her
+    senaryo için ölçüleri hesaplar."""
 
-    shape = npz[f"d_{SENARYOLAR[0]}"].shape
-    mah_et = rasterize([(g, i + 1) for i, (_, _, g) in enumerate(mahalleler)],
-                       out_shape=shape, transform=tr, fill=0, dtype="int32")
-    mah_n = np.bincount(mah_et.ravel(), minlength=len(mahalleler) + 1)
-    mah_anahtar = {(i, m): k for k, (i, m, _) in enumerate(mahalleler)}
+    def __init__(self, olay, ozet, dizi_boyutu):
+        self.olay, self.ozet = olay, ozet
+        self.tr = Affine(ozet["dx"], 0, ozet["bati"], 0, ozet["dy"], ozet["kuzey"])
+        self.yerler = olay["yerler"]
+        self.ilce_adlari = sorted({y["ilce"] for y in self.yerler} | {"Bornova"})
+        ilce, self.mahalleler = ilceler_ve_mahalleler(self.ilce_adlari)
+        self.cizgiler = osm_adli_cizgiler()
+        # haberdeki ad OSM'de farklıysa (ör. "Caddesi" ↔ "Sokak") osm_ad kullanılır
+        for y in self.yerler:
+            y["osm"] = y.get("osm_ad", y["ad"])
+        self.caddeler = adli_caddeler(self.cizgiler, ilce, {y["osm"] for y in self.yerler if y["tur"] == "cadde"})
+        kopru, _, uzun_tunel = kopru_tunel(il_poligonu())
+        self.haric = kopru + uzun_tunel
+        self.mah_et = rasterize([(g, i + 1) for i, (_, _, g) in enumerate(self.mahalleler)],
+                                out_shape=dizi_boyutu, transform=self.tr, fill=0, dtype="int32")
+        self.mah_n = np.bincount(self.mah_et.ravel(), minlength=len(self.mahalleler) + 1)
+        self.mah_anahtar = {(i, m): k for k, (i, m, _) in enumerate(self.mahalleler)}
+        self._eksikleri_denetle()
 
-    eksik = [y for y in yerler if
-             (y["tur"] == "mahalle" and (y["ilce"], y["ad"]) not in mah_anahtar) or
-             (y["tur"] == "cadde" and (y["ilce"], y["osm"]) not in caddeler)]
-    if eksik:
-        raise ValueError(f"Haritada bulunamayan yerler: {[(y['ilce'], y['ad']) for y in eksik]}")
+    def _eksikleri_denetle(self):
+        eksik = [y for y in self.yerler if
+                 (y["tur"] == "mahalle" and (y["ilce"], y["ad"]) not in self.mah_anahtar) or
+                 (y["tur"] == "cadde" and (y["ilce"], y["osm"]) not in self.caddeler)]
+        if eksik:
+            raise ValueError(f"Haritada bulunamayan yerler: {[(y['ilce'], y['ad']) for y in eksik]}")
 
-    sonuc = {"olay": olay["olay"], "ilceler": ilce_adlari, "senaryolar": {}}
-    for sen in SENARYOLAR:
-        dizi = npz[f"d_{sen}"]
+    def _yer_olcumu(self, y, sen, dizi, mah, cadde_skor):
+        """Haberdeki bir yerin bu senaryodaki ölçüsü."""
+        s = {"tur": y["tur"], "ilce": y["ilce"], "ad": y["ad"], "neden": y["neden"]}
+        if y["tur"] == "mahalle":
+            k = self.mah_anahtar[(y["ilce"], y["ad"])]
+            s.update(islak_pay=round(float(mah["pay"][k]), 3),
+                     yuzdelik=yuzdelik(mah["pay"][k], mah["pay"][mah["gecerli"]]),
+                     derin_pay=round(float(mah["derin"][k]), 3),
+                     derin_yuzdelik=yuzdelik(mah["derin"][k], mah["derin"][mah["gecerli"]]))
+        elif y["tur"] == "cadde":
+            s.update(cadde_skor[(y["ilce"], y["osm"])])
+        elif y["tur"] == "dere":
+            s.update(cizgi_skoru(dizi, self.tr, adli_dere(self.cizgiler, y["ad"]), self.haric) or {"bulunamadi": True})
+        elif y["tur"] == "alt_gecit":
+            s.update(alt_gecit_dolu=self.ozet["senaryolar"][sen]["alt_gecit_dolu"] > 0)
+        return s
+
+    def senaryo_sonucu(self, sen, dizi):
         # iki ölçü: düz ova (gri, "su gelir") dahil ve yalnız hesaplanan derinlik
         derin = (dizi >= ISLAK_DM) & (dizi != BELIRSIZ)
         islak = derin | (dizi == BELIRSIZ)
-        pay = lambda m: (np.bincount(mah_et.ravel(), weights=m.ravel(), minlength=len(mahalleler) + 1)
-                         / np.maximum(mah_n, 1))[1:]
-        mah_pay, mah_derin = pay(islak), pay(derin)
-        gecerli = mah_n[1:] > 0                          # ızgaraya düşen mahalleler
-        cadde_skor = {k: cizgi_skoru(dizi, tr, g, haric) for k, g in caddeler.items()}
-
-        satirlar = []
-        poz_mah, poz_cadde = set(), set()
-        for y in yerler:
-            s = {"tur": y["tur"], "ilce": y["ilce"], "ad": y["ad"], "neden": y["neden"]}
-            if y["tur"] == "mahalle":
-                k = mah_anahtar[(y["ilce"], y["ad"])]
-                poz_mah.add(k)
-                s.update(islak_pay=round(float(mah_pay[k]), 3),
-                         yuzdelik=yuzdelik(mah_pay[k], mah_pay[gecerli]),
-                         derin_pay=round(float(mah_derin[k]), 3),
-                         derin_yuzdelik=yuzdelik(mah_derin[k], mah_derin[gecerli]))
-            elif y["tur"] == "cadde":
-                poz_cadde.add((y["ilce"], y["osm"]))
-                s.update(cadde_skor[(y["ilce"], y["osm"])])
-            elif y["tur"] == "dere":
-                g = shapely.union_all([shapely.geometry.shape(f["geometry"]) for f in cizgiler
-                                       if f["properties"]["tur"] == "dere" and f["properties"]["ad"] == y["ad"]])
-                s.update(cizgi_skoru(dizi, tr, g, haric) or {"bulunamadi": True})
-            elif y["tur"] == "alt_gecit":
-                s.update(alt_gecit_dolu=ozet["senaryolar"][sen]["alt_gecit_dolu"] > 0)
-            satirlar.append(s)
-
-        neg_mah = [mah_pay[k] for k in range(len(mahalleler)) if gecerli[k] and k not in poz_mah]
+        mah = {"pay": mahalle_payi(self.mah_et, self.mah_n, islak),
+               "derin": mahalle_payi(self.mah_et, self.mah_n, derin),
+               "gecerli": self.mah_n[1:] > 0}                      # ızgaraya düşen mahalleler
+        cadde_skor = {k: cizgi_skoru(dizi, self.tr, g, self.haric) for k, g in self.caddeler.items()}
+        satirlar = [self._yer_olcumu(y, sen, dizi, mah, cadde_skor) for y in self.yerler]
+        poz_mah = {self.mah_anahtar[(y["ilce"], y["ad"])] for y in self.yerler if y["tur"] == "mahalle"}
+        poz_cadde = {(y["ilce"], y["osm"]) for y in self.yerler if y["tur"] == "cadde"}
+        oteki_mah = [k for k in range(len(self.mahalleler)) if mah["gecerli"][k] and k not in poz_mah]
+        neg_mah = [mah["pay"][k] for k in oteki_mah]
         neg_cadde = [v for k, v in cadde_skor.items() if k not in poz_cadde and v]
         poz_c = [s for s in satirlar if s["tur"] == "cadde"]
         # cadde için "yalnız derinlik": 30 cm+ nokta (düz ova sayılmaz) zaten kapali
-        sonuc["senaryolar"][sen] = {
+        return {
             "yerler": satirlar,
-            "mahalle_auc": auc([mah_pay[k] for k in poz_mah], neg_mah),
-            "mahalle_auc_yalniz_derinlik": auc(
-                [mah_derin[k] for k in poz_mah],
-                [mah_derin[k] for k in range(len(mahalleler)) if gecerli[k] and k not in poz_mah]),
+            "mahalle_auc": auc([mah["pay"][k] for k in poz_mah], neg_mah),
+            "mahalle_auc_yalniz_derinlik": auc([mah["derin"][k] for k in poz_mah],
+                                               [mah["derin"][k] for k in oteki_mah]),
             "mahalle_sayisi": {"haber": len(poz_mah), "oteki": len(neg_mah)},
-            "mahalle_islak_pay_medyan": {"haber": round(float(np.median([mah_pay[k] for k in poz_mah])), 3),
+            "mahalle_islak_pay_medyan": {"haber": round(float(np.median([mah["pay"][k] for k in poz_mah])), 3),
                                          "oteki": round(float(np.median(neg_mah)), 3)},
             "cadde_kapali_oran": {"haber": round(sum(s["kapali"] for s in poz_c) / len(poz_c), 2),
                                   "oteki": round(sum(v["kapali"] for v in neg_cadde) / len(neg_cadde), 2)},
             "cadde_sayisi": {"haber": len(poz_c), "oteki": len(neg_cadde)},
             "cadde_auc": auc([s["en_derin_m"] for s in poz_c], [v["en_derin_m"] for v in neg_cadde]),
         }
-    return sonuc
+
+
+def dogrula(olay_yolu):
+    olay = json_oku(olay_yolu)
+    npz = np.load(SENARYO)
+    d = OlayDogrulamasi(olay, json_oku(SENARYO_OZETI), npz[f"d_{SENARYOLAR[0]}"].shape)
+    return {"olay": olay["olay"], "ilceler": d.ilce_adlari,
+            "senaryolar": {sen: d.senaryo_sonucu(sen, npz[f"d_{sen}"]) for sen in SENARYOLAR}}
 
 
 def yazdir(sonuc):
@@ -230,8 +246,10 @@ def yazdir(sonuc):
     for sen, o in sonuc["senaryolar"].items():
         p, sure = sen.split("_")
         print(f"\n=== {p} mm / {sure} saat ===")
-        print(f"Mahalle AUC {o['mahalle_auc']}, yalnız derinlik {o['mahalle_auc_yalniz_derinlik']} (haber {o['mahalle_sayisi']['haber']}, öteki {o['mahalle_sayisi']['oteki']}); "
-              f"ıslak pay medyanı haber {o['mahalle_islak_pay_medyan']['haber']:.1%} / öteki {o['mahalle_islak_pay_medyan']['oteki']:.1%}")
+        sayi, medyan = o["mahalle_sayisi"], o["mahalle_islak_pay_medyan"]
+        print(f"Mahalle AUC {o['mahalle_auc']}, yalnız derinlik {o['mahalle_auc_yalniz_derinlik']} "
+              f"(haber {sayi['haber']}, öteki {sayi['oteki']}); "
+              f"ıslak pay medyanı haber {medyan['haber']:.1%} / öteki {medyan['oteki']:.1%}")
         print(f"Cadde: 30 cm+ noktası olan haber {o['cadde_kapali_oran']['haber']:.0%} / öteki "
               f"{o['cadde_kapali_oran']['oteki']:.0%} ({o['cadde_sayisi']['oteki']} cadde), AUC {o['cadde_auc']}")
         for s in o["yerler"]:

@@ -2,7 +2,7 @@
 // veri, yöntem. Metin index.html'de durur; doğrulama ve erken uyarı sayıları
 // veriden doldurulur (data-doldur).
 import { sayi } from './cekirdek/dil.js';
-import { aralik, yerAdi, yuzde, yuzdeIsareti, yilAraligi, tarih } from './cekirdek/bicim.js';
+import { aralik, cm, yerAdi, yuzde, yuzdeIsareti, yilAraligi, tarih } from './cekirdek/bicim.js';
 import { enDuyarlilar } from './sekmeler/uyari.js';
 
 /** Erken uyarı bölümünün sayıları (uyari.json; Uyarı sekmesiyle aynı kaynak). */
@@ -52,6 +52,8 @@ export function hakkindaKur(pencere, { vitrin, uyari }) {
       'mahalle-oteki': sayi(ilk.mahalle_sayisi.oteki),
       'cadde-oteki': sayi(ilk.cadde_sayisi.oteki),
       'ilce-sayisi': sayi(vitrin.merkez.ilceler.length),
+      'kapali-cm': cm(vitrin.esikler.yol_kapali_m),
+      'hucre-m': sayi(vitrin.esikler.hucre_m),
     };
     pencere.querySelectorAll('[data-doldur]').forEach((oge) => {
       if (oge.dataset.doldur in degerler) oge.textContent = degerler[oge.dataset.doldur];

@@ -46,6 +46,7 @@ ve tahliye rotası için sel_senaryo_su tablosu (hesap/sel_senaryo_yollar.py).
 DEM'ini ve köprü/alt geçit önbelleğini kullanır; ~20–30 dk)
 """
 import asyncio
+import functools
 import logging
 import math
 import os
@@ -65,10 +66,9 @@ from afet.sinir import il_poligonu, tkgm_ilceler, tkgm_mahalleler
 from afet.veritabani.baglanti import db
 from afet.veritabani.depo import AfetDeposu
 from afet.yollar import CN_DOSYASI, MODEL_DIR, SENARYO, SENARYO_OZETI
-from hesap import gunlugu_kur
-from hesap import sel_senaryo_yollar
-from hesap.dem_hidroloji import (DIRMAP, akis_agi, cukurlar, dem_mozaik, hand_hesapla,
-                           kopru_tunel, raster_ornekle, yakin_mi, yol_noktalari)
+from hesap import gunlugu_kur, sel_senaryo_yollar
+from hesap.dem_hidroloji import (DIRMAP, akis_agi, cukurlar, dem_mozaik, hand_hesapla, kopru_tunel, raster_ornekle,
+                                 yakin_mi, yol_noktalari)
 
 log = logging.getLogger("senaryo")
 
@@ -102,6 +102,16 @@ def scs_akis(p, cn):
     s = 25400.0 / np.clip(cn, 30, 100) - 254.0
     ia = 0.2 * s
     return np.where(p > ia, (p - ia) ** 2 / np.maximum(p - ia + s, 1e-6), 0.0)
+
+
+def _hucreye_topla(x):
+    """WorldCover örnek ızgarasını (WC_KAT × WC_KAT örnek) model hücrelerine toplar."""
+    h, w = x.shape
+    return x.reshape(h // WC_KAT, WC_KAT, w // WC_KAT, WC_KAT).sum(axis=(1, 3))
+
+
+def _akis(p, sure, arazi):
+    return senaryo_akisi(p, sure, *arazi)
 
 
 def senaryo_akisi(p, sure, cn_dogal, cn_kent, kent, su=0.0):
@@ -200,14 +210,13 @@ def worldcover_cn(tr, shape):
                               tr.f + s0 * tr.e, transform=ds.transform)
             arr = ds.read(1, window=win, out_shape=((s1 - s0) * WC_KAT, (c1 - c0) * WC_KAT),
                           boundless=True, fill_value=0)
-            blok = lambda x: x.reshape(s1 - s0, WC_KAT, c1 - c0, WC_KAT).sum(axis=(1, 3))
             gecerli = arr > 0
             kent = arr == 50
             su = arr == 80
-            toplam[s0:s1, c0:c1] += blok(gecerli)
-            kent_t[s0:s1, c0:c1] += blok(kent)
-            su_t[s0:s1, c0:c1] += blok(su)
-            cn_t[s0:s1, c0:c1] += blok(np.where(gecerli & ~kent & ~su, lut[arr], 0))
+            toplam[s0:s1, c0:c1] += _hucreye_topla(gecerli)
+            kent_t[s0:s1, c0:c1] += _hucreye_topla(kent)
+            su_t[s0:s1, c0:c1] += _hucreye_topla(su)
+            cn_t[s0:s1, c0:c1] += _hucreye_topla(np.where(gecerli & ~kent & ~su, lut[arr], 0))
     dogal_say = toplam - kent_t - su_t
     cn_dogal = np.where(dogal_say > 0, cn_t / np.maximum(dogal_say, 1), CN_TABLO[30]).astype(np.float32)
     kent = (kent_t / np.maximum(toplam, 1)).astype(np.float32)
@@ -362,90 +371,123 @@ async def yol_ornekleri():
     return x, y, ki, shapely.length(geoms), [dict(a) for a in alanlar]
 
 
+KM_DERECE = 111.32   # kenar uzunluğu (°) → km (enlem/boylam ortalaması yeterli)
+
+
+class SenaryoHesabi:
+    """İl geneli bir kez hazırlanan bağlam (hidroloji, arazi, ızgara, yollar,
+    yatak kapasitesi); hesapla(p, sure) bir senaryonun su derinliği ızgarasını
+    ve özetini verir."""
+
+    def __init__(self, sinir):
+        self.hd = hd = hidroloji()
+        self.tr, self.shape = hd["tr"], hd["alan"].shape
+        cn_dogal, cn_kent, kent, su = self.arazi = worldcover_cn(self.tr, self.shape)
+        hd["kalici_su"] = su > 0.5
+        # göl / deniz yüzeyi düz ovaya sayılmaz (ıslanma payı karadan hesaplanır)
+        hd["duz_et"] = np.where(hd["kalici_su"], 0, hd["duz_et"])
+        self.duz_n = np.bincount(hd["duz_et"].ravel())
+        log.info("Düz ova (belirsiz) alanı: %d parça, %.0f km²", int((self.duz_n[1:] > 0).sum()),
+                 hd["alan"][hd["duz_et"] > 0].sum() / 1e6)
+        log.info("Arazi: yapılaşma payı il çerçevesinde %%%.1f, ortalama doğal CN %.0f",
+                 kent.mean() * 100, cn_dogal.mean())
+        lon, lat = hucre_merkezleri(self.tr, self.shape)
+        self.kapsa = sinira_degen(sinir, lon, lat, self.tr.a, self.tr.e)
+        self.icinde = shapely.contains_xy(sinir, lon, lat)
+        del lon, lat
+        self.mah_id, self.mah_adlari = mahalle_izgara(self.tr, self.shape)
+        self._yollari_hazirla(sinir)
+        # yatak kapasitesi tüm havzaya (il dışı dahil) yağan 2 yıllık yağışa göre
+        self.qbf = np.maximum.reduce([havza_debisi(hd, p, sure, self.akis(sure))[0] for p, sure in YATAK_SENARYO])
+        self.hucre_km2 = hd["alan"] / 1e6
+
+    def _yollari_hazirla(self, sinir):
+        """Yol örnek noktaları (köprü / uzun tünel üstündekiler işaretli), alt
+        geçitler ve toplanma alanları."""
+        self.x, self.y, ki, uzunluk, self.alanlar = asyncio.run(yol_ornekleri())
+        kopru, alt_gecit, uzun_tunel = kopru_tunel(sinir)
+        self.koprude = yakin_mi(self.x, self.y, kopru + uzun_tunel, 0.00012)
+        self.ag_xy = (np.array([shapely.get_coordinates(g).mean(axis=0) for g in alt_gecit]) if alt_gecit
+                      else np.zeros((0, 2)))
+        self.a_xy = (np.array([(a["lon"], a["lat"]) for a in self.alanlar]) if self.alanlar
+                     else np.zeros((0, 2)))
+        # her örnek nokta kenar uzunluğunun 1/n'ini temsil eder
+        self.nokta_uzunluk = (uzunluk / np.bincount(ki, minlength=len(uzunluk)).clip(1))[ki]
+
+    def akis(self, sure):
+        """havza_debisi'nin beklediği biçimde: yağış (mm) → akış, bu süre ve arazi için."""
+        return functools.partial(_akis, sure=sure, arazi=self.arazi)
+
+    def ozet_basligi(self):
+        tr = self.tr
+        return {"yagis_mm": YAGIS_MM, "sure_sa": SURE_SA, "drenaj_mm_sa": DRENAJ_MM_SA,
+                "derinlik_sinif_m": DERIN_SINIF, "yol_kapali_m": YOL_KAPALI_M,
+                "il_km2": round(float(self.hucre_km2[self.icinde].sum())),
+                "bati": tr.c, "kuzey": tr.f, "dx": tr.a, "dy": tr.e, "senaryolar": {}}
+
+    def _derinlik(self, p, sure):
+        """(su derinliği m — düz ovada 0, düz ova "belirsiz" maskesi). Senaryo
+        yağışı yalnız il sınırı içine düşer; düz ovada parçanın ≥ DUZ_ISLAK_PAY'ı
+        ıslaksa tümü "su gelir, derinlik belirsiz"."""
+        hd = self.hd
+        d = derinlik(hd, *havza_debisi(hd, p, sure, self.akis(sure), self.icinde), self.qbf)
+        et = hd["duz_et"]
+        islak_pay = (np.bincount(et.ravel(), weights=(d >= DERIN_SINIF[0]).ravel(), minlength=len(self.duz_n))
+                     / np.maximum(self.duz_n, 1))
+        belirsiz = (et > 0) & (islak_pay[et] >= DUZ_ISLAK_PAY)
+        return np.where(et > 0, 0, d), belirsiz
+
+    def hesapla(self, p, sure):
+        """→ (desimetre ızgarası uint8, BELIRSIZ = düz ova; senaryo özeti)."""
+        t = time.time()
+        d, belirsiz = self._derinlik(p, sure)
+        desimetre = np.clip(np.round(d * 10), 0, BELIRSIZ - 1)
+        dizi = np.where(self.kapsa, np.where(belirsiz, BELIRSIZ, desimetre), 0).astype(np.uint8)
+        di = np.where(self.icinde, d, 0)
+        alan_km2 = {f"{e}": round(float(self.hucre_km2[di >= e].sum()), 1) for e in DERIN_SINIF}
+        # yollar: suyun ≥ YOL_KAPALI_M olduğu örnek noktalarının temsil ettiği uzunluk (köprüler hariç)
+        yd = raster_ornekle(d, self.tr, self.x, self.y)
+        yd[self.koprude] = 0
+        kapali_km = float((self.nokta_uzunluk * (yd >= YOL_KAPALI_M)).sum() * KM_DERECE)
+        # alt geçitler: kentte drenajın taşıyamadığı su ≥ 10 mm ise dolar
+        q_kent_fazla = np.maximum(scs_akis(p, CN_TABLO[50]) - DRENAJ_MM_SA * sure, 0)
+        ag_dolu = int(len(self.ag_xy)) if q_kent_fazla >= 10 else 0
+        ozet = {"yagis_mm": p, "sure_sa": sure, "su_alan_km2": alan_km2,
+                "belirsiz_km2": round(float(self.hucre_km2[belirsiz & self.icinde].sum()), 1),
+                "yol_kapali_km": round(kapali_km, 1),
+                "alt_gecit_dolu": ag_dolu, "alt_gecit_toplam": int(len(self.ag_xy)),
+                **self._toplanma_ozeti(d), "mahalleler": self._mahalle_ozeti(di)}
+        log.info("%3d mm / %2d sa: ≥0.3 m su %.1f km², kapalı yol %.0f km, toplanma %d, alt geçit %d — %.0f sn",
+                 p, sure, alan_km2["0.3"], ozet["yol_kapali_km"], ozet["toplanma_etkilenen_sayi"], ag_dolu,
+                 time.time() - t)
+        return dizi, ozet
+
+    def _toplanma_ozeti(self, d):
+        a = self.alanlar
+        ad = raster_ornekle(d, self.tr, self.a_xy[:, 0], self.a_xy[:, 1]) if len(self.a_xy) else np.zeros(0)
+        return {"toplanma_etkilenen": [{"adi": a[i]["adi"], "ilce": a[i]["ilce"], "derinlik_m": round(float(ad[i]), 1)}
+                                       for i in np.argsort(ad)[::-1] if ad[i] >= YOL_KAPALI_M][:30],
+                "toplanma_etkilenen_sayi": int((ad >= YOL_KAPALI_M).sum()),
+                "toplanma_toplam": len(a)}
+
+    def _mahalle_ozeti(self, di):
+        """En çok etkilenen 15 mahalle (≥ DERIN_SINIF[1] suyun km²'si, ≥ 0.01 km²)."""
+        etk = np.bincount(self.mah_id.ravel(), weights=((di >= DERIN_SINIF[1]) * self.hucre_km2).ravel(),
+                          minlength=len(self.mah_adlari) + 1)
+        return [{"ilce": self.mah_adlari[i - 1][0], "mahalle": self.mah_adlari[i - 1][1],
+                 "km2": round(float(etk[i]), 2)} for i in np.argsort(etk)[::-1][:15] if i > 0 and etk[i] >= 0.01]
+
+
 def main():
     gunlugu_kur()
     sinir = il_poligonu()
     dem_mozaik(sinir)
     t0 = time.time()
-    hd = hidroloji()
-    tr, shape = hd["tr"], hd["alan"].shape
-    cn_dogal, cn_kent, kent, su = worldcover_cn(tr, shape)
-    hd["kalici_su"] = su > 0.5
-    # göl / deniz yüzeyi düz ovaya sayılmaz (ıslanma payı karadan hesaplanır)
-    hd["duz_et"] = np.where(hd["kalici_su"], 0, hd["duz_et"])
-    duz_n = np.bincount(hd["duz_et"].ravel())
-    log.info("Düz ova (belirsiz) alanı: %d parça, %.0f km²", int((duz_n[1:] > 0).sum()),
-             hd["alan"][hd["duz_et"] > 0].sum() / 1e6)
-    log.info("Arazi: yapılaşma payı il çerçevesinde %%%.1f, ortalama doğal CN %.0f",
-             kent.mean() * 100, cn_dogal.mean())
-
-    lon, lat = hucre_merkezleri(tr, shape)
-    kapsa = sinira_degen(sinir, lon, lat, tr.a, tr.e)
-    icinde = shapely.contains_xy(sinir, lon, lat)
-    del lon, lat
-    mah_id, mah_adlari = mahalle_izgara(tr, shape)
-
-    x, y, ki, uzunluk, alanlar = asyncio.run(yol_ornekleri())
-    kopru, alt_gecit, uzun_tunel = kopru_tunel(sinir)
-    koprude = yakin_mi(x, y, kopru + uzun_tunel, 0.00012)
-    ag_xy = np.array([shapely.get_coordinates(g).mean(axis=0) for g in alt_gecit]) if alt_gecit else np.zeros((0, 2))
-    a_xy = np.array([(a["lon"], a["lat"]) for a in alanlar]) if alanlar else np.zeros((0, 2))
-    km_derece = 111.32   # kenar uzunluğu (°) → km (enlem/boylam ortalaması yeterli)
-    nokta_uzunluk = (uzunluk / np.bincount(ki, minlength=len(uzunluk)).clip(1))[ki]
-
-    akis = lambda sure: (lambda p: senaryo_akisi(p, sure, cn_dogal, cn_kent, kent, su))
-    # yatak kapasitesi tüm havzaya (il dışı dahil) yağan 2 yıllık yağışa göre
-    qbf = np.maximum.reduce([havza_debisi(hd, p, sure, akis(sure))[0] for p, sure in YATAK_SENARYO])
-    hucre_km2 = hd["alan"] / 1e6
-    il_km2 = float(hucre_km2[icinde].sum())
-    sonuc, ozet = {}, {"yagis_mm": YAGIS_MM, "sure_sa": SURE_SA, "drenaj_mm_sa": DRENAJ_MM_SA,
-                       "derinlik_sinif_m": DERIN_SINIF, "yol_kapali_m": YOL_KAPALI_M,
-                       "il_km2": round(il_km2), "bati": tr.c, "kuzey": tr.f, "dx": tr.a, "dy": tr.e,
-                       "senaryolar": {}}
+    hesap = SenaryoHesabi(sinir)
+    sonuc, ozet = {}, hesap.ozet_basligi()
     for sure in SURE_SA:
         for p in YAGIS_MM:
-            t = time.time()
-            # senaryo yağışı yalnız il sınırı içine düşer
-            d = derinlik(hd, *havza_debisi(hd, p, sure, akis(sure), icinde), qbf)
-            # düz ovada: parçanın ≥ %10'u ıslaksa tümü "su gelir, derinlik belirsiz"
-            et = hd["duz_et"]
-            islak_pay = (np.bincount(et.ravel(), weights=(d >= DERIN_SINIF[0]).ravel(), minlength=len(duz_n))
-                         / np.maximum(duz_n, 1))
-            belirsiz = (et > 0) & (islak_pay[et] >= DUZ_ISLAK_PAY)
-            d = np.where(et > 0, 0, d)
-            sonuc[f"d_{p}_{sure}"] = np.where(kapsa, np.where(belirsiz, BELIRSIZ,
-                                                              np.clip(np.round(d * 10), 0, BELIRSIZ - 1)), 0).astype(np.uint8)
-            di = np.where(icinde, d, 0)
-            alan_km2 = {f"{e}": round(float(hucre_km2[di >= e].sum()), 1) for e in DERIN_SINIF}
-            # yollar: suyun ≥ YOL_KAPALI_M olduğu örnek noktalarının temsil ettiği
-            # uzunluk (köprüler hariç); her nokta kenar uzunluğunun 1/n'i
-            yd = raster_ornekle(d, tr, x, y)
-            yd[koprude] = 0
-            kapali_km = float((nokta_uzunluk * (yd >= YOL_KAPALI_M)).sum() * km_derece)
-            # alt geçitler: kentte drenajın taşıyamadığı su ≥ 10 mm ise dolar
-            q_kent_fazla = np.maximum(scs_akis(p, CN_TABLO[50]) - DRENAJ_MM_SA * sure, 0)
-            ag_dolu = int(len(ag_xy)) if q_kent_fazla >= 10 else 0
-            ad = raster_ornekle(d, tr, a_xy[:, 0], a_xy[:, 1]) if len(a_xy) else np.zeros(0)
-            etk = np.bincount(mah_id.ravel(), weights=((di >= DERIN_SINIF[1]) * hucre_km2).ravel(),
-                              minlength=len(mah_adlari) + 1)
-            en_cok = np.argsort(etk)[::-1][:15]
-            ozet["senaryolar"][f"{p}_{sure}"] = {
-                "yagis_mm": p, "sure_sa": sure,
-                "su_alan_km2": alan_km2,
-                "belirsiz_km2": round(float(hucre_km2[belirsiz & icinde].sum()), 1),
-                "yol_kapali_km": round(kapali_km, 1),
-                "alt_gecit_dolu": ag_dolu, "alt_gecit_toplam": int(len(ag_xy)),
-                "toplanma_etkilenen": [{"adi": alanlar[i]["adi"], "ilce": alanlar[i]["ilce"],
-                                        "derinlik_m": round(float(ad[i]), 1)}
-                                       for i in np.argsort(ad)[::-1] if ad[i] >= YOL_KAPALI_M][:30],
-                "toplanma_etkilenen_sayi": int((ad >= YOL_KAPALI_M).sum()),
-                "toplanma_toplam": len(alanlar),
-                "mahalleler": [{"ilce": mah_adlari[i - 1][0], "mahalle": mah_adlari[i - 1][1],
-                                "km2": round(float(etk[i]), 2)} for i in en_cok if i > 0 and etk[i] >= 0.01],
-            }
-            log.info("%3d mm / %2d sa: ≥0.3 m su %.1f km², kapalı yol %.0f km, toplanma %d, alt geçit %d — %.0f sn",
-                     p, sure, alan_km2["0.3"], ozet["senaryolar"][f"{p}_{sure}"]["yol_kapali_km"],
-                     ozet["senaryolar"][f"{p}_{sure}"]["toplanma_etkilenen_sayi"], ag_dolu, time.time() - t)
+            sonuc[f"d_{p}_{sure}"], ozet["senaryolar"][f"{p}_{sure}"] = hesap.hesapla(p, sure)
     os.makedirs(MODEL_DIR, exist_ok=True)
     np.savez_compressed(SENARYO, **sonuc)
     json_yaz(SENARYO_OZETI, ozet, okunur=True)
@@ -456,7 +498,6 @@ def main():
     except Exception as e:
         log.warning("Senaryo suyu yollara yazılamadı (migrations/011 uygulandı mı?): %s — "
                     "sonra 'venv/bin/python -m hesap.sel_senaryo_yollar' çalıştırın", e)
-
 
 if __name__ == "__main__":
     main()

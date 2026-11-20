@@ -1,9 +1,8 @@
 """Kademeli yağış senaryosu (çalışma zamanı): hesap/sel_senaryo_hazirla.py'nin
 çevrimdışı hesapladığı su derinliklerini harita görüntüsü ve özet olarak sunar."""
-import json
-
 import numpy as np
 
+from afet.dosya import json_oku
 from afet.izgara import IzgaraKatmani, mercator_satirlari, renkli_png
 from afet.yollar import SENARYO, SENARYO_OZETI
 
@@ -30,8 +29,7 @@ class SelSenaryolari(IzgaraKatmani):
 
     def ozet(self):
         if self._ozet is None:
-            with open(self.ozet_dosyasi, encoding="utf-8") as f:
-                self._ozet = json.load(f)
+            self._ozet = json_oku(self.ozet_dosyasi)
         return self._ozet
 
     def dizi(self, p, sure):
@@ -56,7 +54,7 @@ class SelSenaryolari(IzgaraKatmani):
             "status": "ok",
             "yagis_mm": o["yagis_mm"], "sure_sa": o["sure_sa"], "drenaj_mm_sa": o["drenaj_mm_sa"],
             "bounds": self.leaflet_sinirlari(),
-            "siniflar": [{"ad": ad, "renk": "rgba(%d,%d,%d,%.2f)" % (*r[:3], r[3] / 255)}
+            "siniflar": [{"ad": ad, "renk": f"rgba({r[0]},{r[1]},{r[2]},{r[3] / 255:.2f})"}
                          for ad, r in zip(DERINLIK_AD + [BELIRSIZ_AD], DERINLIK_RENK + [BELIRSIZ_RENK])],
             "il_km2": o["il_km2"],
             "senaryolar": o["senaryolar"],

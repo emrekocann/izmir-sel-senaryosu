@@ -41,14 +41,10 @@ import shapely
 
 from afet import ag
 from afet.sinir import tkgm_ilceler
-from afet.yollar import CN_DOSYASI, DEM_TIF, EGITIM_DIR, ITFAIYE_HAM_DIR
+from afet.yollar import CN_DOSYASI, DEM_TIF, EGITIM_DIR, ILCE_CSV, ILCE_GUN_CSV, ITFAIYE_HAM_DIR
 from hesap import gunlugu_kur
 
 log = logging.getLogger("ilce_gun")
-HAM_DIR = ITFAIYE_HAM_DIR                                  # indirilen ham dosyalar (depoda değil)
-CIKTI_DIR = EGITIM_DIR
-ILCE_GUN_CSV = os.path.join(CIKTI_DIR, "ilce_gun.csv")
-ILCE_CSV = os.path.join(CIKTI_DIR, "ilce.csv")
 
 CKAN = "https://acikveri.bizizmir.com/api/3/action/package_show?id="
 HIZMET_PAKETI = "izmir-itfaiyesi-kontrol-emniyet-tedbir-ve-vatandasa-verilen-hizmetlerin-istatistigi"
@@ -86,7 +82,7 @@ def cagri_turu(hizmet_tipi):
 # ── İndirme ─────────────────────────────────────────────────────────────────
 
 def _paket_kaynaklari(paket):
-    return ag.json_getir(CKAN + paket, os.path.join(HAM_DIR, f"{paket}.json"))["result"]["resources"]
+    return ag.json_getir(CKAN + paket, os.path.join(ITFAIYE_HAM_DIR, f"{paket}.json"))["result"]["resources"]
 
 
 def hizmet_dosyalari():
@@ -97,7 +93,7 @@ def hizmet_dosyalari():
         if not yil or int(yil.group(1)) < ILK_YIL:
             continue
         uzanti = ".xls" if r["url"].lower().endswith(".xls") else ".xlsx"
-        yol = os.path.join(HAM_DIR, f"hizmet_{yil.group(1)}{uzanti}")
+        yol = os.path.join(ITFAIYE_HAM_DIR, f"hizmet_{yil.group(1)}{uzanti}")
         ag.getir(r["url"], yol, dogrula=_excel_mi)
         out.append((int(yil.group(1)), yol))
     return sorted(out)
@@ -210,7 +206,7 @@ def kent_ozellikleri(ilce_listesi):
 def nufus(ilce_adlari):
     """İlçe nüfusu (en son yıl): Series ilce → kişi."""
     r = next(r for r in _paket_kaynaklari(NUFUS_PAKETI) if (r.get("format") or "").upper() == "CSV")
-    yol = os.path.join(HAM_DIR, "ilce_nufus.csv")
+    yol = os.path.join(ITFAIYE_HAM_DIR, "ilce_nufus.csv")
     ag.getir(r["url"], yol)
     df = pd.read_csv(yol, sep=";", encoding="utf-8-sig", dtype={"ERKEK": float, "KADIN": float})
     df = df[df.TARIH == df.TARIH.max()]
@@ -225,12 +221,12 @@ def nufus(ilce_adlari):
 
 def saatlik_arsiv(url, ilce_df, bas, bit, degisken, dosya, **params):
     """Her ilçe noktası için saatlik bir Open-Meteo değişkeni: DataFrame(ilce, zaman, mm).
-    Bütün noktalar tek istekte, yıl yıl istenir; dosya: HAM_DIR'deki önbellek
+    Bütün noktalar tek istekte, yıl yıl istenir; dosya: ITFAIYE_HAM_DIR'deki önbellek
     adının kalıbı ({yil}, {bas}, {bit}). Eksik saatler NaN kalır."""
     parcalar = []
     for yil, b, s in ag.yillara_bol(bas, bit):
         ad = dosya.format(yil=yil, bas=b, bit=s)
-        veri = ag.open_meteo_arsiv(url, ilce_df.yagis_lat, ilce_df.yagis_lon, b, s, os.path.join(HAM_DIR, ad),
+        veri = ag.open_meteo_arsiv(url, ilce_df.yagis_lat, ilce_df.yagis_lon, b, s, os.path.join(ITFAIYE_HAM_DIR, ad),
                                    hourly=degisken, **params)
         parcalar += [pd.DataFrame({"ilce": ilce, "zaman": pd.to_datetime(v["hourly"]["time"]),
                                    "mm": pd.to_numeric(v["hourly"][degisken])}) for ilce, v in zip(ilce_df.ilce, veri)]
@@ -287,8 +283,8 @@ def ilce_gun_tablosu(cagri, yagis, ilce_df):
 
 def main():
     gunlugu_kur()
-    os.makedirs(HAM_DIR, exist_ok=True)
-    os.makedirs(CIKTI_DIR, exist_ok=True)
+    os.makedirs(ITFAIYE_HAM_DIR, exist_ok=True)
+    os.makedirs(EGITIM_DIR, exist_ok=True)
     il = ilceler()
     ilce_adlari = {anahtar(ad): ad for ad, _ in il}
 

@@ -7,7 +7,7 @@ import pytest
 from sklearn.ensemble import RandomForestClassifier
 
 from afet.dosya import json_oku
-from hesap import ols_model as om
+from afet.yollar import SINIFLANDIRMA_SONUC
 from hesap import siniflandirma as sn
 
 
@@ -35,9 +35,9 @@ def _sentetik(n_ilce=5, n_gun=6 * 365, tohum=1):
 # testte hızlı: küçük ızgaralar, küçük orman
 HIZLI = {
     "temel": sn.MODELLER["temel"],
-    "lojistik": (sn._lojistik, om.OZELLIKLER, {"logisticregression__C": [0.1, 1]}, "lojistik"),
-    "rf": (lambda: RandomForestClassifier(n_estimators=30, n_jobs=-1, random_state=0), sn.AGAC_OZ,
-           {"min_samples_leaf": [20]}, "rf"),
+    "lojistik": sn.MODELLER["lojistik"]._replace(izgara={"logisticregression__C": [0.1, 1]}),
+    "rf": sn.ModelTanimi(lambda: RandomForestClassifier(n_estimators=30, n_jobs=-1, random_state=0), sn.AGAC_OZ,
+                         {"min_samples_leaf": [20]}, "rf"),
 }
 
 
@@ -72,9 +72,9 @@ def test_uctan_uca_sentetik():
         assert p[-1] > p[0]                                                 # çok yağış, daha çok olasılık
 
 
-@pytest.mark.skipif(not os.path.exists(sn.SONUC_JSON), reason="model eğitilmedi")
+@pytest.mark.skipif(not os.path.exists(SINIFLANDIRMA_SONUC), reason="model eğitilmedi")
 def test_sonuc_dosyasi_sozlesmesi():
-    r = json_oku(sn.SONUC_JSON)
+    r = json_oku(SINIFLANDIRMA_SONUC)
     assert set(r["modeller"]) == set(sn.MODELLER) and r["secili"] in sn.MODELLER
     for ad in sn.MODELLER:
         assert {"auc", "ap", "brier", "kesinlik", "duyarlilik", "esik", "il"} <= set(r["zaman_sinamasi"][ad])

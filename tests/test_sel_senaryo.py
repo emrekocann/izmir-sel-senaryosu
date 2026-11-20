@@ -1,7 +1,7 @@
 import numpy as np
 
 from hesap.sel_senaryo_hazirla import (DRENAJ_MM_SA, SEVIYE_M, havuz_doldur, kesit_debisi, scs_akis,
-                                 senaryo_akisi, seviye_bul)
+                                       senaryo_akisi, seviye_bul)
 
 
 def test_scs_akis_tr55_degerleri():
@@ -30,7 +30,10 @@ def test_cukur_alttan_dolar_ve_tasmaz():
     taban = np.array([[0.0, 1.0, 2.0, 5.0]])
     tasma = np.full((1, 4), 3.0)
     alan = np.ones((1, 4))
-    d = lambda v: havuz_doldur(et, taban, tasma, alan, np.array([0, v]))[0]
+
+    def d(v):
+        return havuz_doldur(et, taban, tasma, alan, np.array([0, v]))[0]
+
     assert np.allclose(d(0), 0)
     assert np.allclose(d(1), [1, 0, 0, 0])            # 1 m³ dipteki hücreyi 1 m doldurur
     assert np.allclose(d(2), [1.5, 0.5, 0, 0])        # seviye 1.5 m

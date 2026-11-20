@@ -27,6 +27,9 @@ export function alanAdi(alan) {
   return eslesme ? T(`${eslesme[1]} No'lu Alan`, `Area No. ${eslesme[1]}`) : baslik(alan.adi);
 }
 
+/** Metre → "30 cm" (eşik metinleri için). */
+export const cm = (metre) => `${sayi(metre * 100)} cm`;
+
 export const mesafe = (metre) => (metre >= 1000 ? `${sayi(metre / 1000, 1)} km` : `${sayi(metre)} m`);
 
 /** Yüzde işareti dile göre: tr "%36", en "36%" (metin: hazır sayı ya da aralık). */

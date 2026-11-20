@@ -6,9 +6,9 @@ import pytest
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 
+from afet.yollar import ILCE_CSV
 from hesap import siniflandirma as sn
 from hesap import uyari_hazirla as uh
-from hesap.ilce_gun import ILCE_CSV
 
 
 def test_islak_gecmis_olay_gunlerinin_ortancasi():
@@ -27,7 +27,9 @@ def test_butun_ilceler_sinirla_eslesir():
 def _gwr_sonucu(ilceler):
     """gwr_sonuc.json biçiminde küçük örnek: ad → (günün yağışı katsayı aralığı, önceki 7 gün aralığı)."""
     def ilce(ad, ay, a7, k):
-        c = lambda a: {"deger": 2.0, "aralik_95": [round(1 + a[0], 2), round(1 + a[1], 2)]}
+        def c(a):
+            return {"deger": 2.0, "aralik_95": [round(1 + a[0], 2), round(1 + a[1], 2)]}
+
         return {"ilce": ad, "katsayi": {"log_yagis": k, "log_max_nokta": k * 1.1},
                 "aralik_95": {"log_yagis": ay, "log_onceki7g": a7},
                 "carpan_10_40": {"log_yagis": c(ay), "log_onceki7g": c(a7)}}

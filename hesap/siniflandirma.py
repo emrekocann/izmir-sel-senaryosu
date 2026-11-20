@@ -58,8 +58,8 @@ verilerle eğitilmiş seçili modelden; önceki günler kuru varsayımıyla).
 Çalıştırma: venv/bin/python -m hesap.siniflandirma
 """
 import logging
-import os
 import time
+from typing import Callable, NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -73,12 +73,11 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
+from afet.yollar import ILCE_GUN_CSV, SINIFLANDIRMA_SONUC
 from hesap import gunlugu_kur, sonucu_yaz
 from hesap import ols_model as om
-from hesap.ilce_gun import CIKTI_DIR, ILCE_GUN_CSV
 
 log = logging.getLogger("siniflandirma")
-SONUC_JSON = os.path.join(CIKTI_DIR, "siniflandirma_sonuc.json")
 
 OLAY_ESIK = 3                         # ilçe-günde ≥ bu kadar su çağrısı = olay
 TOHUM = 0
@@ -86,34 +85,60 @@ YAGIS_HAM = ["yagis_mm", "yagis_max1s_mm", "yagis_max3s_mm", "yagis_dun_mm",
              "yagis_onceki3g_mm", "yagis_onceki7g_mm"]
 AGAC_OZ = YAGIS_HAM + ["log_nufus", "kent_payi"]
 TABLO_YAGIS = [0, 10, 20, 30, 40, 60, 80, 120]     # olasılık tablosunun günlük yağış adımları (mm)
+KURU = {"yagis_dun_mm": 0.0, "yagis_onceki3g_mm": 0.0, "yagis_onceki7g_mm": 0.0}   # önceki günler kuru
 ACIKLAMA = {**om.ACIKLAMA,
             "yagis_mm": "o günün yağışı (mm)", "yagis_max1s_mm": "en yoğun 1 saat (mm)",
             "yagis_max3s_mm": "en yoğun 3 saat (mm)", "yagis_dun_mm": "dünkü yağış (mm)",
             "yagis_onceki3g_mm": "önceki 3 gün (mm)", "yagis_onceki7g_mm": "önceki 7 gün (mm)"}
 
 
-def _lojistik():
+class ModelTanimi(NamedTuple):
+    """Bir modelin tarifi; ayarla ve sınamalar yalnız bunu okur."""
+    kur: Callable              # () → eğitilmemiş yeni model
+    kolonlar: list             # modelin gördüğü değişkenler
+    izgara: dict               # hiperparametre ızgarası ({}: ayar yok)
+    aciklama: str
+
+
+class Ayar(NamedTuple):
+    """ayarla'nın sonucu: parametreleri seçilmiş (eğitilmemiş) model ve eşiği."""
+    model: object
+    parametreler: dict
+    ic_ap: float               # eğitim yıllarındaki yıl-dışarıda AP
+    esik: float                # alarm eşiği (aynı dışarıda tahminlerde F1'i en yükselten)
+
+
+def lojistik_kur():
     return make_pipeline(StandardScaler(), LogisticRegression(max_iter=5000))
 
 
-def _gb():
-    # yağış ↑ → olasılık ↓ olamaz; nüfus ve kent payı serbest
+def agac_kur():
+    return DecisionTreeClassifier(random_state=TOHUM)
+
+
+def rf_kur():
+    return RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=TOHUM)
+
+
+def gb_kur(monoton=None, **parametreler):
+    """Gradient boosting; monoton (varsayılan YAGIS_HAM) değişkenler artınca olasılık
+    düşemez. Nüfus ve kent payı serbest."""
+    monoton = YAGIS_HAM if monoton is None else monoton
     return HistGradientBoostingClassifier(max_iter=300, random_state=TOHUM,
-                                          monotonic_cst={k: 1 for k in YAGIS_HAM})
+                                          monotonic_cst={k: 1 for k in monoton}, **parametreler)
 
 
-# ad → (kurucu, kolonlar, ızgara, açıklama)
 MODELLER = {
-    "temel": (_lojistik, om.TEMEL, {}, "yağışsız lojistik regresyon (nüfus + kent payı)"),
-    "lojistik": (_lojistik, om.OZELLIKLER,
-                 {"logisticregression__C": [0.01, 0.1, 1, 10]}, "lojistik regresyon (OLS değişkenleri)"),
-    "agac": (lambda: DecisionTreeClassifier(random_state=TOHUM), AGAC_OZ,
-             {"max_depth": [3, 5, 8], "min_samples_leaf": [20, 50, 100]}, "karar ağacı"),
-    "rf": (lambda: RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=TOHUM), AGAC_OZ,
-           {"min_samples_leaf": [5, 20, 50], "max_features": [0.33, 0.66]}, "Random Forest"),
-    "gb": (_gb, AGAC_OZ,
-           {"learning_rate": [0.03, 0.1], "max_leaf_nodes": [7, 15, 31], "min_samples_leaf": [20, 100]},
-           "gradient boosting (yağışa monoton)"),
+    "temel": ModelTanimi(lojistik_kur, om.TEMEL, {}, "yağışsız lojistik regresyon (nüfus + kent payı)"),
+    "lojistik": ModelTanimi(lojistik_kur, om.OZELLIKLER, {"logisticregression__C": [0.01, 0.1, 1, 10]},
+                            "lojistik regresyon (OLS değişkenleri)"),
+    "agac": ModelTanimi(agac_kur, AGAC_OZ, {"max_depth": [3, 5, 8], "min_samples_leaf": [20, 50, 100]},
+                        "karar ağacı"),
+    "rf": ModelTanimi(rf_kur, AGAC_OZ, {"min_samples_leaf": [5, 20, 50], "max_features": [0.33, 0.66]},
+                      "Random Forest"),
+    "gb": ModelTanimi(gb_kur, AGAC_OZ,
+                      {"learning_rate": [0.03, 0.1], "max_leaf_nodes": [7, 15, 31], "min_samples_leaf": [20, 100]},
+                      "gradient boosting (yağışa monoton)"),
 }
 
 
@@ -146,20 +171,20 @@ def f1_esigi(y, p):
 
 
 def ayarla(ad, egitim, modeller=MODELLER):
-    """Izgara araması, eğitim yıllarında yıl-dışarıda; (en iyi model, parametre, iç AP, eşik)."""
-    kur, kolonlar, izgara, _ = modeller[ad]
-    cv, g = LeaveOneGroupOut(), egitim.yil.values
-    if izgara:
-        ara = GridSearchCV(kur(), izgara, scoring="average_precision", cv=cv, refit=False)
-        ara.fit(egitim[kolonlar], egitim.olay, groups=g)
+    """Izgara araması, eğitim yıllarında yıl-dışarıda → Ayar."""
+    tanim = modeller[ad]
+    x, cv, g = egitim[tanim.kolonlar], LeaveOneGroupOut(), egitim.yil.values
+    if tanim.izgara:
+        ara = GridSearchCV(tanim.kur(), tanim.izgara, scoring="average_precision", cv=cv, refit=False)
+        ara.fit(x, egitim.olay, groups=g)
         prm, ic_ap = ara.best_params_, float(ara.best_score_)
     else:
         prm, ic_ap = {}, None
-    m = kur().set_params(**prm)
-    oof = cross_val_predict(m, egitim[kolonlar], egitim.olay, groups=g, cv=cv, method="predict_proba")[:, 1]
+    m = tanim.kur().set_params(**prm)
+    oof = cross_val_predict(m, x, egitim.olay, groups=g, cv=cv, method="predict_proba")[:, 1]
     if ic_ap is None:
         ic_ap = float(average_precision_score(egitim.olay, oof))
-    return m, prm, round(ic_ap, 3), f1_esigi(egitim.olay, oof)
+    return Ayar(m, prm, round(ic_ap, 3), f1_esigi(egitim.olay, oof))
 
 
 def il_gunleri(test, p, esik):
@@ -172,31 +197,32 @@ def il_gunleri(test, p, esik):
             "alarm_gunu": int(d.a.sum()), "gun": int(len(d))}
 
 
-def zaman_sinamasi(t, ayar):
+def zaman_sinamasi(t, ayar, modeller=MODELLER):
+    """Eğitim yıllarıyla eğitilir, test yılları (hiç görülmemiş) tahmin edilir."""
     egitim, test = t[~t.yil.isin(om.TEST_YILLARI)], t[t.yil.isin(om.TEST_YILLARI)]
     out, tahminler = {}, {}
-    for ad, (m, _, _, esik) in ayar.items():
-        kolonlar = MODELLER[ad][1]
-        m = clone(m).fit(egitim[kolonlar], egitim.olay)
+    for ad, a in ayar.items():
+        kolonlar = modeller[ad].kolonlar
+        m = clone(a.model).fit(egitim[kolonlar], egitim.olay)
         p = m.predict_proba(test[kolonlar])[:, 1]
-        out[ad] = {**olculer(test.olay, p, esik), "esik": round(esik, 3), "il": il_gunleri(test, p, esik)}
+        out[ad] = {**olculer(test.olay, p, a.esik), "esik": round(a.esik, 3), "il": il_gunleri(test, p, a.esik)}
         tahminler[ad] = (m, p)
     return out, tahminler, test
 
 
-def mekan_sinamasi(t, ayar):
+def mekan_sinamasi(t, ayar, modeller=MODELLER):
     """Her ilçe dışarıda; tahminler birleştirilip ölçülür. Rastgele 5-katlı
     sınama sızıntının etkisini göstermek için yanında hesaplanır."""
     out, ilce_p = {}, {}
-    for ad, (m, _, _, esik) in ayar.items():
-        kolonlar = MODELLER[ad][1]
+    for ad, a in ayar.items():
+        kolonlar = modeller[ad].kolonlar
         p = np.zeros(len(t))
         for ilce in t.ilce.unique():
             k = (t.ilce == ilce).values
-            p[k] = clone(m).fit(t.loc[~k, kolonlar], t.olay[~k]).predict_proba(t.loc[k, kolonlar])[:, 1]
-        r = cross_val_predict(clone(m), t[kolonlar], t.olay, method="predict_proba",
+            p[k] = clone(a.model).fit(t.loc[~k, kolonlar], t.olay[~k]).predict_proba(t.loc[k, kolonlar])[:, 1]
+        r = cross_val_predict(clone(a.model), t[kolonlar], t.olay, method="predict_proba",
                               cv=KFold(5, shuffle=True, random_state=TOHUM))[:, 1]
-        out[ad] = {"ilce_disarida": olculer(t.olay, p, esik), "rastgele_5kat": olculer(t.olay, r, esik)}
+        out[ad] = {"ilce_disarida": olculer(t.olay, p, a.esik), "rastgele_5kat": olculer(t.olay, r, a.esik)}
         ilce_p[ad] = p
     return out, ilce_p
 
@@ -215,9 +241,6 @@ def onem(m, test, kolonlar, n=5):
     return sorted(({"ad": k, "aciklama": ACIKLAMA.get(k, k), "ap_dususu": round(float(o), 4),
                     "std": round(float(s), 4)} for k, o, s in zip(kolonlar, r.importances_mean, r.importances_std)),
                   key=lambda x: -x["ap_dususu"])
-
-
-KURU = {"yagis_dun_mm": 0.0, "yagis_onceki3g_mm": 0.0, "yagis_onceki7g_mm": 0.0}
 
 
 def olasilik_tablosu(t, m, kolonlar, onceki=None):
@@ -249,28 +272,28 @@ def calistir(t, modeller=MODELLER):
     for ad in modeller:
         s = time.time()
         ayar[ad] = ayarla(ad, egitim, modeller)
-        log.info("%s ayarlandı (%.0f sn): %s, iç AP %s", ad, time.time() - s, ayar[ad][1], ayar[ad][2])
+        log.info("%s ayarlandı (%.0f sn): %s, iç AP %s", ad, time.time() - s, ayar[ad].parametreler, ayar[ad].ic_ap)
     # seçim: yağışlı modeller içinde iç sınama AP'si en yüksek olan (test sonucuna bakılmaz)
-    secili = max((a for a in ayar if a != "temel"), key=lambda a: ayar[a][2])
-    zaman, tahminler, test = zaman_sinamasi(t, ayar)
+    secili = max((a for a in ayar if a != "temel"), key=lambda a: ayar[a].ic_ap)
+    zaman, tahminler, test = zaman_sinamasi(t, ayar, modeller)
     log.info("zaman sınaması bitti")
-    mekan, ilce_p = mekan_sinamasi(t, ayar)
+    mekan, ilce_p = mekan_sinamasi(t, ayar, modeller)
     log.info("mekân sınaması bitti")
-    kolonlar = modeller[secili][1]
-    tum = clone(ayar[secili][0]).fit(t[kolonlar], t.olay)
+    kolonlar = modeller[secili].kolonlar
+    tum = clone(ayar[secili].model).fit(t[kolonlar], t.olay)
     return {
         "veri": {"satir": len(t), "ilce": int(t.ilce.nunique()), "gun": int(t.gun.nunique()),
                  "yillar": [int(t.yil.min()), int(t.yil.max())], "olay": int(t.olay.sum()),
                  "olay_orani": round(float(t.olay.mean()), 4)},
         "olay_tanimi": f"ilçe-günde ≥ {OLAY_ESIK} su baskını çağrısı",
-        "modeller": {ad: {"aciklama": modeller[ad][3], "degiskenler": modeller[ad][1],
-                          "parametreler": {k.split("__")[-1]: v for k, v in ayar[ad][1].items()},
-                          "ic_ap": ayar[ad][2], "esik": round(ayar[ad][3], 3)} for ad in modeller},
+        "modeller": {ad: {"aciklama": tanim.aciklama, "degiskenler": tanim.kolonlar,
+                          "parametreler": {k.split("__")[-1]: v for k, v in ayar[ad].parametreler.items()},
+                          "ic_ap": ayar[ad].ic_ap, "esik": round(ayar[ad].esik, 3)} for ad, tanim in modeller.items()},
         "secili": secili,
         "secim": "yağışlı modeller içinde eğitim yıllarındaki yıl-dışarıda sınamanın AP'si en yüksek olan",
         "zaman_sinamasi": zaman,
         "mekan_sinamasi": mekan,
-        "ilce": ilce_sonuclari(t, ilce_p[secili], ayar[secili][3]),
+        "ilce": ilce_sonuclari(t, ilce_p[secili], ayar[secili].esik),
         "onem": onem(tahminler[secili][0], test, kolonlar),
         "olasilik_tablosu": olasilik_tablosu(t, tum, kolonlar),
     }
@@ -284,11 +307,13 @@ def yazdir(r):
           f"{'ilçe-dış AUC':>12} {'AP':>6} | {'rastgele AP':>11}")
     for ad, m in r["modeller"].items():
         z, k = r["zaman_sinamasi"][ad], r["mekan_sinamasi"][ad]
-        print(f"{ad:9} {m['ic_ap']:6.3f} | {z['auc']:9.3f} {z['ap']:6.3f} {z['kesinlik']:8.2f} {z['duyarlilik']:10.2f} | "
+        print(f"{ad:9} {m['ic_ap']:6.3f} | {z['auc']:9.3f} {z['ap']:6.3f} "
+              f"{z['kesinlik']:8.2f} {z['duyarlilik']:10.2f} | "
               f"{k['ilce_disarida']['auc']:12.3f} {k['ilce_disarida']['ap']:6.3f} | {k['rastgele_5kat']['ap']:11.3f}")
     z = r["zaman_sinamasi"][r["secili"]]
-    print(f"\nTest yıllarında (seçili, eşik {z['esik']}): {z['dogru_alarm']} doğru alarm, {z['yanlis_alarm']} yanlış alarm, "
-          f"{z['kacirilan']} kaçırılan olay; büyük olay günlerinin {z['il']['alarmli']}/{z['il']['buyuk_olay_gunu']}'inde alarm")
+    print(f"\nTest yıllarında (seçili, eşik {z['esik']}): {z['dogru_alarm']} doğru alarm, "
+          f"{z['yanlis_alarm']} yanlış alarm, {z['kacirilan']} kaçırılan olay; "
+          f"büyük olay günlerinin {z['il']['alarmli']}/{z['il']['buyuk_olay_gunu']}'inde alarm")
     print("Önem (AP düşüşü):", ", ".join(f"{o['ad']} {o['ap_dususu']:.3f}" for o in r["onem"]))
     tb = r["olasilik_tablosu"]
     print(f"\nOlasılık tablosu (günlük mm: {tb['yagis_mm']}), örnekler:")
@@ -300,7 +325,7 @@ def yazdir(r):
 def main():
     gunlugu_kur()
     r = calistir(pd.read_csv(ILCE_GUN_CSV))
-    sonucu_yaz(SONUC_JSON, r, yazdir)
+    sonucu_yaz(SINIFLANDIRMA_SONUC, r, yazdir)
 
 
 if __name__ == "__main__":

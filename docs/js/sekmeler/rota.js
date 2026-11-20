@@ -3,8 +3,8 @@
 // basan yollardan kaçarak en yakın açık toplanma alanına araç rotasını o anda
 // hesaplar (js/cekirdek/rota_motoru.js). Sunucu gerekmez.
 import { T, sayi } from '../cekirdek/dil.js';
-import { senaryoAnahtari, senaryoCoz, alanAdi, baslik, kacis, mesafe, yerAdi } from '../cekirdek/bicim.js';
-import { secimDinle, sayiKutulari, senaryoSecimi, sureSecimi, lejantOgesi, suLejanti } from '../cekirdek/arayuz.js';
+import { senaryoAnahtari, senaryoCoz, cm, alanAdi, baslik, kacis, mesafe, yerAdi } from '../cekirdek/bicim.js';
+import { yagisSecimiDinle, sayiKutulari, senaryoSecimi, sureSecimi, lejantOgesi, suLejanti } from '../cekirdek/arayuz.js';
 import { ROTA_AGI, jsonOku, rotaSuyu } from '../cekirdek/veri.js';
 import { kenarCizgileri } from '../cekirdek/harita.js';
 import { agKur, suKur, enYakinDugum, rotaBul, rotaCizgisi, rotaOzeti } from '../cekirdek/rota_motoru.js';
@@ -52,6 +52,7 @@ export function rotaSekmesi({ vitrin, harita }) {
     harita.suGoster(a);
     try {
       await agYukle();
+      yontemCiz();
       const su = a ? await suYukle(a) : null;
       if (no !== istekNo || !icerik) return;          // bu arada başka seçim yapıldı
       hesapla(su);
@@ -65,12 +66,12 @@ export function rotaSekmesi({ vitrin, harita }) {
   }
 
   function suMetni(s) {
-    const o = s.ozet, parcalar = [];
+    const o = s.ozet, parcalar = [], kapali = cm(ag.ayar.kapali_m);
     if (o.derinParca) {
-      parcalar.push(T(`<b>Kuru yol yok:</b> rota ${o.derinParca} yol parçasında 30 cm'den derin sudan geçiyor (en derin ${sayi(o.enDerinM, 1)} m).`,
-                      `<b>No dry way:</b> the route crosses water deeper than 30 cm on ${o.derinParca} road segment(s) (deepest ${sayi(o.enDerinM, 1)} m).`));
+      parcalar.push(T(`<b>Kuru yol yok:</b> rota ${o.derinParca} yol parçasında ${kapali}'den derin sudan geçiyor (en derin ${sayi(o.enDerinM, 1)} m).`,
+                      `<b>No dry way:</b> the route crosses water deeper than ${kapali} on ${o.derinParca} road segment(s) (deepest ${sayi(o.enDerinM, 1)} m).`));
     } else if (s.a) {
-      parcalar.push(T("Rota 30 cm'den derin sudan geçmiyor.", 'The route avoids water deeper than 30 cm.'));
+      parcalar.push(T(`Rota ${kapali}'den derin sudan geçmiyor.`, `The route avoids water deeper than ${kapali}.`));
     }
     if (o.sigParca) {
       parcalar.push(T(`${o.sigParca} yol parçasında sığ su ya da derinliği bilinmeyen düz ova var.`,
@@ -106,8 +107,8 @@ export function rotaSekmesi({ vitrin, harita }) {
     if (!s) { kutu.innerHTML = `<p class="kucuk">${T('Yol ağı yükleniyor…', 'Loading the road network…')}</p>`; return; }
     if (s.hata) { kutu.innerHTML = `<p class="kutu kotu">${T('Yol ağı yüklenemedi.', 'The road network failed to load.')}</p>`; return; }
     if (s.disarida) {
-      kutu.innerHTML = `<p class="kutu not">${T('Bu nokta rota ağının dışında. Ağ, kesikli çizgiyle gösterilen merkez 11 ilçeyi kapsar; içinde bir yere tıkla.',
-        'This point is outside the road network. It covers the 11 central districts inside the dashed line; click somewhere inside.')}</p>`;
+      kutu.innerHTML = `<p class="kutu not">${T(`Bu nokta rota ağının dışında. Ağ, kesikli çizgiyle gösterilen merkez ${ag.ilceler.length} ilçeyi kapsar; içinde bir yere tıkla.`,
+        `This point is outside the road network. It covers the ${ag.ilceler.length} central districts inside the dashed line; click somewhere inside.`)}</p>`;
       return;
     }
     if (s.alanYok) {
@@ -197,6 +198,26 @@ export function rotaSekmesi({ vitrin, harita }) {
     icerik.querySelector('[data-yer="olay"]').innerHTML = senaryoSecimi('olay', vitrin.olay_senaryolari, anahtar() ?? '');
   }
 
+  /** "Rota nasıl hesaplanıyor?": eşikler ve ağın büyüklüğü yol ağı dosyasından (ag.json). */
+  function yontemCiz() {
+    const kutu = icerik?.querySelector('[data-yer="yontem"]');
+    if (!kutu || !ag) return;
+    const m = ag.ayar, kapali = cm(m.kapali_m), kat = sayi(m.islak_k);
+    const ilce = ag.ilceler.length, parca = sayi(Math.round(ag.e / 1000)), alan = sayi(ag.alanlar.length);
+    kutu.innerHTML = `
+      <h3>${T('Rota nasıl hesaplanıyor?', 'How is the route computed?')}</h3>
+      <ul>
+        <li>${T(`Bir noktası ${kapali}'den derin suda kalan yol kapalı sayılır; başka yol yoksa yine geçilir ve söylenir.`, `A road with any point under more than ${kapali} of water counts as closed; if there is no other way it is still used and reported.`)}</li>
+        <li>${T(`Sığ sulu ya da düz ovadaki (derinliği bilinmeyen) yol ${kat} kat pahalı sayılır; yokuş da maliyeti artırır.`, `Roads with shallow water or on a flat plain (depth unknown) cost ${kat} times more; slopes add cost too.`)}</li>
+        <li>${T('Su altındaki ya da düz ovadaki toplanma alanı hedef seçilmez; kalanların hepsi arasından en ucuz yolla ulaşılanı seçilir.', 'Assembly areas under water or on a flat plain are never chosen; of the rest, the one reached at least cost wins.')}</li>
+        <li>${T('Senaryoda alt geçitler doluysa alt geçitler de kapalıdır.', 'If the scenario floods the underpasses, they are closed too.')}</li>
+      </ul>
+      <div class="kutu not">${T('Sel anında resmi tavsiye çoğu zaman yola çıkmamak ve yüksekte kalmaktır. Bu rota bir "ne yapmalı" tavsiyesi değil; hangi yolların ve alanların kullanılamaz hale geldiğini gösteren bir planlama aracıdır.',
+                                 'During a flood the official advice is usually to stay put on high ground. This route is not advice on what to do; it is a planning aid that shows which roads and areas become unusable.')}</div>
+      <p class="kucuk">${T(`Rota tarayıcında hesaplanır: merkezdeki ${ilce} ilçenin OpenStreetMap araç yolu ağı (${parca} bin yol parçası, ${alan} toplanma alanı) ve her senaryoda yollara düşen su önceden dosyaya yazılmıştır; Dijkstra algoritması sunucudaki pgRouting sorgusuyla aynı maliyeti kullanır. Sunucu sürümündeki son 24 saatin depremleri ve trafik verisi burada yoktur.`,
+                           `The route is computed in your browser: the OpenStreetMap drive network of the ${ilce} central districts (${parca}k road segments, ${alan} assembly areas) and the water on each road in each scenario are precomputed; Dijkstra uses the same cost as the server-side pgRouting query. Live earthquakes and traffic from the server version are not included.`)}</p>`;
+  }
+
   function ciz() {
     icerik.innerHTML = `
       <h2>${T('Tahliye rotası', 'Evacuation route')}</h2>
@@ -209,17 +230,7 @@ export function rotaSekmesi({ vitrin, harita }) {
       <div class="alan-baslik">${T("2 Şubat 2021'e yakın yağışlar", 'Closest to 2 February 2021')}</div>
       <div data-yer="olay"></div>
       <div data-yer="sonuc"></div>
-      <h3>${T('Rota nasıl hesaplanıyor?', 'How is the route computed?')}</h3>
-      <ul>
-        <li>${T("Bir noktası 30 cm'den derin suda kalan yol kapalı sayılır; başka yol yoksa yine geçilir ve söylenir.", 'A road with any point under more than 30 cm of water counts as closed; if there is no other way it is still used and reported.')}</li>
-        <li>${T('Sığ sulu ya da düz ovadaki (derinliği bilinmeyen) yol 5 kat pahalı sayılır; yokuş da maliyeti artırır.', 'Roads with shallow water or on a flat plain (depth unknown) cost 5 times more; slopes add cost too.')}</li>
-        <li>${T('Su altındaki ya da düz ovadaki toplanma alanı hedef seçilmez; kalanların hepsi arasından en ucuz yolla ulaşılanı seçilir.', 'Assembly areas under water or on a flat plain are never chosen; of the rest, the one reached at least cost wins.')}</li>
-        <li>${T('Senaryoda alt geçitler doluysa alt geçitler de kapalıdır.', 'If the scenario floods the underpasses, they are closed too.')}</li>
-      </ul>
-      <div class="kutu not">${T('Sel anında resmi tavsiye çoğu zaman yola çıkmamak ve yüksekte kalmaktır. Bu rota bir "ne yapmalı" tavsiyesi değil; hangi yolların ve alanların kullanılamaz hale geldiğini gösteren bir planlama aracıdır.',
-                                 'During a flood the official advice is usually to stay put on high ground. This route is not advice on what to do; it is a planning aid that shows which roads and areas become unusable.')}</div>
-      <p class="kucuk">${T('Rota tarayıcında hesaplanır: merkezdeki 11 ilçenin OpenStreetMap araç yolu ağı (82 bin yol parçası, 873 toplanma alanı) ve her senaryoda yollara düşen su önceden dosyaya yazılmıştır; Dijkstra algoritması sunucudaki pgRouting sorgusuyla aynı maliyeti kullanır. Sunucu sürümündeki son 24 saatin depremleri ve trafik verisi burada yoktur.',
-                           'The route is computed in your browser: the OpenStreetMap drive network of the 11 central districts (82k road segments, 873 assembly areas) and the water on each road in each scenario are precomputed; Dijkstra uses the same cost as the server-side pgRouting query. Live earthquakes and traffic from the server version are not included.')}</p>`;
+      <div data-yer="yontem"></div>`;
     icerik.querySelector('#rota-kaydir').addEventListener('input', (olay) => {
       durum.sira = Number(olay.target.value);
       secimleriCiz();
@@ -227,6 +238,7 @@ export function rotaSekmesi({ vitrin, harita }) {
     });
     secimleriCiz();
     sonucCiz();
+    yontemCiz();
   }
 
   return {
@@ -234,17 +246,8 @@ export function rotaSekmesi({ vitrin, harita }) {
     baslik: () => T('Rota', 'Route'),
     goster(yeniIcerik) {
       icerik = yeniIcerik;
-      secimDinle(icerik, (grup, deger) => {
-        if (grup === 'saat') durum.saat = Number(deger);
-        if (grup === 'olay') {
-          const [mm, saat] = senaryoCoz(deger);
-          durum.sira = vitrin.yagis_mm.indexOf(mm) + 1;
-          durum.saat = saat;
-          icerik.querySelector('#rota-kaydir').value = durum.sira;
-        }
-        secimleriCiz();
-        yenile();
-      });
+      yagisSecimiDinle(icerik, { yagisMm: vitrin.yagis_mm, durum, kaydirici: '#rota-kaydir', bosluk: 1,
+        sonra: () => { secimleriCiz(); yenile(); } });
       ilkSigdirma = true;
       ciz();
       isaretciKur();

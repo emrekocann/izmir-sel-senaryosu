@@ -15,15 +15,15 @@ from fastapi.responses import FileResponse, RedirectResponse
 from loguru import logger
 
 from afet import ag, canli_veri, gunluk
-from afet.sel.risk import katsayi_noktada, en_yogun, risk
+from afet.sel.risk import en_yogun, katsayi_noktada, risk
 from afet.sel.senaryo import senaryolar
 from afet.veritabani.baglanti import db
 from afet.veritabani.depo import depo
-from afet.yollar import ILCE_SINIRLARI, IL_SINIRI
+from afet.yollar import IL_SINIRI, ILCE_SINIRLARI
 
 
 @asynccontextmanager
-async def omur(app: FastAPI):
+async def omur(_app: FastAPI):
     gunluk.kur()
     await db.ac()
     canli_veri.baslat()
@@ -120,8 +120,8 @@ async def akilli_rota(
         except Exception as e:
             logger.warning(f"Yağış tahmini alınamadı, rota sel cezasız: {e}")
     sonuc = await depo.akilli_rota(
-        user_lon=user_lon, user_lat=user_lat, dest_lon=dest_lon, dest_lat=dest_lat,
-        severity=severity, mode=mode, sel_f=sel_f,
+        lon=user_lon, lat=user_lat, hedef_lon=dest_lon, hedef_lat=dest_lat,
+        siddet=severity, mod=mode, sel_f=sel_f,
         senaryo=senaryo, alt_gecit_dolu=alt_gecit_dolu)
     if isinstance(sonuc.get("sel"), dict):
         sonuc["sel"]["il_geneli_seviye"] = sel_seviye

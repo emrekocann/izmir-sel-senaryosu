@@ -1,7 +1,7 @@
 // Sekme: yağış senaryoları. "X mm yağış Y saatte düşerse nereyi su basar?"
 import { T, sayi } from '../cekirdek/dil.js';
-import { senaryoAnahtari, senaryoCoz } from '../cekirdek/bicim.js';
-import { secimDinle, sayiKutulari, senaryoSecimi, sureSecimi, suLejanti } from '../cekirdek/arayuz.js';
+import { cm, senaryoAnahtari, senaryoCoz } from '../cekirdek/bicim.js';
+import { yagisSecimiDinle, sayiKutulari, senaryoSecimi, sureSecimi, suLejanti } from '../cekirdek/arayuz.js';
 
 export function senaryoSekmesi({ vitrin, harita }) {
   // açılış: 2 Şubat 2021'e en yakın kısa senaryo
@@ -12,9 +12,9 @@ export function senaryoSekmesi({ vitrin, harita }) {
   const anahtar = () => senaryoAnahtari(vitrin.yagis_mm[durum.sira], durum.saat);
 
   function ozet() {
-    const o = vitrin.senaryolar[anahtar()];
+    const o = vitrin.senaryolar[anahtar()], esik = vitrin.esikler.yol_kapali_m, kapali = cm(esik);
     return sayiKutulari([
-      [`${sayi(o.su_alan_km2['0.3'])} km²`, T("30 cm'den derin su", 'water deeper than 30 cm')],
+      [`${sayi(o.su_alan_km2[String(esik)])} km²`, T(`${kapali}'den derin su`, `water deeper than ${kapali}`)],
       [`${sayi(o.yol_kapali_km)} km`, T('araçla geçilemez yol', 'roads impassable by car')],
       [`${sayi(o.toplanma_etkilenen_sayi)} / ${sayi(o.toplanma_toplam)}`, T('su altında toplanma alanı', 'assembly areas under water')],
       [`${sayi(o.belirsiz_km2)} km²`, T('düz ova: derinlik belirsiz', 'flat plain: depth unknown')],
@@ -60,16 +60,7 @@ export function senaryoSekmesi({ vitrin, harita }) {
     baslik: () => T('Senaryolar', 'Scenarios'),
     goster(yeniIcerik) {
       icerik = yeniIcerik;
-      secimDinle(icerik, (grup, deger) => {
-        if (grup === 'saat') durum.saat = Number(deger);
-        if (grup === 'olay') {
-          const [mm, saat] = senaryoCoz(deger);
-          durum.sira = vitrin.yagis_mm.indexOf(mm);
-          durum.saat = saat;
-          icerik.querySelector('#sen-kaydir').value = durum.sira;
-        }
-        guncelle();
-      });
+      yagisSecimiDinle(icerik, { yagisMm: vitrin.yagis_mm, durum, kaydirici: '#sen-kaydir', sonra: guncelle });
       ciz();
       harita.ilGorunumu();
     },

@@ -31,9 +31,9 @@ from afet.sel.senaryo import BELIRSIZ, senaryolar
 from afet.sinir import il_poligonu
 from afet.veritabani.baglanti import db
 from afet.veritabani.depo import AfetDeposu, depo
-from afet.yollar import IL_SINIRI, OLAY_2021, SITE_VERI_DIR, SONUC_2021, VITRIN
+from afet.yollar import IL_SINIRI, OLAY_2021, SENARYO_PNG_DIR, SITE_IL_SINIRI, SITE_VERI_DIR, SONUC_2021, VITRIN
 from hesap import gunlugu_kur
-from hesap.sel_dogrulama import adli_caddeler, ilceler_ve_mahalleler, osm_adli_cizgiler
+from hesap.sel_dogrulama import adli_caddeler, adli_dere, ilceler_ve_mahalleler, osm_adli_cizgiler
 
 log = logging.getLogger("vitrin")
 
@@ -47,6 +47,7 @@ DOGRULAMA_SENARYOLARI = ["100_6", "150_6", "100_24", "150_24"]
 MAHALLE_YUZDELIK = 75
 ROTA_BASLANGIC = {"ad": "Bornova", "lat": 38.452, "lon": 27.205}
 SADELESTIR = 0.0002          # ~20 m: sayfa için geometri sadeleştirme
+METRE_DERECE = 111_320       # bir enlem derecesi (m): ızgara hücresini metreyle yazmak için
 
 
 def il_maskesi(boyut, bounds):
@@ -55,7 +56,10 @@ def il_maskesi(boyut, bounds):
     (yoksa "düz ova" grisi körfezin üstünü de boyar)."""
     w, h = boyut
     (guney, bati), (kuzey, dogu) = bounds
-    merc = lambda lat: np.degrees(mercator_y(lat))             # derece ölçeğinde Mercator y
+
+    def merc(lat):                                                # derece ölçeğinde Mercator y
+        return np.degrees(mercator_y(lat))
+
     sinir = il_poligonu()
     sinir_m = shapely.transform(sinir, lambda c: np.column_stack([c[:, 0], merc(c[:, 1])]))
     tr = Affine((dogu - bati) / w, 0, bati, 0, (merc(guney) - merc(kuzey)) / h, merc(kuzey))
@@ -81,7 +85,7 @@ def yakalandi(sonuc, tur, ilce, ad):
                  if (y["tur"], y["ilce"], y["ad"]) == (tur, ilce, ad))
         if tur == "mahalle" and s["derin_yuzdelik"] >= MAHALLE_YUZDELIK:
             return True
-        if tur in ("cadde", "dere") and (s.get("en_derin_m") or 0) >= 0.3:
+        if tur in ("cadde", "dere") and (s.get("en_derin_m") or 0) >= AfetDeposu.SENARYO_KAPALI_M:
             return True
         if tur == "alt_gecit" and s["alt_gecit_dolu"]:
             return True
@@ -104,8 +108,7 @@ def olay_yerleri():
         elif y["tur"] == "cadde":
             g = caddeler[(y["ilce"], y.get("osm_ad", y["ad"]))]
         elif y["tur"] == "dere":
-            g = shapely.union_all([shapely.geometry.shape(f["geometry"]) for f in cizgiler
-                                   if f["properties"]["tur"] == "dere" and f["properties"]["ad"] == y["ad"]])
+            g = adli_dere(cizgiler, y["ad"])
         else:
             g = None                     # alt geçit: OSM'de adıyla yok, yalnız listede
         olcum = {sen: {k: v for k, v in next(
@@ -176,7 +179,7 @@ async def veritabani_ozetleri(bolge):
                              "yol_parcasi_su": yol}
         for sen in [None] + OLAY_SENARYOLARI:
             r = await depo.akilli_rota(
-                ROTA_BASLANGIC["lon"], ROTA_BASLANGIC["lat"], mode="drive", senaryo=sen,
+                ROTA_BASLANGIC["lon"], ROTA_BASLANGIC["lat"], mod="drive", senaryo=sen,
                 alt_gecit_dolu=bool(sen and ozetler[sen]["alt_gecit_dolu"]))
             if r["status"] != "ok":
                 raise RuntimeError(f"Rota hesaplanamadı ({sen}): {r}")
@@ -196,14 +199,14 @@ async def veritabani_ozetleri(bolge):
 
 def main():
     gunlugu_kur()
-    os.makedirs(os.path.join(SITE_VERI_DIR, "senaryo"), exist_ok=True)
+    os.makedirs(SENARYO_PNG_DIR, exist_ok=True)
     y = senaryolar.yanit()
     maske = {}
     for p in y["yagis_mm"]:
         for sure in y["sure_sa"]:
-            with open(os.path.join(SITE_VERI_DIR, "senaryo", f"{p}_{sure}.png"), "wb") as f:
+            with open(os.path.join(SENARYO_PNG_DIR, f"{p}_{sure}.png"), "wb") as f:
                 f.write(kirpili_png(senaryolar.harita_png(p, sure), maske, y["bounds"]))
-    shutil.copy(IL_SINIRI, os.path.join(SITE_VERI_DIR, "izmir_sinir.geojson"))
+    shutil.copy(IL_SINIRI, SITE_IL_SINIRI)
     yerler, dogrulama = olay_yerleri()
     ilceler = json_oku(SONUC_2021)["ilceler"]
     alan, bolge_km2, bolge = merkez_alanlari(ilceler)
@@ -220,6 +223,9 @@ def main():
         "merkez": {"ilceler": ilceler, "km2": bolge_km2, "toplanma": toplanma,
                    "senaryolar": {sen: {**alan[sen], **etki[sen]} for sen in OLAY_SENARYOLARI}},
         "rota_baslangic": ROTA_BASLANGIC, "rotalar": rotalar,
+        # sayfa metnindeki eşikler: yol kapalı derinliği, "en ıslak mahalle" yüzdeliği, ızgara hücresi
+        "esikler": {"yol_kapali_m": AfetDeposu.SENARYO_KAPALI_M, "mahalle_yuzdelik": MAHALLE_YUZDELIK,
+                    "hucre_m": int(round(abs(senaryolar.ozet()["dy"]) * METRE_DERECE, -1))},
     }
     json_yaz(VITRIN, vitrin)
     boyut = sum(os.path.getsize(os.path.join(kok, d)) for kok, _, ds in os.walk(SITE_VERI_DIR) for d in ds)

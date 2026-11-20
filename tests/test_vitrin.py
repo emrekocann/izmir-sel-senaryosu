@@ -7,15 +7,12 @@ import numpy as np
 import pandas as pd
 
 from afet.dosya import json_oku
-from afet.yollar import SITE_VERI_DIR, VITRIN
+from afet.yollar import (DENETIM_JSON, ILCE_GUN_CSV, SENARYO_PNG_DIR, SITE_DENETIM_CSV, SITE_DIR, UYARI_JSON,
+                         UYARI_MODEL_JSON, VITRIN)
 from hesap import siniflandirma as sn
 from hesap import tahmin_sinamasi as ts
 from hesap import uyari_hazirla as uh
-from hesap.ilce_gun import ILCE_GUN_CSV
-from hesap.uyari_hazirla import UYARI_JSON, UYARI_MODEL_JSON
 from hesap.vitrin_hazirla import MAHALLE_YUZDELIK, OLAY_SENARYOLARI, yakalandi
-
-SITE_DIR = os.path.dirname(SITE_VERI_DIR)          # docs/
 
 
 def _metin(*yol):
@@ -39,24 +36,26 @@ def test_yakalandi_olcutu():
 def test_site_verisi_sozlesmesi():
     """docs/js modüllerinin okuduğu alanlar veri dosyalarında var mı."""
     v = json_oku(VITRIN)
-    d = json_oku(os.path.join(SITE_VERI_DIR, "denetim.json"))
+    d = json_oku(DENETIM_JSON)
     assert {"yagis_mm", "sure_sa", "bounds", "siniflar", "olay_senaryolari", "senaryolar", "yerler",
-            "dogrulama", "dogrulama_senaryolari", "merkez", "rota_baslangic", "rotalar"} <= set(v)
+            "dogrulama", "dogrulama_senaryolari", "merkez", "rota_baslangic", "rotalar", "esikler"} <= set(v)
+    assert {"yol_kapali_m", "mahalle_yuzdelik", "hucre_m"} <= set(v["esikler"])
     # her senaryonun görüntüsü ve özeti var
     for p in v["yagis_mm"]:
         for saat in v["sure_sa"]:
             assert f"{p}_{saat}" in v["senaryolar"]
-            assert os.path.exists(os.path.join(SITE_VERI_DIR, "senaryo", f"{p}_{saat}.png"))
+            assert os.path.exists(os.path.join(SENARYO_PNG_DIR, f"{p}_{saat}.png"))
     for s in v["olay_senaryolari"]:
         assert {"su_30_km2", "su_10_km2", "belirsiz_km2", "toplanma_su", "toplanma_belirsiz",
                 "yol_parcasi_su"} <= set(v["merkez"]["senaryolar"][s])
         assert all(s in y["olcum"] for y in v["yerler"])
     assert all(s in v["dogrulama"] for s in v["dogrulama_senaryolari"])
     assert v["rotalar"][0]["senaryo"] is None and len(v["rotalar"]) == 1 + len(v["olay_senaryolari"])
-    assert {"toplam", "sayim", "dere_yakin", "dere_yakin_m", "noktalar", "liste"} <= set(d)
+    assert {"toplam", "sayim", "dere_yakin", "dere_yakin_m", "noktalar", "liste", "senaryolar"} <= set(d)
+    assert {"oncelik_1", "oncelik_2"} <= set(d["senaryolar"])
     assert len(d["noktalar"]) == d["toplam"]
     assert len(d["liste"]) == d["sayim"]["1"] + d["sayim"]["2"]
-    assert os.path.exists(os.path.join(SITE_VERI_DIR, "toplanma_denetimi.csv"))
+    assert os.path.exists(SITE_DENETIM_CSV)
 
 
 def test_uyari_verisi_sozlesmesi():
@@ -113,7 +112,7 @@ def test_uyari_modeli_sozlesmesi():
     tahmin modeli, ağaçlar. Ayrıca "kendin dene" tablosunu (sklearn'le hesaplanmış) aynen
     yeniden üretir: sayfadaki iki görünüm aynı modeli kullanıyor."""
     u, m = json_oku(UYARI_JSON), json_oku(UYARI_MODEL_JSON)
-    assert m["tahmin_modeli"] == ts.ANA and m["girdiler"] == sn.MODELLER[u["model"]["ad"]][1]
+    assert m["tahmin_modeli"] == ts.ANA and m["girdiler"] == sn.MODELLER[u["model"]["ad"]].kolonlar
     assert set(m["ilceler"]) == {i["ad"] for i in u["ilceler"]}
     sabit = [g for g in m["girdiler"] if not g.startswith("yagis_")]
     for i in m["ilceler"].values():
@@ -138,3 +137,13 @@ def test_hakkinda_doldurma_alanlari():
     alanlar = set(re.findall(r'data-doldur="([^"]+)"', _metin("index.html")))
     tanimli = set(re.findall(r"'([a-z0-9-]+)':", _metin("js", "hakkinda.js")))
     assert alanlar and alanlar <= tanimli, sorted(alanlar - tanimli)
+
+
+def test_sekmelerde_elle_yazili_esik_yok():
+    """Eşikler ve ağ büyüklüğü sekme metinlerine elle yazılmaz; veriden gelir
+    (vitrin.esikler, denetim.senaryolar, rota ağı)."""
+    klasor = os.path.join(SITE_DIR, "js", "sekmeler")
+    for ad in sorted(os.listdir(klasor)):
+        metin = _metin("js", "sekmeler", ad)
+        bulunan = re.findall(r"\b(?:30 cm|60 m\b|100 mm|150 mm|82 bin|873\b|11 ilçe|5 kat)|%25", metin)
+        assert not bulunan, (ad, bulunan)
