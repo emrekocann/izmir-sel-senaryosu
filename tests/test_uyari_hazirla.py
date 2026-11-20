@@ -1,6 +1,10 @@
-"""Uyarı sekmesi verisi: ıslak geçmiş, ilçe sınırı eşlemesi, sonuç kutuları, sel dalgaları."""
+"""Uyarı sekmesi verisi: ıslak geçmiş, ilçe sınırı eşlemesi, sonuç kutuları, sel dalgaları,
+canlı tahmin için modelin dışa aktarımı."""
+import numpy as np
 import pandas as pd
 import pytest
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
 
 from hesap import siniflandirma as sn
 from hesap import uyari_hazirla as uh
@@ -72,3 +76,30 @@ def test_dalgalar_ilk_gunun_en_cok_cagrili_ilcesi():
     assert d["ilk_gun_alarmsiz"] == {"dalga": 1, "yagis_mm": 12.3, "onceki7g_mm": 41.3}
     assert uh.dalgalar(_ilce_gun(), ataklar[:1])["ilk_gun_alarmsiz"] == {"dalga": 0, "yagis_mm": None,
                                                                          "onceki7g_mm": None}
+
+
+def _kucuk_gb():
+    """Yağışa monoton küçük gradient boosting: yağış 0,1 mm adımlı, ikinci girdi 5 ilçenin sabit değeri."""
+    r = np.random.default_rng(0)
+    X = np.column_stack([np.round(r.gamma(0.8, 8, 2000), 1), r.integers(0, 5, 2000) / 4])
+    y = (r.random(2000) < 1 / (1 + np.exp(-(X[:, 0] / 10 - 3)))).astype(int)
+    m = HistGradientBoostingClassifier(max_iter=20, early_stopping=False, random_state=0, monotonic_cst=[1, 0])
+    return m.fit(X, y), X
+
+
+def test_model_disa_aktarimi_sklearn_ile_ayni():
+    m, X = _kucuk_gb()
+    model = uh.model_disa_aktar(m, ["yagis_mm", "kent_payi"])
+    assert model["girdiler"] == ["yagis_mm", "kent_payi"] and len(model["agaclar"]) == m.n_iter_
+    assert all(len(d) in (1, 4) for agac in model["agaclar"] for d in agac)     # yaprak ya da iç düğüm
+    assert uh.aktarimi_denetle(model, m, X, 0.3) < 1e-9
+
+
+def test_bozuk_aktarim_yazilmaz_ve_yalniz_gradient_boosting():
+    m, X = _kucuk_gb()
+    model = uh.model_disa_aktar(m, ["yagis_mm", "kent_payi"])
+    with pytest.raises(ValueError):
+        uh.aktarimi_denetle({**model, "baslangic": model["baslangic"] + 0.5}, m, X, 0.3)
+    X1 = np.arange(20.0).reshape(-1, 1)
+    with pytest.raises(ValueError):
+        uh.model_disa_aktar(LogisticRegression().fit(X1, (X1[:, 0] > 9).astype(int)), ["yagis_mm"])

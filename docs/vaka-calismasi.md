@@ -13,7 +13,7 @@ Ardından ikinci bir soruya geçtim: **hangi gün hangi ilçede sel olur?** Bunu
 
 Sonuç iki parçalı:
 
-- **Çalışan kısım:** veri hattı, su derinliği haritası, su basan yollardan kaçan rota ve hepsini gösteren web haritası uçtan uca çalışıyor. Erken uyarı modeli, büyük sel ataklarının 23'ünden 17'sinde ilk gün alarm veriyor; bir gün önceki hava tahminiyle de çalışıyor.
+- **Çalışan kısım:** veri hattı, su derinliği haritası, su basan yollardan kaçan rota ve hepsini gösteren web haritası uçtan uca çalışıyor. Erken uyarı modeli, büyük sel ataklarının 23'ünden 17'sinde ilk gün alarm veriyor; bir gün önceki hava tahminiyle de çalışıyor ve sitede her gün yarının tahminiyle canlı hesaplanıyor.
 - **Sınırı:** senaryo modeli büyük dere hatlarını ve ana caddeleri kısmen yakalıyor, ama su basan mahalleleri ötekilerden ayırt edemiyor. Kıyıdaki kanalizasyon taşkınını ve küçük kent derelerini göremiyor. Erken uyarı ilçe düzeyinde zayıf: alarmların yalnız beşte biri isabetli ve dar alanlı sağanağı yağış verisi göremiyor. İki parçada da sınırı çoğunlukla yöntem değil, verinin çözünürlüğü belirliyor.
 
 Bu çalışma resmî bir uyarı sistemi değil; açık veriyle nereye kadar gidilebildiğini ve kurum verisinin nerede şart olduğunu gösteren bir vaka çalışmasıdır.
@@ -160,6 +160,7 @@ AP, modelin olay günlerini ne kadar öne sıraladığını ölçer: rastgele ta
 
 - İlçe olaylarının %36'sı yakalanıyor [%26–44]; alarmların %19'u isabetli [%13–26].
 - Uyarı önceki gün öğlen, o anda elde olan ECMWF tahminiyle verildiğinde (2024–26): 8 atağın 6'sı ilk gününde alarmlı. Tahmin olmadan 2'si.
+- Sitenin Uyarı sekmesi bunu her gün canlı yapıyor: sayfa açılınca yarının ECMWF tahminini alıyor, model tarayıcıda çalışıyor. Son günlerin yağışı da tahmin modelinin kendi kaydından geldiği için bu koşul ayrıca sınandı (2024–26): ilçe olaylarının %36'sı yakalanıyor, alarmların %21'i isabetli; 8 atağın 6'sı ilk gününde alarmlı.
 - Gradient boosting, lojistik regresyondan anlamlı biçimde iyi değil (2022–26 AP: 0.19'a 0.18). Basit model işin çoğunu yapıyor.
 
 **2024–25 neden zayıf?**

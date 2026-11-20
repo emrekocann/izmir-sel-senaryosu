@@ -38,6 +38,23 @@ def test_oglen_degistir_gecmisi_duzeltir_sifirin_altina_inmez():
     assert (x[gv.ONCEKI].values == 0).all()
 
 
+def test_gecmis_kaydi_onceki_7_gunu_tam_olmayani_atar():
+    s = _saatlik(1.0, gun_sayisi=10)                      # saatte 1 mm: her gün 24 mm
+    s.loc[30, "mm"] = np.nan                              # 2 Mart'ta bir saat eksik
+    k = gv.gecmis_kaydi(s).set_index("gun")
+    assert k.index.tolist() == ["2025-03-10"]             # önceki 7 günü (3–9 Mart) tam olan tek gün
+    assert k.loc["2025-03-10"].to_dict() == {"ilce": "a", "yagis_dun_mm": 24, "yagis_onceki3g_mm": 72,
+                                             "yagis_onceki7g_mm": 168}
+
+
+def test_gecmisi_degistir_yalniz_onceki_gunleri_degistirir():
+    test = sn.hazirla(_sentetik(n_ilce=1, n_gun=10))
+    kayit = test[["ilce", "gun"]].iloc[2:5].assign(yagis_dun_mm=1.0, yagis_onceki3g_mm=2.0, yagis_onceki7g_mm=3.0)
+    x = gv.gecmisi_degistir(test, kayit)
+    assert len(x) == 3 and (x[gv.ONCEKI].values == [1, 2, 3]).all()
+    assert np.allclose(x.yagis_mm.values, test.yagis_mm.iloc[2:5].values)
+
+
 def test_bootstrap_gun_blogu_ve_aralik():
     r = np.random.default_rng(0)
     gun = np.repeat([f"g{i}" for i in range(200)], 5)

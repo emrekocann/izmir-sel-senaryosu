@@ -12,8 +12,9 @@ yükü biner?" Bütün sayılar buradan gelir; sitede elle yazılı sayı yoktur
               ortancası (veriden; "tipik bir olay gününün geçmişi")
     Önceki 7 günün yağışı modelin en önemli değişkenidir; bu yüzden iki koşul.
   • Sınama özeti: guvenilirlik.json (yıl yıl, ataklar, %95 aralık, öğlen
-    uyarısı) — sekmedeki başlık sayıları. Ayrıca dört kutulu sonuç tablosu
-    (doğru alarm, boşa alarm, kaçan sel, doğru sessizlik; ilçe-gün) ve büyük
+    uyarısı, canlı sayfa koşulu) — sekmedeki başlık sayıları. Ayrıca dört
+    kutulu sonuç tablosu (doğru alarm, boşa alarm, kaçan sel, doğru
+    sessizlik; ilçe-gün) ve büyük
     sel dalgalarının (atak) listesi: her dalganın ilk gününde en çok çağrının
     geldiği ilçe ve oradaki arşiv yağışı — model neyi neden kaçırdı?
   • Eğitim: karşılaştırılan yöntemler ve yöntemin seçildiği yıllar.
@@ -25,6 +26,12 @@ yükü biner?" Bütün sayılar buradan gelir; sitede elle yazılı sayı yoktur
     aralığı ve etkinin kanıtlanıp kanıtlanmadığı (katsayı aralığı sıfırı
     içermiyor); çok noktalı yağışla sağlamlık için sıra korelasyonu.
 
+Ayrıca docs/veri/uyari_model.json: aynı model, sayfanın tarayıcıda
+çalıştıracağı biçimde (docs/js/cekirdek/canli.js "yarının tahmini"): karar
+ağaçları ve ilçelerin sabit girdileri (yağış noktası, nüfus, kent payı).
+Yazmadan önce, dışa aktarılan modelin bütün satırlarda sklearn ile aynı
+olasılığı verdiği denetlenir.
+
 Çalıştırma: venv/bin/python -m hesap.uyari_hazirla
 Önkoşul: hesap.siniflandirma, hesap.guvenilirlik (ve tahmin arşivi önbelleği), hesap.gwr.
 """
@@ -33,8 +40,10 @@ import logging
 import os
 from statistics import median
 
+import numpy as np
 import pandas as pd
 import shapely
+from sklearn.ensemble import HistGradientBoostingClassifier
 
 from afet.dosya import json_oku, json_yaz
 from afet.yollar import ILCE_SINIRLARI, SITE_VERI_DIR
@@ -48,6 +57,7 @@ from hesap.ilce_gun import ILCE_CSV, ILCE_GUN_CSV, anahtar
 
 log = logging.getLogger("uyari")
 UYARI_JSON = os.path.join(SITE_VERI_DIR, "uyari.json")
+UYARI_MODEL_JSON = os.path.join(SITE_VERI_DIR, "uyari_model.json")
 SADELESTIR = 0.002            # ~200 m: ilçe ölçeğinde yeterli, dosya küçük kalır
 GWR_GORUNUMLER = {"gunun_yagisi": "log_yagis", "onceki_hafta": "log_onceki7g"}   # sekmedeki görünüm → değişken
 ORNEK = {
@@ -123,8 +133,67 @@ def sinama_ozeti(g, secili, t):
                     "yillar": o["yillar"], "aralik_95": o["aralik_95"]}
     return {"tum_yillar": {**al(tum), "dort_kutu": dort_kutu(t, tum), "dalgalar": dalgalar(t, tum["atak"]["liste"])},
             "oglen_tahmin": al(oglen), "tahminsiz": al(yok),
+            "canli_tahmin": al(s["tahminli_donem"]["ecmwf_canli"]),
             "yillar": [{"yil": k["test_yili"], "ap": k["ap"], "buyuk_gun": k["il"]["buyuk_olay_gunu"],
                         "buyuk_gun_alarmli": k["il"]["alarmli"]} for k in s["katmanlar"]]}
+
+
+def model_disa_aktar(m, kolonlar):
+    """Gradient boosting modelini tarayıcının çalıştıracağı biçime çevirir. Her
+    ağaç bir düğüm listesidir: iç düğüm [girdi sırası, eşik, sol, sağ] (girdi ≤
+    eşik → sol), yaprak [değer]. Olasılık = 1 / (1 + e^−(baslangic + her ağacın
+    yaprağı)). Eşikler 6 ondalığa yuvarlanır: yağış girdileri 0,1 mm adımlı,
+    eşikler iki değerin ortası (ya da değerin kendisi) olduğundan karar değişmez;
+    agac_olasiligi ile denetlenir."""
+    if not isinstance(m, HistGradientBoostingClassifier) or m.n_trees_per_iteration_ != 1:
+        raise ValueError(f"Canlı tahmin yalnız iki sınıflı gradient boosting için: {type(m).__name__}")
+    agaclar = []
+    for (agac,) in m._predictors:
+        d = agac.nodes
+        if d["is_categorical"].any():
+            raise ValueError("Kategorik girdi desteklenmiyor")
+        agaclar.append([[float(f"{n['value']:.10g}")] if n["is_leaf"] else
+                        [int(n["feature_idx"]), round(float(n["num_threshold"]), 6), int(n["left"]), int(n["right"])]
+                        for n in d])
+    return {"girdiler": list(kolonlar), "baslangic": float(m._baseline_prediction.ravel()[0]), "agaclar": agaclar}
+
+
+def agac_olasiligi(model, X):
+    """Dışa aktarılmış modelin olasılığı; X: (satır, girdi) dizisi. canli.js'teki
+    olasilik() ile aynı kural (testler ikisini ve sklearn'ü karşılaştırır)."""
+    X = np.asarray(X, dtype=float)
+    ham = np.full(len(X), model["baslangic"])
+    for agac in model["agaclar"]:
+        ic = np.array([len(d) == 4 for d in agac])
+        oz, esik, sol, sag = (np.array([d[k] if len(d) == 4 else 0 for d in agac]) for k in range(4))
+        deger = np.array([0.0 if len(d) == 4 else d[0] for d in agac])
+        i = np.zeros(len(X), dtype=int)
+        while (ic_mi := ic[i]).any():
+            j = i[ic_mi]
+            i[ic_mi] = np.where(X[ic_mi, oz[j].astype(int)] <= esik[j], sol[j], sag[j]).astype(int)
+        ham += deger[i]
+    return 1 / (1 + np.exp(-ham))
+
+
+def canli_modeli(m, kolonlar, t, ilce_df):
+    """Sayfanın "yarının tahmini" için model ve ilçelerin sabit girdileri: yağış
+    noktası (hava tahmini burada okunur; eğitim ve sınamayla aynı nokta, aynı
+    tahmin modeli), nüfusun logaritması ve kent payı."""
+    sabit = t.groupby("ilce")[["log_nufus", "kent_payi"]].first()
+    nokta = ilce_df.set_index("ilce")
+    return {**model_disa_aktar(m, kolonlar), "tahmin_modeli": ts.ANA,
+            "ilceler": {ad: {"lat": float(nokta.yagis_lat[ad]), "lon": float(nokta.yagis_lon[ad]),
+                             "log_nufus": float(r.log_nufus), "kent_payi": float(r.kent_payi)}
+                        for ad, r in sabit.iterrows()}}
+
+
+def aktarimi_denetle(model, m, X, esik):
+    """Dışa aktarılan model sklearn ile aynı olasılığı ve aynı alarmı veriyor mu?"""
+    p, q = m.predict_proba(X)[:, 1], agac_olasiligi(model, X)
+    fark = float(np.abs(p - q).max())
+    if fark > 1e-7 or ((p >= esik) != (q >= esik)).any():
+        raise ValueError(f"Dışa aktarılan model sklearn'den ayrılıyor (en büyük fark {fark:.2e})")
+    return fark
 
 
 def gwr_ozeti(g, adlar):
@@ -163,6 +232,7 @@ def ornek_ozeti(t, ilce_df):
 
 
 def hazirla():
+    """Döner: (uyari.json içeriği, uyari_model.json içeriği)."""
     sonuc = json_oku(sn.SONUC_JSON)
     secili = sonuc["secili"]
     t = sn.hazirla(pd.read_csv(ILCE_GUN_CSV))
@@ -173,9 +243,12 @@ def hazirla():
     tablolar = {k: sn.olasilik_tablosu(t, m, kolonlar, o) for k, o in kosullar.items()}
     adlar = sorted(t.ilce.unique())
     olay_gunu = t.groupby("ilce").olay.sum()
+    esik = sonuc["modeller"][secili]["esik"]
+    model = canli_modeli(m, kolonlar, t, ilce_df)
+    log.info("Dışa aktarılan model sklearn ile aynı (en büyük fark %.1e)", aktarimi_denetle(model, m, t[kolonlar], esik))
     return {
         "model": {"ad": secili, "aciklama": sonuc["modeller"][secili]["aciklama"],
-                  "esik": sonuc["modeller"][secili]["esik"], "egitim_yillari": [int(t.yil.min()), int(t.yil.max())]},
+                  "esik": esik, "egitim_yillari": [int(t.yil.min()), int(t.yil.max())]},
         "olay_tanimi": {"ilce_cagri": sn.OLAY_ESIK, "il_cagri": om.OLAY_CAGRI, "dalga_arasi_gun": gv.ATAK_BOSLUK},
         "veri": sonuc["veri"],
         "yagis_mm": tablolar["kuru"]["yagis_mm"],
@@ -188,14 +261,14 @@ def hazirla():
         "onem": sonuc["onem"],
         "ornek": ornek_ozeti(t, ilce_df),
         "gwr": gwr_ozeti(json_oku(gwr.SONUC_JSON), adlar),
-    }
+    }, model
 
 
 def main():
     gunlugu_kur()
-    r = hazirla()
-    json_yaz(UYARI_JSON, r)
-    log.info("Yazıldı: %s (%.0f KB)", UYARI_JSON, os.path.getsize(UYARI_JSON) / 1024)
+    r, model = hazirla()
+    for yol, veri in ((UYARI_JSON, r), (UYARI_MODEL_JSON, model)):
+        log.info("Yazıldı: %s (%.0f KB)", yol, json_yaz(yol, veri) / 1024)
     i = r["kosullar"]["islak"]["onceki"]
     print("Islak geçmiş:", i)
     for k in ("kuru", "islak"):

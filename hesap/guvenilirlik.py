@@ -33,6 +33,14 @@ hesap/siniflandirma.py ve hesap/tahmin_sinamasi.py tek bir test dönemine
    Geçmiş tahmin arşivi 2024'te başladığı için tahminli sınama 2024–26'yı
    kapsar.
 
+4. Canlı sayfa — ecmwf_canli. Sitenin Uyarı sekmesi yarının tahminini sayfa
+   açılınca kendisi alır (docs/js/cekirdek/canli.js). Yağış arşivi (ERA5)
+   ~5 gün geç geldiği için orada önceki günlerin yağışı da hava tahmini
+   modelinin kendi kaydındandır (0. gün: her saat, o saati kapsayan en yeni
+   koşudan; Open-Meteo'nun sayfaya döndürdüğü geçmiş saatlerle birebir aynı).
+   Bu sınama öğlen uyarısının aynısıdır, yalnız dün / önceki 3 / 7 günün
+   yağışı arşivden değil bu kayıttan gelir: sayfadaki haritanın sınanmış hali.
+
 Çıktı: egitim/guvenilirlik.json. Süre ~10 dk (her katmanda ızgara araması).
 Çalıştırma: venv/bin/python -m hesap.guvenilirlik
 """
@@ -50,7 +58,7 @@ from hesap import gunlugu_kur, sonucu_yaz
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
 from hesap import tahmin_sinamasi as ts
-from hesap.ilce_gun import ILCE_CSV, ILCE_GUN_CSV, yagis_arsivi
+from hesap.ilce_gun import ILCE_CSV, ILCE_GUN_CSV, gunluk_yagis, yagis_arsivi
 
 log = logging.getLogger("guvenilirlik")
 SONUC_JSON = os.path.join(sn.CIKTI_DIR, "guvenilirlik.json")
@@ -98,6 +106,24 @@ def oglen_degistir(test, girdi):
     for k in ONCEKI:
         t[k] = (t[k] + t.duzeltme_mm).clip(lower=0)
     return ts.tahminle_degistir(t.drop(columns="duzeltme_mm"), girdi.drop(columns="duzeltme_mm"))
+
+
+# ── 4. Canlı sayfa girdileri ────────────────────────────────────────────────
+
+def gecmis_kaydi(saatlik):
+    """Saatlik bir kayıttan (ör. ECMWF'nin 0. gün kaydı) önceki günlerin yağışı:
+    DataFrame(ilce, gun, ONCEKI). Önceki 7 günün her saati kayıtlı olmayan
+    ilçe-günler atılır (eksik saat sıfır sayılıp geçmiş küçültülmesin)."""
+    g = gunluk_yagis(saatlik).merge(ts.tam_gunler(saatlik), on=["ilce", "gun"]).sort_values(["ilce", "gun"])
+    tam = g.groupby("ilce").tam.transform(lambda x: x.astype(float).shift(1).rolling(7).min() == 1)
+    g = g[tam].copy()
+    g["gun"] = g.gun.astype(str)
+    return g[["ilce", "gun", *ONCEKI]]
+
+
+def gecmisi_degistir(test, kayit):
+    """Test satırlarında önceki günlerin yağışını kayittakiyle (gecmis_kaydi) değiştirir."""
+    return test.drop(columns=ONCEKI).merge(kayit, on=["ilce", "gun"], how="inner")
 
 
 # ── 2. Blok bootstrap ve ataklar ────────────────────────────────────────────
@@ -252,6 +278,7 @@ def calistir(t, girdiler=None, test_yillari=TEST_YILLARI, modeller=MODELLER, n=B
         "test_yillari": test_yillari, "bootstrap": f"haftalar yerine koyarak, {n} tekrar, %95 yüzdelik",
         "atak": f"il genelinde ≥ {om.OLAY_CAGRI} çağrılı günler, aralarında ≤ {ATAK_BOSLUK} gün boşlukla tek atak",
         "oglen_uyarisi": "D 00–11: 1 gün önceki koşu; D 12–23: 2 gün önceki koşu; D-1 12–23: gözlem yerine 1 gün önceki koşu",
+        "canli_sayfa": "öğlen uyarısı; önceki günlerin yağışı arşivden değil tahmin modelinin 0. gün kaydından",
         "sonuclar": sonuc,
     }
 
@@ -278,14 +305,17 @@ def main():
     t = pd.read_csv(ILCE_GUN_CSV)
     ilce_df = pd.read_csv(ILCE_CSV)
     bas, bit = dt.date(TAHMIN_ILK_YIL, 1, 1), pd.Timestamp(t.gun.max()).date()
+    t0 = ts.tahmin_arsivi(ilce_df, ts.ANA, bas, bit, once=0)
     t1 = ts.tahmin_arsivi(ilce_df, ts.ANA, bas, bit, once=1)
     t2 = ts.tahmin_arsivi(ilce_df, ts.ANA, bas, bit, once=2)
     gozlem = yagis_arsivi(ilce_df, *ARSIV_ARALIGI)
     aksam = ts.tahmin_gunluk(t1)
     oglen = oglen_girdisi(gozlem, t1, t2)
+    kayit, canli = gecmis_kaydi(t0), oglen_girdisi(t0, t1, t2)
     girdiler = {
         "ecmwf_aksam": (TAHMIN_ILK_YIL, lambda x: ts.tahminle_degistir(x, aksam)),
         "ecmwf_oglen": (TAHMIN_ILK_YIL, lambda x: oglen_degistir(x, oglen)),
+        "ecmwf_canli": (TAHMIN_ILK_YIL, lambda x: oglen_degistir(gecmisi_degistir(x, kayit), canli)),
         "tahminsiz": (TAHMIN_ILK_YIL, lambda x: ts.tahminle_degistir(
             x, x[["ilce", "gun"]].assign(**{k: 0.0 for k in ts.GUNUN_YAGISI}))),
     }

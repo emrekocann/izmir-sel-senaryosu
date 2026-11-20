@@ -63,8 +63,8 @@
       <p><b><span class="tr">Çalışan kısım</span><span class="en">What works</span></b></p>
       <p class="tr">Veri hattı, su derinliği haritası, su basan yoldan kaçan rota ve web haritası uçtan uca çalışıyor. Senaryo modeli büyük dere hatlarını ve ana caddeleri kısmen yakalıyor.</p>
       <p class="en">The data pipeline, depth maps, flood-aware routing and web map work end to end. The scenario model partly captures major stream corridors and main streets.</p>
-      <p class="tr">Erken uyarı modeli büyük sel dalgalarını çoğunlukla ilk gününde yakalıyor (<span data-doldur="atak"></span>); bir gün önceki hava tahminiyle de.</p>
-      <p class="en">The early-warning model mostly flags major flood waves on their first day (<span data-doldur="atak"></span>), also with the day-before weather forecast.</p>
+      <p class="tr">Erken uyarı modeli büyük sel dalgalarını çoğunlukla ilk gününde yakalıyor (<span data-doldur="atak"></span>); bir gün önceki hava tahminiyle de. Uyarı sekmesi yarının tahminini her gün canlı hesaplıyor.</p>
+      <p class="en">The early-warning model mostly flags major flood waves on their first day (<span data-doldur="atak"></span>), also with the day-before weather forecast. The Alert tab computes tomorrow's forecast live every day.</p>
     </div>
     <div class="kutu kotu">
       <p><b><span class="tr">Sınırı</span><span class="en">Where it stops</span></b></p>
@@ -75,8 +75,8 @@
     </div>
   </div>
 
-    <p class="tr">Bu resmî bir uyarı sistemi değil. Açık veriyle nereye kadar gidilebildiğini ve kurum verisinin nerede şart olduğunu gösteren bir çalışma. Haritadaki sekmeler: yağış senaryoları, 2021 seliyle karşılaştırma, haritada seçilen noktadan anında hesaplanan tahliye rotası, toplanma alanı denetimi ve ilçe ilçe erken uyarı.</p>
-    <p class="en">This is not an official warning system. It shows how far open data can go and where institutional data becomes necessary. The map's tabs: rainfall scenarios, comparison with the 2021 flood, an evacuation route computed on the spot from any point you pick on the map, the assembly-area audit, and district-level early warning.</p>
+    <p class="tr">Bu resmî bir uyarı sistemi değil. Açık veriyle nereye kadar gidilebildiğini ve kurum verisinin nerede şart olduğunu gösteren bir çalışma. Haritadaki sekmeler: yağış senaryoları, 2021 seliyle karşılaştırma, haritada seçilen noktadan anında hesaplanan tahliye rotası, toplanma alanı denetimi ve yarının hava tahminiyle ilçe ilçe erken uyarı.</p>
+    <p class="en">This is not an official warning system. It shows how far open data can go and where institutional data becomes necessary. The map's tabs: rainfall scenarios, comparison with the 2021 flood, an evacuation route computed on the spot from any point you pick on the map, the assembly-area audit, and district-level early warning from tomorrow's weather forecast.</p>
 
     <h2 id="hk-olay"><span class="tr">Olay: 2 Şubat 2021</span><span class="en">The event: 2 February 2021</span></h2>
 <p class="tr">2 Şubat 2021 gecesi İzmir merkezine, şubat ayı ortalamasından fazla yağmur birkaç saatte düştü. İki kişi hayatını kaybetti; dereler taştı, kıyı mahallelerinde ev ve iş yerlerini su bastı, ana yollar kapandı.</p>
@@ -169,11 +169,13 @@
     </table></div>
     <ul class="tr">
       <li><b>Bir gün önceden çalışıyor.</b> Hava tahminiyle sonuç neredeyse aynı. Tahmin olmadan sellerin yalnız <span data-doldur="yakalama-tahminsiz"></span> kadarında önceden alarm oluyor, tahminle <span data-doldur="yakalama-oglen"></span> (<span data-doldur="oglen-yillari"></span>): başarıyı hava tahmini taşıyor.</li>
+      <li><b>Her gün canlı çalışıyor.</b> Uyarı sekmesi açılınca yarının hava tahmini (ECMWF, Open-Meteo) her ilçenin yağış noktası için alınır ve model tarayıcıda çalışır; sunucu ya da her gün çalışan bir iş yok. Bu haliyle, son günlerin yağışı da tahmin modelinin kendi kaydından alınarak, <span data-doldur="canli-yillari"></span> için geriye dönük denendi: sellerin <span data-doldur="yakalama-canli"></span> kadarında önceden alarm vardı, alarmların <span data-doldur="isabet-canli"></span> kadarı doğru çıktı.</li>
       <li><b>Karmaşık model az fark yaratıyor.</b> Gradient boosting, basit lojistik regresyondan anlamlı biçimde iyi değil.</li>
       <li><b>Sel her ilçede aynı yağışla gelmiyor.</b> Her ilçeye ayrı bir model kuruldu: coğrafi ağırlıklı lojistik regresyon (GWR). O günün yağışına en duyarlı ilçeler <span data-doldur="gwr-gunun"></span>; önceki haftanın yağışına en duyarlılar <span data-doldur="gwr-hafta"></span>. <span data-doldur="gwr-kanitsiz"></span> ilçede önceki haftanın etkisi kanıtlanmamış. Yani bazı ilçelerde sel o günün sağanağıyla, bazılarında ancak günlerce yağdıktan sonra geliyor. Ayrı modeller uyarıyı iyileştirmiyor; değerleri bu farkı göstermelerinde.</li>
     </ul>
     <ul class="en">
       <li><b>It works a day ahead.</b> With the weather forecast the results barely change. Without a forecast only <span data-doldur="yakalama-tahminsiz"></span> of floods have an alert beforehand, <span data-doldur="yakalama-oglen"></span> with it (<span data-doldur="oglen-yillari"></span>): the forecast carries the skill.</li>
+      <li><b>It runs live every day.</b> When the Alert tab opens, tomorrow's weather forecast (ECMWF, via Open-Meteo) is fetched for each district's rain point and the model runs in the browser; no server and no daily job. Replayed exactly like this for <span data-doldur="canli-yillari"></span>, with the last few days' rain also from the forecast model's own record, <span data-doldur="yakalama-canli"></span> of floods had an alert beforehand and <span data-doldur="isabet-canli"></span> of alerts came true.</li>
       <li><b>The complex model adds little.</b> Gradient boosting is not significantly better than plain logistic regression.</li>
       <li><b>Floods do not come with the same rain everywhere.</b> A separate model was fitted for each district: geographically weighted logistic regression (GWR). Most sensitive to the day's rain: <span data-doldur="gwr-gunun"></span>; to the previous week's rain: <span data-doldur="gwr-hafta"></span>. In <span data-doldur="gwr-kanitsiz"></span> districts the previous week has no proven effect. So in some districts floods come with the day's downpour, in others only after days of rain. The separate models do not improve the alert; their value is in showing this difference.</li>
     </ul>

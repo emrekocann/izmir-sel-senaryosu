@@ -8,6 +8,8 @@
 //     gizle   sekmeden çıkılınca: katmanlarını kaldırır
 //     ciz     dil değişince: panel metnini yeniden üretir
 //     lejant  haritanın lejantı (HTML)
+// Sekme kurucusu { ...veri, harita, lejantiYenile } alır; lejantiYenile, sekmenin
+// lejantı kendiliğinden değiştiğinde (ör. veri sonradan gelince) çağrılır.
 import { ilkDil, dilAyarla, aktifDil, dilDegisince, T } from './cekirdek/dil.js';
 import { veriYukle } from './cekirdek/veri.js';
 import { haritaKur } from './cekirdek/harita.js';
@@ -37,7 +39,7 @@ async function baslat() {
 
   const harita = haritaKur(oge('harita'), panel, veri.vitrin);
   const hakkinda = hakkindaKur(oge('hakkinda'), veri);
-  const sekmeler = SEKMELER.map((kur) => kur({ ...veri, harita }));
+  const sekmeler = SEKMELER.map((kur) => kur({ ...veri, harita, lejantiYenile: () => lejantCiz() }));
   let aktif = null;
 
   // Lejant dar ekranda kapalı başlar: açıkken haritanın çoğunu örter

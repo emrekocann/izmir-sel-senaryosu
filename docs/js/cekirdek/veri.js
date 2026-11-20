@@ -18,6 +18,8 @@ export async function veriYukle() {
   return Object.fromEntries(adlar.map((ad, i) => [ad, sonuclar[i]]));
 }
 
+/** Uyarı sekmesinin canlı tahmin modeli: yalnız "Yarının tahmini" açılınca yüklenir. */
+export const UYARI_MODELI = 'veri/uyari_model.json';
 export const senaryoGorseli = (anahtar) => `veri/senaryo/${anahtar}.png`;
 export const IL_SINIRI = 'veri/izmir_sinir.geojson';
 export const ROTA_AGI = 'veri/rota/ag.json';

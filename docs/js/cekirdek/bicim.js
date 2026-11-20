@@ -47,6 +47,9 @@ const gunBicimi = () => new Intl.DateTimeFormat(aktifDil() === 'tr' ? 'tr-TR' : 
 const gunu = (gun) => new Date(`${gun}T12:00:00`);
 /** "2025-10-23" → tr "23 Ekim 2025", en "23 October 2025". */
 export const tarih = (gun) => gunBicimi().format(gunu(gun));
+/** Zaman → tr "20 Kasım 14:05", en "20 November 14:05" (Türkiye saatiyle). */
+export const tarihSaat = (an) => new Intl.DateTimeFormat(aktifDil() === 'tr' ? 'tr-TR' : 'en-GB',
+  { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' }).format(new Date(an));
 /** İki gün → tr "2–3 Şubat 2022", "26 Kasım – 5 Aralık 2023" (aynı günse tek tarih). */
 export const tarihAraligi = (ilk, son) => gunBicimi().formatRange(gunu(ilk), gunu(son));
 

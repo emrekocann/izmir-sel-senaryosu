@@ -4,7 +4,7 @@ Tek bir soruyu yanıtlayan, PostGIS + pgRouting tabanlı bir karar destek harita
 
 **🔗 Canlı site: [emrekocann.github.io/izmir-sel-senaryosu](https://emrekocann.github.io/izmir-sel-senaryosu/)** · Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md)
 
-**Yayın sitesi:** [docs/](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Harita merkezli, Türkçe / İngilizce, sunucusuz çalışan site (GitHub Pages: Settings → Pages → dal + `/docs`). Beş sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tarayıcıda hesaplanan tahliye rotası, toplanma alanı denetimi, itfaiye kayıtlarıyla eğitilmiş erken uyarı modeli ve ilçe ilçe yağışa duyarlılık haritası; yöntem ve doğrulama "Hakkında" penceresinde. Sitedeki bütün sayılar `docs/veri/` dosyalarından gelir; bunları `venv/bin/python -m hesap.vitrin_hazirla`, `-m hesap.rota_agi_hazirla`, `-m hesap.toplanma_denetimi` ve `-m hesap.uyari_hazirla` üretir (sonuncusu `hesap.siniflandirma`, `hesap.guvenilirlik` ve `hesap.gwr` çıktılarını okur). Yerelde: `python -m http.server --directory docs`. Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
+**Yayın sitesi:** [docs/](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Harita merkezli, Türkçe / İngilizce, sunucusuz çalışan site (GitHub Pages: Settings → Pages → dal + `/docs`). Beş sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tarayıcıda hesaplanan tahliye rotası, toplanma alanı denetimi, itfaiye kayıtlarıyla eğitilmiş ve yarının hava tahminiyle her gün canlı çalışan erken uyarı modeli, ilçe ilçe yağışa duyarlılık haritası; yöntem ve doğrulama "Hakkında" penceresinde. Sitedeki bütün sayılar `docs/veri/` dosyalarından gelir; bunları `venv/bin/python -m hesap.vitrin_hazirla`, `-m hesap.rota_agi_hazirla`, `-m hesap.toplanma_denetimi` ve `-m hesap.uyari_hazirla` üretir (sonuncusu `hesap.siniflandirma`, `hesap.guvenilirlik` ve `hesap.gwr` çıktılarını okur). Yerelde: `python -m http.server --directory docs`. Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
 
 ## 🚀 Neler var
 
@@ -60,7 +60,7 @@ docs/         Yayın sitesi (GitHub Pages), derleme adımı yok:
                 index.html        sayfa iskeleti + "Hakkında" metni
                 css/app.css       düzen ve tema
                 js/main.js        giriş: veri, harita, sekme yönetimi
-                js/cekirdek/      dil, biçim, veri, harita, arayüz yardımcıları
+                js/cekirdek/      dil, biçim, veri, harita, arayüz yardımcıları; rota motoru, canlı tahmin
                 js/sekmeler/      her sekme bir modül (senaryo, olay, rota, denetim, uyari)
                 veri/             önceden hesaplanmış veri (JSON, PNG, CSV)
 hesap/        Çevrimdışı hesap betikleri — kökten "python -m hesap.<betik>" ile çalışır
@@ -386,6 +386,8 @@ Büyük olay günleri (il genelinde ≥ 50 çağrı) bağımsız değildir: yağ
 
 Tahminli sınamada uyarı **önceki gün saat 12:00'de** verilir ve o anda elde olmayan hiçbir bilgi kullanılmaz: o günün öğleden sonrası 2 gün önceki koşudan, önceki günün öğleden sonrası da gözlem yerine tahminden alınır.
 
+**Canlı sayfa koşulu** (`ecmwf_canli`): sitenin "Yarının tahmini" görünümünde önceki günlerin yağışı da arşivden değil, tahmin modelinin kendi kaydından gelir; yağış arşivi (ERA5) ~5 gün geç yayımlanır. Bu kayıt geçmiş tahmin arşivinin 0. günüdür (her saat, o saati kapsayan en yeni koşu). Open-Meteo'nun sayfaya döndürdüğü geçmiş saatlerle birebir aynı olduğu denetlendi (30 ilçe × 8 gün, 5.760 saatin hepsi). Önceki 7 günün her saati kayıtlı olmayan ilçe-günler atılır; kıyas yine bütün girdilerin ortak satırlarında yapılır.
+
 | Gradient boosting, gerçek yağış | 2022 | 2023 | 2024 | 2025 | 2026 | **2022–26** |
 |---|---|---|---|---|---|---|
 | AP | 0.10 | 0.15 | 0.05 | 0.06 | 0.38 | **0.19** [0.12–0.26] |
@@ -397,14 +399,16 @@ Tahminli sınamada uyarı **önceki gün saat 12:00'de** verilir ve o anda elde 
 | 2024–26, aynı satırlar | AP | Duyarlılık | Atak, ilk gün alarmlı |
 |---|---|---|---|
 | gerçek yağış | 0.24 | 0.41 | 6/8 |
-| ECMWF, önceki gün sonu | 0.22 | 0.37 | 6/8 |
-| **ECMWF, önceki gün öğlen** | **0.21** | **0.37** | **6/8** |
+| ECMWF, önceki gün sonu | 0.22 | 0.38 | 6/8 |
+| **ECMWF, önceki gün öğlen** | **0.22** | **0.37** | **6/8** |
+| ECMWF öğlen, geçmiş günler de tahmin kaydından (canlı sayfa) | 0.19 | 0.36 | 6/8 |
 | tahminsiz | 0.17 | 0.10 | 2/8 |
 
 **Bulgular:**
 - **Atakların dörtte üçü ilk gününde yakalanıyor** (gerçek yağışla 17/23; öğlen tahminiyle 2024–26'da 6/8). Rakam bu kadar az atakla kaba bir rakam.
 - **Zamanlama iyimserliği önemsiz.** Uyarı öğlen verilince sonuç neredeyse değişmiyor.
 - **Tahminin katkısı tutarlı.** Tahmin olmadan duyarlılık 0.37'den 0.10'a, ilk gün alarmlı ataklar 6/8'den 2/8'e düşüyor.
+- **Canlı sayfa koşulu neredeyse aynı.** Son günlerin yağışı da tahmin kaydından gelince AP 0.22'den 0.19'a iniyor, ama alarm sonuçları pek değişmiyor: duyarlılık 0.36, kesinlik 0.21, ilk gün alarmlı atak 6/8 (öğlen tahminiyle 0.37, 0.22, 6/8).
 - **Gradient boosting lojistik regresyondan anlamlı biçimde iyi değil.** Beş yılda AP 0.19 ile 0.18, aralıklar örtüşüyor.
 - **İlçe düzeyi zayıf.** İlçe olaylarının ~%36'sı yakalanıyor, alarmların ~5'te 1'i isabetli.
 
@@ -419,7 +423,12 @@ Tahminli sınamada uyarı **önceki gün saat 12:00'de** verilir ve o anda elde 
 venv/bin/python -m hesap.guvenilirlik   # ~10 dk; sonuç egitim/guvenilirlik.json
 ```
 
-**Sitede:** "Uyarı" sekmesi (`docs/js/sekmeler/uyari.js`). Seçilen günlük yağış ve önceki hafta (kuru / ıslak) için her ilçenin olay olasılığını haritada gösterir; alarm eşiğini geçen ilçeler kalın çerçeveli. Seçili model bütün verilerle (2020–26) yeniden eğitilir. "Islak" geçmiş, olay günlerinde gözlenen önceki gün yağışlarının ortancasıdır (önceki 7 günde ~44 mm). Panelde yıl yıl sınama sonuçları ve Foça örneği de var. İkinci görünüm "Yağışa duyarlılık": GWR'nin ilçe ilçe sonuçları (aşağıda). Veri: `venv/bin/python -m hesap.uyari_hazirla` → `docs/veri/uyari.json`.
+**Sitede:** "Uyarı" sekmesi (`docs/js/sekmeler/uyari.js`), üç görünüm. Seçili model bütün verilerle (2020–26) yeniden eğitilir; alarm eşiğini geçen ilçeler kalın çerçeveli.
+- **Yarının tahmini** (ilk açılan): sekme açılınca tarayıcı, Open-Meteo'dan 30 ilçenin yağış noktası için saatlik ECMWF tahminini tek istekte alır (önceki 7 gün, bugün, yarın). Yağış girdileri eğitimdekiyle aynı kurallarla (`gunluk_yagis`) hesaplanır, model tarayıcıda çalışır (`docs/js/cekirdek/canli.js`). Sunucu, API anahtarı, zamanlanmış iş yok; depoya her gün bir şey yazılmaz. Sonuç aynı tarayıcıda bir saat saklanır. Tahmin alınamazsa sayfa "Kendin dene"ye döner ve nedenini yazar. Sayfada "araştırma amaçlıdır, resmî uyarı değildir" notu ve bu koşulun sınama sonucu (yukarıda, canlı sayfa) var.
+- **Kendin dene:** seçilen günlük yağış ve önceki hafta (kuru / ıslak) için hazır olasılık tablosu. "Islak" geçmiş, olay günlerinde gözlenen önceki gün yağışlarının ortancasıdır (önceki 7 günde ~44 mm).
+- **Hangi yağış etkili?:** GWR'nin ilçe ilçe sonuçları (aşağıda).
+
+Altında yıl yıl sınama sonuçları, sel dalgaları ve Foça örneği. Veri: `venv/bin/python -m hesap.uyari_hazirla` → `docs/veri/uyari.json` ve `docs/veri/uyari_model.json` (modelin karar ağaçları ve ilçelerin sabit girdileri). Betik, dışa aktarılan modelin bütün eğitim satırlarında sklearn ile aynı olasılığı ve aynı alarmı verdiğini denetlemeden yazmaz. `tests/test_canli.py`, tarayıcı modülünü Node ile çalıştırıp girdileri ve olasılığı Python hesabıyla karşılaştırır.
 
 ### 🌬️ Ek değişkenler: çok noktalı yağış ve lodos (`hesap/ek_degiskenler.py`)
 
@@ -527,6 +536,8 @@ venv/bin/python -m hesap.rota_agi_hazirla   # DB açık; ~10 sn
 pytest
 ```
 
+`tests/test_canli.py` tarayıcıdaki canlı tahmin modülünü Node ile çalıştırır; Node kurulu değilse bu testler atlanır.
+
 ## 📚 Veri kaynakları ve lisanslar
 
 Kod **MIT** lisanslıdır (`LICENSE`). Veriler kendi koşullarına tabidir; depodaki türetilmiş dosyalar (`sel_model/`, `sinir/*.geojson`, `docs/veri/`, `dogrulama/`, `egitim/`) bu kaynaklardan üretilmiştir:
@@ -539,7 +550,7 @@ Kod **MIT** lisanslıdır (`LICENSE`). Veriler kendi koşullarına tabidir; depo
 | Toplanma alanları | İzmir Büyükşehir Belediyesi Açık Veri Portalı | İBB Açık Veri Lisansı — atıf |
 | İlçe ve mahalle sınırları | TKGM (MEGSİS idari yapı servisi) | Açık bir veri lisansı yayımlanmamıştır; yalnız görselleştirme ve analiz için, atıfla kullanılmıştır |
 | Deprem (canlı, rota maliyeti) | Boğaziçi Üniversitesi Kandilli Rasathanesi (KRDAE), api.orhanaydogdu.com.tr aracılığıyla | Atıf zorunlu; ticari kullanım izne bağlı; veri depoda tutulmaz |
-| Yağış tahmini | Open-Meteo | CC BY 4.0 |
+| Yağış tahmini (canlı uyarı ve tahminli sınama) | Open-Meteo (ECMWF IFS açık verisi) | CC BY 4.0 |
 | Geçmiş yağış (eğitim verisi) | Open-Meteo Historical Weather API (Copernicus ERA5 / ERA5-Land) | CC BY 4.0; ERA5 için Copernicus atfı |
 | İtfaiye hizmet kayıtları | İzmir Büyükşehir Belediyesi Açık Veri Portalı | İBB Açık Veri Lisansı — atıf |
 | İlçe nüfusu | İzmir Büyükşehir Belediyesi Açık Veri Portalı (TÜİK ADNKS) | İBB Açık Veri Lisansı — atıf |

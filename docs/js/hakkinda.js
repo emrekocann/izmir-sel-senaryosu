@@ -7,7 +7,7 @@ import { enDuyarlilar } from './sekmeler/uyari.js';
 
 /** Erken uyarı bölümünün sayıları (uyari.json; Uyarı sekmesiyle aynı kaynak). */
 function uyariDegerleri(uyari) {
-  const s = uyari.sinama, tum = s.tum_yillar, og = s.oglen_tahmin, o = uyari.ornek, gwr = uyari.gwr;
+  const s = uyari.sinama, tum = s.tum_yillar, og = s.oglen_tahmin, cn = s.canli_tahmin, o = uyari.ornek, gwr = uyari.gwr;
   const ilkUc = (etken) => enDuyarlilar(gwr, etken).slice(0, 3).map(yerAdi).join(', ');
   return {
     'uyari-yillari': yilAraligi(uyari.veri.yillar),
@@ -21,6 +21,9 @@ function uyariDegerleri(uyari) {
     'isabet': yuzde(tum.kesinlik),
     'yakalama-oglen': yuzde(og.duyarlilik),
     'yakalama-tahminsiz': yuzde(s.tahminsiz.duyarlilik),
+    'canli-yillari': yilAraligi(cn.yillar),
+    'yakalama-canli': yuzde(cn.duyarlilik),
+    'isabet-canli': yuzde(cn.kesinlik),
     'ornek-yer': `${yerAdi(o.ilce)}, ${tarih(o.gun)}`,
     'ornek-saat': sayi(o.haber_saat, 1),
     'ornek-haber': `~${sayi(o.haber_mm)} mm`,

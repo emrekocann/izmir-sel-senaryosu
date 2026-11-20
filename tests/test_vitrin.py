@@ -3,9 +3,16 @@
 import os
 import re
 
+import numpy as np
+import pandas as pd
+
 from afet.dosya import json_oku
 from afet.yollar import SITE_VERI_DIR, VITRIN
-from hesap.uyari_hazirla import UYARI_JSON
+from hesap import siniflandirma as sn
+from hesap import tahmin_sinamasi as ts
+from hesap import uyari_hazirla as uh
+from hesap.ilce_gun import ILCE_GUN_CSV
+from hesap.uyari_hazirla import UYARI_JSON, UYARI_MODEL_JSON
 from hesap.vitrin_hazirla import MAHALLE_YUZDELIK, OLAY_SENARYOLARI, yakalandi
 
 SITE_DIR = os.path.dirname(SITE_VERI_DIR)          # docs/
@@ -67,7 +74,7 @@ def test_uyari_verisi_sozlesmesi():
             assert len(p) == len(u["yagis_mm"]) and all(0 <= x <= 1 for x in p)
             if u["model"]["ad"] == "gb":                      # yağışa monoton
                 assert all(a <= b + 1e-9 for a, b in zip(p, p[1:]))
-    for k in ("tum_yillar", "oglen_tahmin", "tahminsiz"):
+    for k in ("tum_yillar", "oglen_tahmin", "tahminsiz", "canli_tahmin"):
         s = u["sinama"][k]
         assert {"atak", "atak_ilk_gun", "duyarlilik", "kesinlik", "yillar", "aralik_95"} <= set(s)
         assert {"duyarlilik", "kesinlik"} <= set(s["aralik_95"])
@@ -99,6 +106,30 @@ def test_uyari_verisi_sozlesmesi():
         for gorunum in ("gunun_yagisi", "onceki_hafta"):
             c = i[gorunum]
             assert c["aralik_95"][0] <= c["deger"] <= c["aralik_95"][1] and isinstance(c["kanitli"], bool)
+
+
+def test_uyari_modeli_sozlesmesi():
+    """docs/js/cekirdek/canli.js'in okuduğu model: ilçeler (yağış noktası + sabit girdiler),
+    tahmin modeli, ağaçlar. Ayrıca "kendin dene" tablosunu (sklearn'le hesaplanmış) aynen
+    yeniden üretir: sayfadaki iki görünüm aynı modeli kullanıyor."""
+    u, m = json_oku(UYARI_JSON), json_oku(UYARI_MODEL_JSON)
+    assert m["tahmin_modeli"] == ts.ANA and m["girdiler"] == sn.MODELLER[u["model"]["ad"]][1]
+    assert set(m["ilceler"]) == {i["ad"] for i in u["ilceler"]}
+    sabit = [g for g in m["girdiler"] if not g.startswith("yagis_")]
+    for i in m["ilceler"].values():
+        assert set(sabit) <= set(i) and 37.5 < i["lat"] < 39.5 and 26 < i["lon"] < 28.6   # İzmir
+    assert all(len(d) in (1, 4) for agac in m["agaclar"] for d in agac)
+
+    class Disa:                                          # dışa aktarılmış model, sklearn arayüzüyle
+        def predict_proba(self, X):
+            p = uh.agac_olasiligi(m, X)
+            return np.column_stack([1 - p, p])
+
+    t = sn.hazirla(pd.read_csv(ILCE_GUN_CSV))
+    for k, kosul in u["kosullar"].items():
+        tb = sn.olasilik_tablosu(t, Disa(), m["girdiler"], kosul["onceki"])["ilce"]
+        for ad, p in kosul["olasilik"].items():
+            assert np.allclose(tb[ad], p, atol=1.01e-3), (k, ad)
 
 
 def test_hakkinda_doldurma_alanlari():

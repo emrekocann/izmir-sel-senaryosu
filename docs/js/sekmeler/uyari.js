@@ -1,14 +1,19 @@
-// Sekme: erken uyarı. İki görünüm:
-//   olasılık   — itfaiye su baskını kayıtlarıyla eğitilmiş sınıflandırma modeli:
-//                "yarın bu yağışta bu ilçeye ≥ 3 su baskını çağrısı gelir mi?"
-//                Altında: model nasıl eğitildi, ne kadar doğru (dört kutu),
-//                hangi sel dalgalarını yakaladı, hangilerini kaçırdı ve neden.
+// Sekme: erken uyarı. İtfaiye su baskını kayıtlarıyla eğitilmiş sınıflandırma
+// modeli: "yarın bu ilçeye ≥ 3 su baskını çağrısı gelir mi?" Üç görünüm:
+//   canlı      — yarının gerçek hava tahminiyle (sayfa açılınca alınır;
+//                cekirdek/canli.js) her ilçede sel olasılığı ve alarm.
+//   olasılık   — "kendin dene": yağışı ve geçen haftayı kullanıcı seçer (hazır tablo).
+//                Bu ikisinin altında: model nasıl eğitildi, ne kadar doğru (dört
+//                kutu), hangi sel dalgalarını yakaladı, hangilerini kaçırdı ve neden.
 //   duyarlılık — coğrafi ağırlıklı lojistik regresyon (GWR): her ilçede sel
 //                neyle geliyor, o günün yağışıyla mı, önceki haftanınkiyle mi?
-// Metin sade dildedir; bütün sayılar veriden gelir (hesap/uyari_hazirla.py → veri/uyari.json).
+// Metin sade dildedir; bütün sayılar veriden gelir (hesap/uyari_hazirla.py →
+// veri/uyari.json; canlıda veri/uyari_model.json ve Open-Meteo hava tahmini).
 import { T, sayi } from '../cekirdek/dil.js';
-import { yerAdi, kacis, aralik, yuzde, yuzdeAraligi, yilAraligi, tarih, tarihAraligi } from '../cekirdek/bicim.js';
+import { yerAdi, kacis, aralik, yuzde, yuzdeAraligi, yilAraligi, tarih, tarihAraligi, tarihSaat } from '../cekirdek/bicim.js';
 import { secimHtml, secimDinle, listeDinle, sayiKutulari, lejantOgesi } from '../cekirdek/arayuz.js';
+import { jsonOku, UYARI_MODELI } from '../cekirdek/veri.js';
+import { yarininGirdileri, tahminler } from '../cekirdek/canli.js';
 
 // Olasılık: tek tonlu (turuncu) sıralı ölçek, açıktan koyuya. Mavi öteki
 // sekmelerde su derinliği demek; olasılık onunla karışmasın diye turuncu.
@@ -23,6 +28,9 @@ const CARPAN_SINIR = [2, 3, 5];
 const carpanSinifi = (c) => CARPAN_SINIR.filter((s) => c >= s).length;
 const KANITSIZ_RENK = '#d1d5db';
 const KANITSIZ_STIL = { color: '#6b7280', weight: 1.2, dashArray: '4 3', fillColor: KANITSIZ_RENK, fillOpacity: 0.5 };
+// Canlı tahmin henüz yok (alınıyor ya da o ilçe için eksik): açık gri, kesik çizgi.
+const VERISIZ_RENK = '#f3f4f6';
+const VERISIZ_STIL = { color: '#9ca3af', weight: 1, dashArray: '3 3', fillColor: VERISIZ_RENK, fillOpacity: 0.6 };
 
 // Modelin girdileri ve denenen yöntemler, sade adlarıyla (uyari.json'daki kısa ad → [tr, en]).
 const GIRDI = {
@@ -67,18 +75,25 @@ const alarmRozeti = () => `<span class="rozet kotu">${T('alarm', 'alert')}</span
 export const enDuyarlilar = (gwr, etken) => Object.keys(gwr.ilceler).filter((ad) => gwr.ilceler[ad][etken].kanitli)
   .sort((a, b) => gwr.ilceler[b][etken].deger - gwr.ilceler[a][etken].deger);
 
-export function uyariSekmesi({ uyari, harita }) {
+export function uyariSekmesi({ uyari, harita, lejantiYenile }) {
   const ilk = uyari.yagis_mm.includes(40) ? 40 : uyari.yagis_mm[Math.floor(uyari.yagis_mm.length / 2)];
-  const durum = { gorunum: 'olasilik', etken: 'gunun_yagisi', mm: ilk, gecmis: 'islak' };
-  let icerik = null, katman = null;
+  const durum = { gorunum: 'canli', etken: 'gunun_yagisi', mm: ilk, gecmis: 'islak' };
+  // Yarının tahmini. hal: bekliyor | yukleniyor | hazir | hata; ilceler: ad → { p, alarm, yagis } | null
+  const canli = { hal: 'bekliyor', hedef: null, alindi: null, ilceler: {}, hata: null };
+  let icerik = null, katman = null, acik = false, model = null;
   const sekiller = new Map();          // ilçe adı → Leaflet katmanı
   const esik = uyari.model.esik;
   const gwr = uyari.gwr;
   const [mmA, mmB] = gwr.olcek_mm;
   const { ilce_cagri: ilceCagri, il_cagri: ilCagri, dalga_arasi_gun: dalgaArasi } = uyari.olay_tanimi;
 
-  const olasilik = (ad) => uyari.kosullar[durum.gecmis].olasilik[ad][uyari.yagis_mm.indexOf(durum.mm)];
-  const alarm = (p) => p >= esik;
+  const canlida = () => durum.gorunum === 'canli';
+  /** Seçili görünümde ilçenin sel olasılığı; canlı tahmin yoksa null. */
+  const olasilik = (ad) => (canlida() ? canli.ilceler[ad]?.p ?? null
+    : uyari.kosullar[durum.gecmis].olasilik[ad][uyari.yagis_mm.indexOf(durum.mm)]);
+  const alarm = (p) => p !== null && p >= esik;
+  const verisizMetni = () => (canli.hal === 'hazir' ? T('tahmin yok', 'no forecast') : T('tahmin alınıyor…', 'fetching forecast…'));
+  const olasilikMetni = (p) => (p === null ? verisizMetni() : yuzde(p));
   const etki = (ad, etken = durum.etken) => gwr.ilceler[ad][etken];
   const duyarlilikta = () => durum.gorunum === 'duyarlilik';
   const etkiMetni = (c) => (c.kanitli ? kat(c.deger) : kanitsizEtiket());
@@ -94,12 +109,26 @@ export function uyariSekmesi({ uyari, harita }) {
         : KANITSIZ_STIL;
     }
     const p = olasilik(ad);
+    if (p === null) return VERISIZ_STIL;
     return alarm(p) ? { color: '#1f2937', weight: 2.5, dashArray: null, fillColor: RENK[sinif(p)], fillOpacity: 0.85 }
       : { color: '#ffffff', weight: 1, dashArray: null, fillColor: RENK[sinif(p)], fillOpacity: 0.8 };
   };
 
+  const olayGunuSatiri = (ilce) => `<span class="soluk">${T(`Sel olan gün sayısı (${yilAraligi(uyari.veri.yillar)})`, `Flood days (${yilAraligi(uyari.veri.yillar)})`)}:</span> ${sayi(ilce.olay_gunu)}`;
+
   const acilir = (ilce) => {
     const ad = `<b>${kacis(yerAdi(ilce.ad))}</b>`;
+    if (canlida()) {
+      const t = canli.ilceler[ilce.ad];
+      if (!t) return `${ad}<br><span class="soluk">${verisizMetni()}</span>`;
+      const y = t.yagis;
+      return `${ad} ${t.alarm ? alarmRozeti() : ''}<br>
+        <span class="soluk">${T('Yarın sel olasılığı', 'Flood probability tomorrow')}:</span> ${yuzde(t.p)}<br>
+        <span class="soluk">${T('Yarın beklenen yağış', 'Rain expected tomorrow')}:</span> ${sayi(y.yagis_mm, 1)} mm
+        <span class="soluk">(${T('en yoğun saatte', 'heaviest hour')} ${sayi(y.yagis_max1s_mm, 1)} mm)</span><br>
+        <span class="soluk">${T('Son 7 günün yağışı (bugün dahil)', 'Rain over the last 7 days (incl. today)')}:</span> ${sayi(y.yagis_onceki7g_mm, 1)} mm<br>
+        ${olayGunuSatiri(ilce)}`;
+    }
     if (duyarlilikta()) {
       const satir = (etken, etiket) => {
         const c = etki(ilce.ad, etken);
@@ -111,14 +140,14 @@ export function uyariSekmesi({ uyari, harita }) {
     const p = olasilik(ilce.ad);
     return `${ad} ${alarm(p) ? alarmRozeti() : ''}<br>
       <span class="soluk">${T(`Yarın ${durum.mm} mm yağarsa sel olasılığı`, `Flood probability with ${durum.mm} mm tomorrow`)}:</span> ${yuzde(p)}<br>
-      <span class="soluk">${T(`Sel olan gün sayısı (${yilAraligi(uyari.veri.yillar)})`, `Flood days (${yilAraligi(uyari.veri.yillar)})`)}:</span> ${sayi(ilce.olay_gunu)}`;
+      ${olayGunuSatiri(ilce)}`;
   };
 
   function katmanlariKur() {
     katman = L.layerGroup();
     uyari.ilceler.forEach((ilce) => {
       const sekil = L.geoJSON(ilce.geometri, { style: () => stil(ilce.ad) })
-        .bindTooltip(() => `${kacis(yerAdi(ilce.ad))}: ${duyarlilikta() ? etkiMetni(etki(ilce.ad)) : yuzde(olasilik(ilce.ad))}`, { sticky: true })
+        .bindTooltip(() => `${kacis(yerAdi(ilce.ad))}: ${duyarlilikta() ? etkiMetni(etki(ilce.ad)) : olasilikMetni(olasilik(ilce.ad))}`, { sticky: true })
         .bindPopup(() => acilir(ilce), { maxWidth: 260 });
       sekiller.set(ilce.ad, sekil);
       katman.addLayer(sekil);
@@ -127,11 +156,17 @@ export function uyariSekmesi({ uyari, harita }) {
 
   const boya = () => uyari.ilceler.forEach((ilce) => sekiller.get(ilce.ad).setStyle(stil(ilce.ad)));
 
+  // Olasılığa göre sıralı; canlıda yarının ve son 7 günün yağışıyla, tahmini olmayanlar sonda.
   function olasilikListesi() {
-    return uyari.ilceler.map((i) => ({ ad: i.ad, p: olasilik(i.ad) })).sort((a, b) => b.p - a.p)
+    const yagisi = (ad) => {
+      const y = canlida() && canli.ilceler[ad]?.yagis;
+      return y ? ` <span class="soluk kucuk">· ${T(`yarın ${sayi(y.yagis_mm, 1)} mm, son 7 gün ${sayi(y.yagis_onceki7g_mm, 1)} mm`,
+        `tomorrow ${sayi(y.yagis_mm, 1)} mm, last 7 days ${sayi(y.yagis_onceki7g_mm, 1)} mm`)}</span>` : '';
+    };
+    return uyari.ilceler.map((i) => ({ ad: i.ad, p: olasilik(i.ad) })).sort((a, b) => (b.p ?? -1) - (a.p ?? -1))
       .map(({ ad, p }) => `<li data-ilce="${kacis(ad)}" tabindex="0" role="button">
-        <i class="olcek-kare" style="--renk:${RENK[sinif(p)]}"></i> <b>${kacis(yerAdi(ad))}</b> ${yuzde(p)}
-        ${alarm(p) ? alarmRozeti() : ''}</li>`).join('');
+        <i class="olcek-kare${p === null ? ' kanitsiz' : ''}" style="--renk:${p === null ? VERISIZ_RENK : RENK[sinif(p)]}"></i>
+        <b>${kacis(yerAdi(ad))}</b> ${olasilikMetni(p)} ${alarm(p) ? alarmRozeti() : ''}${yagisi(ad)}</li>`).join('');
   }
 
   // Tablo görünümü: kanıtlananlar çarpana göre, kanıtlanmayanlar sonda ama değeriyle.
@@ -161,20 +196,68 @@ export function uyariSekmesi({ uyari, harita }) {
         <ul class="liste kaydir" data-yer="liste">${etkiListesi()}</ul>`;
       return;
     }
-    const ilceler = uyari.ilceler.map((i) => ({ ad: i.ad, p: olasilik(i.ad) }));
+    if (canlida() && canli.hal !== 'hazir') {
+      yer.innerHTML = `<p class="soluk">${T('Yarının hava tahmini alınıyor…', "Fetching tomorrow's weather forecast…")}</p>`;
+      return;
+    }
+    const ilceler = uyari.ilceler.map((i) => ({ ad: i.ad, p: olasilik(i.ad) })).filter((x) => x.p !== null);
+    if (!ilceler.length) {
+      yer.innerHTML = `<p class="soluk">${T('Hiçbir ilçe için tahmin yok.', 'No forecast for any district.')}</p>`;
+      return;
+    }
     const enYuksek = ilceler.reduce((a, b) => (b.p > a.p ? b : a));
     yer.innerHTML = `
       ${sayiKutulari([
-        [`${sayi(ilceler.filter((x) => alarm(x.p)).length)} / ${sayi(ilceler.length)}`, T('ilçede alarm', 'districts on alert')],
+        [`${sayi(ilceler.filter((x) => alarm(x.p)).length)} / ${sayi(uyari.ilceler.length)}`, T('ilçede alarm', 'districts on alert')],
         [yuzde(enYuksek.p), T(`en yüksek olasılık: ${kacis(yerAdi(enYuksek.ad))}`, `highest probability: ${kacis(yerAdi(enYuksek.ad))}`)],
       ])}
       <ul class="liste kaydir" data-yer="liste">${olasilikListesi()}</ul>`;
   }
 
-  // ── Olasılık görünümü: denetimler, eğitim, doğruluk, sel dalgaları, sınırlar ──
+  // ── Canlı ve olasılık görünümleri: tahmin ya da denetimler, sonra eğitim,
+  //    doğruluk, sel dalgaları, sınırlar ──
+
+  /** "Haritayı okumak": renk neyin olasılığı, alarm çerçevesi ve eşik; son: görünüme özgü not. */
+  const okumaNotu = (renkTr, renkEn, sonTr, sonEn) => {
+    const ornek = SINIR[2], n = sayi(Math.round(1 / ornek));
+    return `<p class="soluk kucuk">${T(`<b>Haritayı okumak:</b> renk, ${renkTr} (${yuzde(ornek)}: böyle ${n} günün birinde sel olur). Kalın siyah çerçeve: alarm, yani olasılık ${yuzde(esik)} ve üstü. Bu eşik, eğitim yıllarında kaçan sel ile boşa alarm arasındaki en iyi dengeyi verdi. ${sonTr}`,
+      `<b>Reading the map:</b> colour is ${renkEn} (${yuzde(ornek)}: a flood on one in ${n} such days). Thick black outline: alert, i.e. probability ${yuzde(esik)} or more. This threshold gave the best balance between missed floods and false alerts in the training years. ${sonEn}`)}</p>`;
+  };
+
+  function canliHtml() {
+    const c = uyari.sinama.canli_tahmin;
+    const ne = canli.hal === 'hazir'
+      ? T(`<b>${tarih(canli.hedef)}</b> için, her ilçenin yağış noktasındaki hava tahminiyle (ECMWF). Tahmin bu sayfa açılınca alındı: ${tarihSaat(canli.alindi)} (Türkiye saati).`,
+          `For <b>${tarih(canli.hedef)}</b>, from the weather forecast (ECMWF) at each district's rain point. Fetched when this page opened: ${tarihSaat(canli.alindi)} (Turkey time).`)
+      : T('Yarının hava tahmini, her ilçenin yağış noktası için alınıyor…', "Fetching tomorrow's weather forecast for each district's rain point…");
+    return `
+      <div class="kutu not"><p><b>${T('Araştırma amaçlıdır, resmî uyarı değildir.', 'For research only, not an official warning.')}</b>
+        ${T('Resmî uyarılar için <a href="https://meteouyari.mgm.gov.tr" target="_blank" rel="noopener">MGM</a> ve <a href="https://www.afad.gov.tr" target="_blank" rel="noopener">AFAD</a>.',
+            'For official warnings see <a href="https://meteouyari.mgm.gov.tr" target="_blank" rel="noopener">MGM</a> (Turkish Meteorological Service) and <a href="https://www.afad.gov.tr" target="_blank" rel="noopener">AFAD</a>.')}</p></div>
+      <p>${ne}</p>
+      <div data-yer="secim"></div>
+      ${okumaNotu('yarın o ilçede sel olma olasılığı', 'the probability of a flood in that district tomorrow',
+        'Model yarının tahmini yağışına (günün toplamı, en yoğun 1 ve 3 saati) ve son günlerin yağışına bakar. Hava tahmini yaklaşık 25 km\'lik karelerle hesaplanır; yan yana ilçeler bu yüzden çoğu zaman aynı yağışı alır.',
+        "The model looks at tomorrow's forecast rain (the day's total, its heaviest 1 and 3 hours) and the rain of the last few days. The forecast is computed on squares of about 25 km, so neighbouring districts often get the same rain.")}
+      <h3>${T('Bu haliyle ne kadar doğru?', 'How accurate is it, like this?')}</h3>
+      <p>${T(`Sayfanın yaptığının aynısı ${yilAraligi(c.yillar)} için geriye dönük denendi: her gün için, önceki gün öğlen elde olan hava tahmini, son günlerin yağışı da aynı tahmin modelinin kendi kaydından. Sonuç:`,
+             `Exactly what this page does was replayed for ${yilAraligi(c.yillar)}: for each day, the weather forecast available at noon the day before, with the last few days' rain also from the forecast model's own record. The result:`)}</p>
+      ${sayiKutulari([
+        [`${yuzdeSayi(c.duyarlilik)} / 100`, T('selde önceden alarm vardı', 'floods had an alert beforehand')],
+        [`${yuzdeSayi(c.kesinlik)} / 100`, T('alarmda gerçekten sel oldu', 'alerts were followed by a flood')],
+      ])}
+      <p class="soluk kucuk">${T('Hava tahmini: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo.com</a> (ECMWF açık verisi, CC BY 4.0). Aynı tarayıcıda bir saat saklanır; sonra yeniden alınır.',
+                                 'Weather forecast: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo.com</a> (ECMWF open data, CC BY 4.0). Kept for an hour in the same browser, then fetched again.')}</p>`;
+  }
+
+  /** Canlı tahmin alınamadıysa "kendin dene"nin başında nedeni. */
+  const hataNotu = () => (canli.hal !== 'hata' ? '' : `
+      <div class="kutu not"><p><b>${T('Yarının hava tahmini şu an alınamadı', "Tomorrow's weather forecast could not be fetched right now")}</b>
+        <span class="soluk">(${kacis(canli.hata === 'zaman' ? T('yanıt gelmedi', 'no response') : canli.hata)})</span>.
+        ${T('Yağışı aşağıdan kendin seçebilirsin; yeniden denemek için "Yarının tahmini"ne bas.', 'You can choose the rain below; press "Tomorrow\'s forecast" to try again.')}</p></div>`);
 
   function denetimHtml() {
-    const isl = uyari.kosullar.islak.onceki, ornek = SINIR[2];
+    const isl = uyari.kosullar.islak.onceki;
     return `
       <div class="alan-baslik">${T('Yarın kaç mm yağsın?', 'How much rain tomorrow?')}</div>
       ${secimHtml('mm', uyari.yagis_mm.filter((m) => m > 0).map((m) => [m, `${m} mm`]), durum.mm)}
@@ -183,8 +266,9 @@ export function uyariSekmesi({ uyari, harita }) {
       <p class="soluk kucuk bosluk-ust">${T(`Kuru: önceki 7 gün hiç yağmamış. Yağışlı: önceki 7 günde ${sayi(isl.yagis_onceki7g_mm)} mm, son 3 günde ${sayi(isl.yagis_onceki3g_mm)} mm yağmış; sel olan günlerden önce tipik olarak bu kadar yağıyor. Toprak ve kanallar doluysa az yağmur da sel getirir.`,
              `Dry: no rain in the previous 7 days. Wet: ${sayi(isl.yagis_onceki7g_mm)} mm over the previous 7 days, ${sayi(isl.yagis_onceki3g_mm)} mm in the last 3; that is typical before flood days. When soil and drains are full, even a little rain floods.`)}</p>
       <div data-yer="secim"></div>
-      <p class="soluk kucuk">${T(`<b>Haritayı okumak:</b> renk, seçtiğiniz yağışta o ilçede sel olma olasılığı (${yuzde(ornek)}: böyle ${sayi(Math.round(1 / ornek))} günün birinde sel olur). Kalın siyah çerçeve: alarm, yani olasılık ${yuzde(esik)} ve üstü. Bu eşik, eğitim yıllarında kaçan sel ile boşa alarm arasındaki en iyi dengeyi verdi. Yağış, yağış arşivinin (ERA5) ölçeğinde: arşiv sağanağı yumuşatır, istasyonda ölçülen yağış genelde daha yüksektir.`,
-             `<b>Reading the map:</b> colour is the probability of a flood in that district with the rain you chose (${yuzde(ornek)}: a flood on one in ${sayi(Math.round(1 / ornek))} such days). Thick black outline: alert, i.e. probability ${yuzde(esik)} or more. This threshold gave the best balance between missed floods and false alerts in the training years. Rain is on the scale of the rain archive (ERA5), which smooths downpours; station rainfall is usually higher.`)}</p>`;
+      ${okumaNotu('seçtiğiniz yağışta o ilçede sel olma olasılığı', 'the probability of a flood in that district with the rain you chose',
+        'Yağış, yağış arşivinin (ERA5) ölçeğinde: arşiv sağanağı yumuşatır, istasyonda ölçülen yağış genelde daha yüksektir.',
+        'Rain is on the scale of the rain archive (ERA5), which smooths downpours; station rainfall is usually higher.')}`;
   }
 
   function egitimHtml() {
@@ -209,7 +293,7 @@ export function uyariSekmesi({ uyari, harita }) {
   }
 
   function dogrulukHtml() {
-    const s = uyari.sinama, tum = s.tum_yillar, og = s.oglen_tahmin, yok = s.tahminsiz, k = tum.dort_kutu;
+    const s = uyari.sinama, tum = s.tum_yillar, og = s.oglen_tahmin, yok = s.tahminsiz, cn = s.canli_tahmin, k = tum.dort_kutu;
     const dogruluk = (k.dogru_alarm + k.dogru_sessiz) / k.ilce_gun, hicAlarmsiz = (k.ilce_gun - k.sel) / k.ilce_gun;
     const [yA, yB] = tum.aralik_95.duyarlilik, [iA, iB] = tum.aralik_95.kesinlik;
     const secim = uyari.egitim.secim_yillari, temiz = tum.yillar.filter((y) => y > secim[1]);
@@ -231,12 +315,14 @@ export function uyariSekmesi({ uyari, harita }) {
       <div class="kutu not"><p><b>${T(`Neden "${yuzde(dogruluk)} doğru" demiyoruz?`, `Why not just say "${yuzde(dogruluk)} accurate"?`)}</b>
         ${T(`Model ilçe-günlerin ${yuzde(dogruluk, 1)} kadarında doğru tahminde bulundu. Ama hiç alarm vermeyen bir model ${yuzde(hicAlarmsiz, 1)} kadarında doğru olurdu, çünkü günlerin çoğunda sel olmaz. Bu yüzden başarı iki soruyla ölçülür: seller önceden görüldü mü, alarmlar doğru çıktı mı?`,
             `The model was right on ${yuzde(dogruluk, 1)} of district-days. But a model that never alerts would be right on ${yuzde(hicAlarmsiz, 1)}, because most days have no flood. So success is measured by two questions: were floods seen in advance, and did the alerts come true?`)}</p></div>
-      <p>${T(`<b>Bir gün önceden de çalışıyor.</b> Yukarıdaki sınamada o günün yağışı arşivden alındı, yani yağış önceden biliniyormuş gibi. Gerçek uyarı bir gün önce, hava tahminiyle verilir. ${yilAraligi(og.yillar)} böyle de sınandı: önceki gün öğlen elde olan hava tahminiyle (ECMWF) her 100 selin ${yuzdeSayi(og.duyarlilik)} tanesinde alarm vardı ve her 100 alarmın ${yuzdeSayi(og.kesinlik)} tanesi doğru çıktı. Hava tahmini kullanılmasaydı, yalnız geçmiş günlerin yağışıyla, her 100 selin ${yuzdeSayi(yok.duyarlilik)} tanesinde alarm olurdu.`,
-             `<b>It also works a day ahead.</b> The test above took the day's rain from the archive, as if it were known in advance. A real alert is issued the day before, from a weather forecast. ${yilAraligi(og.yillar)} was tested this way too: with the ECMWF forecast available at noon the day before, ${yuzdeSayi(og.duyarlilik)} of every 100 floods had an alert and ${yuzdeSayi(og.kesinlik)} of every 100 alerts came true. Without a forecast, from earlier days' rain alone, only ${yuzdeSayi(yok.duyarlilik)} of every 100 floods would have had an alert.`)}</p>
       <p class="soluk kucuk">${T(`Sonuçlar az sayıda büyük olaya dayanıyor. Başka yıllar yaşansaydı her 100 selden önceden görülen ${yuzdeSayi(yA)} ile ${yuzdeSayi(yB)} arasında, her 100 alarmdan doğru çıkan ${yuzdeSayi(iA)} ile ${yuzdeSayi(iB)} arasında olabilirdi (%95 güven aralığı).`,
                                  `The results rest on few big events. Had other years happened, floods seen in advance could be anywhere from ${yuzdeSayi(yA)} to ${yuzdeSayi(yB)} in 100, and alerts that came true from ${yuzdeSayi(iA)} to ${yuzdeSayi(iB)} in 100 (95% confidence interval).`)}
         ${temiz.length ? T(` Yöntem ${yilAraligi(secim)} yıllarına bakılarak seçildi; ${yilAraligi(temiz)} hiçbir seçimde kullanılmadı, en temiz sınav o yıllar.`,
-                           ` The method was chosen by looking at ${yilAraligi(secim)}; ${yilAraligi(temiz)} played no part in any choice and is the cleanest test.`) : ''}</p>`;
+                           ` The method was chosen by looking at ${yilAraligi(secim)}; ${yilAraligi(temiz)} played no part in any choice and is the cleanest test.`) : ''}</p>
+      <p>${T(`<b>Bir gün önceden de çalışıyor.</b> Yukarıdaki sınamada o günün yağışı arşivden alındı, yani yağış önceden biliniyormuş gibi. Gerçek uyarı bir gün önce, hava tahminiyle verilir. ${yilAraligi(og.yillar)} böyle de sınandı: önceki gün öğlen elde olan hava tahminiyle (ECMWF) her 100 selin ${yuzdeSayi(og.duyarlilik)} tanesinde alarm vardı ve her 100 alarmın ${yuzdeSayi(og.kesinlik)} tanesi doğru çıktı. Hava tahmini kullanılmasaydı, yalnız geçmiş günlerin yağışıyla, her 100 selin ${yuzdeSayi(yok.duyarlilik)} tanesinde alarm olurdu.`,
+             `<b>It also works a day ahead.</b> The test above took the day's rain from the archive, as if it were known in advance. A real alert is issued the day before, from a weather forecast. ${yilAraligi(og.yillar)} was tested this way too: with the ECMWF forecast available at noon the day before, ${yuzdeSayi(og.duyarlilik)} of every 100 floods had an alert and ${yuzdeSayi(og.kesinlik)} of every 100 alerts came true. Without a forecast, from earlier days' rain alone, only ${yuzdeSayi(yok.duyarlilik)} of every 100 floods would have had an alert.`)}</p>
+      <p>${T(`<b>Sayfadaki canlı tahmin de böyle sınandı.</b> "Yarının tahmini" her gün aynısını yapıyor; tek farkı, son günlerin yağışının da tahmin modelinin kendi kaydından gelmesi (yağış arşivi birkaç gün geç yayımlanır). Böyle sınanınca her 100 selin ${yuzdeSayi(cn.duyarlilik)} tanesinde alarm vardı, her 100 alarmın ${yuzdeSayi(cn.kesinlik)} tanesi doğru çıktı.`,
+             `<b>The live forecast on this page was tested the same way.</b> "Tomorrow's forecast" does the same every day; the only difference is that the last few days' rain also comes from the forecast model's own record (the rain archive is published a few days late). Tested that way, ${yuzdeSayi(cn.duyarlilik)} of every 100 floods had an alert and ${yuzdeSayi(cn.kesinlik)} of every 100 alerts came true.`)}</p>`;
   }
 
   const dalgaSatiri = (d) => {
@@ -283,7 +369,7 @@ export function uyariSekmesi({ uyari, harita }) {
           <li>${T('<b>Mahalle yok:</b> itfaiye kayıtlarında adres olmadığı için birim ilçe.', '<b>No neighbourhoods:</b> fire records carry no address, so the unit is the district.')}</li>
         </ul></div>`;
 
-  const olasilikHtml = () => denetimHtml() + egitimHtml() + dogrulukHtml() + dalgalarHtml() + sinirlarHtml();
+  const aciklamaHtml = () => egitimHtml() + dogrulukHtml() + dalgalarHtml() + sinirlarHtml();
 
   function duyarlilikHtml() {
     const s = gwr.sinama, yillar = yilAraligi(s.gwr.yillar);
@@ -312,9 +398,41 @@ export function uyariSekmesi({ uyari, harita }) {
       </ul>`;
   }
 
+  const GORUNUMLER = {
+    canli: () => canliHtml() + aciklamaHtml(),
+    olasilik: () => hataNotu() + denetimHtml() + aciklamaHtml(),
+    duyarlilik: duyarlilikHtml,
+  };
+
   function gorunumCiz() {
-    icerik.querySelector('[data-yer="gorunum"]').innerHTML = duyarlilikta() ? duyarlilikHtml() : olasilikHtml();
+    icerik.querySelector('[data-yer="gorunum"]').innerHTML = GORUNUMLER[durum.gorunum]();
     secimCiz();
+  }
+
+  const dugmeleriGuncelle = (grup) => icerik.querySelectorAll(`[data-secim="${grup}"]`).forEach((d) => {
+    const secili = d.dataset.deger === String(durum[grup]);
+    d.classList.toggle('secili', secili);
+    d.setAttribute('aria-pressed', secili);
+  });
+
+  /** Yarının tahmini: model dosyası (bir kez) + hava tahmini. Alınamazsa "kendin dene"ye döner. */
+  async function canliYukle() {
+    Object.assign(canli, { hal: 'yukleniyor', hata: null });
+    let dondu = false;
+    try {
+      model = model || await jsonOku(UYARI_MODELI);
+      const g = await yarininGirdileri(model);
+      Object.assign(canli, { hal: 'hazir', hedef: g.hedef, alindi: g.alindi, ilceler: tahminler(model, g.girdiler, esik) });
+    } catch (hata) {
+      console.warn('Yarının tahmini alınamadı:', hata);
+      Object.assign(canli, { hal: 'hata', ilceler: {}, hata: hata.name === 'AbortError' ? 'zaman' : String(hata.message || hata) });
+      if (canlida()) { durum.gorunum = 'olasilik'; dondu = true; }
+    }
+    if (!acik || !(canlida() || dondu)) return;      // sekme kapalı ya da başka görünümde: açılınca çizilir
+    dugmeleriGuncelle('gorunum');
+    gorunumCiz();
+    boya();
+    lejantiYenile();
   }
 
   function ciz() {
@@ -323,7 +441,8 @@ export function uyariSekmesi({ uyari, harita }) {
       <p>${T(`Bu sekmedeki model, İzmir İtfaiyesi'nin ${yilAraligi(uyari.veri.yillar)} su baskını kayıtlarından öğrendi. Her ilçe için tek bir soruyu yanıtlıyor: <b>yarın bu ilçeye en az ${ilceCagri} su baskını çağrısı gelir mi?</b> Aşağıda buna kısaca "sel" diyoruz.`,
              `The model in this tab learned from İzmir Fire Department flood calls, ${yilAraligi(uyari.veri.yillar)}. For each district it answers one question: <b>will the district get at least ${ilceCagri} flood calls tomorrow?</b> Below, we call that a "flood".`)}</p>
       <div class="alan-baslik">${T('Harita ne göstersin?', 'What should the map show?')}</div>
-      ${secimHtml('gorunum', [['olasilik', T('Sel olasılığı', 'Flood probability')], ['duyarlilik', T('Hangi yağış etkili?', 'Which rain matters?')]], durum.gorunum)}
+      ${secimHtml('gorunum', [['canli', T('Yarının tahmini', "Tomorrow's forecast")], ['olasilik', T('Kendin dene', 'Try it yourself')],
+        ['duyarlilik', T('Hangi yağış etkili?', 'Which rain matters?')]], durum.gorunum)}
       <div data-yer="gorunum"></div>`;
     gorunumCiz();
   }
@@ -337,12 +456,23 @@ export function uyariSekmesi({ uyari, harita }) {
   // Lejant: başlık ve neyin olasılığı / çarpanı olduğu, seçili yağışla birlikte.
   const lejantBasligi = (baslik, alt) => `<span class="lej-baslik">${baslik}</span><span class="lej-alt">${alt}</span>`;
 
+  const olasilikSiniflari = () => [yuzdeAraligi(0, SINIR[0]), ...SINIR.slice(1).map((s, i) => yuzdeAraligi(SINIR[i], s)),
+    T(`${yuzde(SINIR[SINIR.length - 1])} ve üstü`, `${yuzde(SINIR[SINIR.length - 1])} or more`)]
+    .map((etiket, i) => lejantOgesi(RENK[i], etiket)).join('')
+    + `<span class="lej"><i style="--renk:${RENK[2]};border:2.5px solid #1f2937;box-shadow:0 0 0 1px #e5e7eb"></i>${T(`kalın çerçeve: alarm (${yuzde(esik)} ve üstü)`, `thick outline: alert (${yuzde(esik)} or more)`)}</span>`;
+
   const olasilikLejanti = () => lejantBasligi(T('Sel olasılığı', 'Flood probability'),
     T(`bir ilçeye ≥ ${ilceCagri} su baskını çağrısı · ${durum.mm} mm, ${gecmisAdi()}`, `≥ ${ilceCagri} flood calls in a district · ${durum.mm} mm, ${gecmisAdi()}`))
-    + [yuzdeAraligi(0, SINIR[0]), ...SINIR.slice(1).map((s, i) => yuzdeAraligi(SINIR[i], s)),
-      T(`${yuzde(SINIR[SINIR.length - 1])} ve üstü`, `${yuzde(SINIR[SINIR.length - 1])} or more`)]
-      .map((etiket, i) => lejantOgesi(RENK[i], etiket)).join('')
-    + `<span class="lej"><i style="--renk:${RENK[2]};border:2.5px solid #1f2937;box-shadow:0 0 0 1px #e5e7eb"></i>${T(`kalın çerçeve: alarm (${yuzde(esik)} ve üstü)`, `thick outline: alert (${yuzde(esik)} or more)`)}</span>`;
+    + olasilikSiniflari();
+
+  const canliLejanti = () => {
+    const eksik = canli.hal !== 'hazir' || uyari.ilceler.some((i) => !canli.ilceler[i.ad]);
+    return lejantBasligi(T('Yarın sel olasılığı', 'Flood probability tomorrow'), canli.hal === 'hazir'
+      ? T(`${tarih(canli.hedef)} · hava tahmini: ECMWF · bir ilçeye ≥ ${ilceCagri} su baskını çağrısı`,
+          `${tarih(canli.hedef)} · forecast: ECMWF · ≥ ${ilceCagri} flood calls in a district`)
+      : T('tahmin alınıyor…', 'fetching forecast…'))
+      + olasilikSiniflari() + (eksik ? lejantOgesi(VERISIZ_RENK, verisizMetni(), 'kanitsiz') : '');
+  };
 
   const duyarlilikLejanti = () => lejantBasligi(T('Sel kaç kat olası?', 'How many times likelier?'), etkenAdi())
     + [T(`${CARPAN_SINIR[0]} kattan az`, `under ${CARPAN_SINIR[0]}×`),
@@ -356,29 +486,29 @@ export function uyariSekmesi({ uyari, harita }) {
     baslik: () => T('Uyarı', 'Alert'),
     goster(yeniIcerik) {
       icerik = yeniIcerik;
+      acik = true;
       if (!katman) katmanlariKur();
+      const canliIste = () => { if (canlida() && ['bekliyor', 'hata'].includes(canli.hal)) canliYukle(); };
       secimDinle(icerik, (grup, deger) => {
         durum[grup] = grup === 'mm' ? Number(deger) : deger;
-        icerik.querySelectorAll(`[data-secim="${grup}"]`).forEach((d) => {
-          const secili = d.dataset.deger === String(durum[grup]);
-          d.classList.toggle('secili', secili);
-          d.setAttribute('aria-pressed', secili);
-        });
+        dugmeleriGuncelle(grup);
         harita.harita.closePopup();
-        if (grup === 'gorunum') gorunumCiz(); else secimCiz();
+        if (grup === 'gorunum') { canliIste(); gorunumCiz(); } else secimCiz();
         boya();
       });
       listeDinle(icerik, 'data-ilce', ilceyeGit);
+      canliIste();
       ciz();
       boya();
       katman.addTo(harita.harita);
       harita.ilGorunumu();
     },
     gizle() {
+      acik = false;
       harita.harita.closePopup();
       harita.harita.removeLayer(katman);
     },
     ciz,
-    lejant: () => (duyarlilikta() ? duyarlilikLejanti() : olasilikLejanti()),
+    lejant: () => (duyarlilikta() ? duyarlilikLejanti() : canlida() ? canliLejanti() : olasilikLejanti()),
   };
 }

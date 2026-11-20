@@ -55,18 +55,24 @@ GUNUN_YAGISI = ["yagis_mm", "yagis_max1s_mm", "yagis_max3s_mm"]   # tahminden ge
 
 def tahmin_arsivi(ilce_df, model, bas, bit, once=1):
     """Her ilçe noktası için saatlik tahmin: DataFrame(ilce, zaman, mm). Her saatin
-    değeri, modelin `once` gün önceki koşusundan. Eksik saatler NaN kalır."""
+    değeri, modelin `once` gün önceki koşusundan; once=0: modelin kendi kaydı (her
+    saat, o saati kapsayan en yeni koşudan — canlı sayfada geçmiş saatler budur).
+    Eksik saatler NaN kalır."""
+    degisken = "precipitation" if once == 0 else f"precipitation_previous_day{once}"
     ek = "" if once == 1 else f"_d{once}"
-    return saatlik_arsiv(ag.OPEN_METEO_GECMIS_TAHMIN_URL, ilce_df, bas, bit, f"precipitation_previous_day{once}",
+    return saatlik_arsiv(ag.OPEN_METEO_GECMIS_TAHMIN_URL, ilce_df, bas, bit, degisken,
                          f"tahmin_{model}{ek}_{{bas}}_{{bit}}.json", models=model)
+
+
+def tam_gunler(saatlik):
+    """İlçe-gün başına 24 saatin hepsi var mı: DataFrame(ilce, gun, tam)."""
+    return (saatlik.assign(gun=saatlik.zaman.dt.date).groupby(["ilce", "gun"]).mm
+            .agg(lambda x: x.notna().sum() == 24).rename("tam").reset_index())
 
 
 def tahmin_gunluk(saatlik):
     """Günün tahmin kolonları; 24 saati eksiksiz olmayan ilçe-günler atılır."""
-    tam = (saatlik.assign(gun=saatlik.zaman.dt.date).groupby(["ilce", "gun"]).mm
-           .agg(lambda x: x.notna().sum() == 24).rename("tam").reset_index())
-    g = gunluk_yagis(saatlik)
-    g = g.merge(tam, on=["ilce", "gun"])
+    g = gunluk_yagis(saatlik).merge(tam_gunler(saatlik), on=["ilce", "gun"])
     g = g[g.tam][["ilce", "gun"] + GUNUN_YAGISI]
     g["gun"] = g.gun.astype(str)
     return g
