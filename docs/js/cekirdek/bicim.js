@@ -36,12 +36,19 @@ export const yuzde = (oran, kesir = 0) => yuzdeIsareti(sayi(oran * 100, kesir));
 /** İki oranın yüzde aralığı: tr "%5–10", en "5–10%". */
 export const yuzdeAraligi = (a, b) => yuzdeIsareti(`${sayi(a * 100)}–${sayi(b * 100)}`);
 
-/** Yıl listesi → "2022–2026" (ilk ve son). */
-export const yilAraligi = (yillar) => `${yillar[0]}–${yillar[yillar.length - 1]}`;
+/** Yıl listesi → "2022–2026" (ilk ve son; tek yılsa "2025"). */
+export function yilAraligi(yillar) {
+  const ilk = yillar[0], son = yillar[yillar.length - 1];
+  return ilk === son ? String(ilk) : `${ilk}–${son}`;
+}
 
-/** "2025-10-23" → tr "23 Ekim 2025", en "23 October 2025". */
-export const tarih = (gun) => new Date(`${gun}T12:00:00`).toLocaleDateString(aktifDil() === 'tr' ? 'tr-TR' : 'en-GB',
+const gunBicimi = () => new Intl.DateTimeFormat(aktifDil() === 'tr' ? 'tr-TR' : 'en-GB',
   { day: 'numeric', month: 'long', year: 'numeric' });
+const gunu = (gun) => new Date(`${gun}T12:00:00`);
+/** "2025-10-23" → tr "23 Ekim 2025", en "23 October 2025". */
+export const tarih = (gun) => gunBicimi().format(gunu(gun));
+/** İki gün → tr "2–3 Şubat 2022", "26 Kasım – 5 Aralık 2023" (aynı günse tek tarih). */
+export const tarihAraligi = (ilk, son) => gunBicimi().formatRange(gunu(ilk), gunu(son));
 
 /** Veriden gelen metni HTML'e güvenle koymak için. */
 export const kacis = (metin) => String(metin ?? '').replace(/[&<>"']/g,

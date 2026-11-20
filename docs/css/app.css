@@ -94,6 +94,7 @@ input[type=search] { width: 100%; padding: 8px 10px; border: 1px solid var(--ciz
 .rozet.oncelik-1 { background: var(--o1-zemin); color: var(--o1); }
 .rozet.oncelik-2 { background: var(--o2-zemin); color: var(--o2); }
 .rozet.oncelik-3 { background: var(--o3-zemin); color: var(--o3); }
+.rozet.gec { background: var(--o3-zemin); color: var(--o3); }
 ul.liste { list-style: none; padding: 0 !important; margin: 10px 0; border: 1px solid var(--cizgi); border-radius: 10px; overflow: hidden; }
 ul.liste.kaydir { max-height: 320px; overflow-y: auto; }
 ul.liste li { padding: 8px 11px; margin: 0; border-bottom: 1px solid var(--cizgi); font-size: 13.5px; line-height: 1.45; }
@@ -107,6 +108,20 @@ table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--cizgi); vertical-align: top; }
 th { font-size: 12px; color: var(--soluk); font-weight: 600; }
 td.s, th.s { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* uyarı sekmesi: dört kutulu sonuç tablosu (alarm × sel), girdi sırası, sel dalgaları */
+table.dortlu { border-collapse: separate; border-spacing: 4px; table-layout: fixed; }
+table.dortlu th { border: 0; padding: 2px 4px; text-align: center; }
+table.dortlu th[scope=row] { text-align: left; width: 28%; vertical-align: middle; }
+table.dortlu td { border: 0; border-radius: 8px; padding: 8px 6px; text-align: center; vertical-align: middle; }
+table.dortlu td.iyi { background: var(--iyi-zemin); } table.dortlu td.kotu { background: var(--kotu-zemin); }
+table.dortlu td b { display: block; font-size: 17px; line-height: 1.25; font-variant-numeric: tabular-nums; }
+table.dortlu td span { display: block; font-size: 12px; color: var(--soluk); line-height: 1.3; }
+ol.onem { padding-left: 22px !important; }
+ol.onem li { margin-bottom: 4px; font-size: 14px; }
+ol.onem i { display: block; height: 5px; border-radius: 3px; margin-top: 2px; background: var(--vurgu); opacity: .65;
+  width: calc(var(--oran) * 100%); }
+ul.liste.dalgalar li { font-size: 13px; }
+ul.liste.dalgalar .rozet { margin-right: 2px; }
 
 /* ── Lejant ──────────────────────────────────────────────────── */
 #lejant { position: absolute; right: 12px; bottom: 28px; z-index: 900; max-width: 250px;
@@ -121,6 +136,8 @@ td.s, th.s { text-align: right; font-variant-numeric: tabular-nums; white-space:
   transform: rotate(45deg); margin: -3px 0 0 auto; }
 #lejant:not(.kapali) .lejant-dugme::after { transform: rotate(-135deg); margin-top: 3px; }
 .lej { display: flex; align-items: center; gap: 7px; }
+.lej-baslik { font-weight: 700; }
+.lej-alt { font-size: 11.5px; color: var(--soluk); line-height: 1.35; margin: -3px 0 2px; }
 /* renk yarı saydam olabilir (su sınıfları): haritadaki gibi açık zemin üstünde gösterilir */
 .lej i { width: 13px; height: 13px; flex: none; border-radius: 3px; border: 1px solid rgba(0, 0, 0, .15);
   background: linear-gradient(var(--renk), var(--renk)), #eef1f4; }

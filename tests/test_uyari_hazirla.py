@@ -1,5 +1,6 @@
-"""Uyarı sekmesi verisi: ıslak geçmiş ve ilçe sınırı eşlemesi."""
+"""Uyarı sekmesi verisi: ıslak geçmiş, ilçe sınırı eşlemesi, sonuç kutuları, sel dalgaları."""
 import pandas as pd
+import pytest
 
 from hesap import siniflandirma as sn
 from hesap import uyari_hazirla as uh
@@ -41,8 +42,33 @@ def test_gwr_ozeti_kanit_ve_sira():
     assert o["ilceler"]["a"]["gunun_yagisi"]["kanitli"] and not o["ilceler"]["a"]["onceki_hafta"]["kanitli"]
     assert o["ilceler"]["c"]["gunun_yagisi"]["kanitli"]          # sıfırın altında da kanıtlı (ters etki)
     assert o["cok_nokta_sira_korelasyonu"] == 1.0
-    try:
+    with pytest.raises(ValueError):                              # eksik ilçe
         uh.gwr_ozeti(g, ["a", "b"])
-        assert False, "eksik ilçe hata vermeli"
-    except ValueError:
-        pass
+
+
+def _ilce_gun():
+    """İki gün × üç ilçe; 1. gün a'da, 2. gün b'de sel."""
+    return pd.DataFrame({"gun": ["2022-01-01"] * 3 + ["2022-01-02"] * 3, "yil": 2022, "ilce": ["a", "b", "c"] * 2,
+                         "olay": [1, 0, 0, 0, 1, 0], "cagri_su": [12, 3, 0, 1, 20, 9],
+                         "yagis_mm": [30.0, 5.0, 1.0, 0.0, 12.34, 8.0],
+                         "yagis_onceki7g_mm": [2.0, 2.0, 2.0, 40.0, 41.26, 39.0]})
+
+
+def test_dort_kutu_toplami_ilce_gun_sayisi():
+    o = {"yillar": [2022], "olay": 2, "dogru_alarm": 1, "yanlis_alarm": 2, "kacirilan": 1}
+    assert uh.dort_kutu(_ilce_gun(), o) == {"ilce_gun": 6, "gun": 2, "sel": 2, "dogru_alarm": 1,
+                                            "bosa_alarm": 2, "kacan": 1, "dogru_sessiz": 2}
+    with pytest.raises(ValueError):                              # sel sayısı tutmuyor
+        uh.dort_kutu(_ilce_gun(), {**o, "olay": 3})
+
+
+def test_dalgalar_ilk_gunun_en_cok_cagrili_ilcesi():
+    ataklar = [{"ilk": "2022-01-01", "son": "2022-01-01", "gun": 1, "ilk_gun_alarm": True, "herhangi_alarm": True},
+               {"ilk": "2022-01-02", "son": "2022-01-02", "gun": 1, "ilk_gun_alarm": False, "herhangi_alarm": False}]
+    d = uh.dalgalar(_ilce_gun(), ataklar)
+    assert [(a["ilce"], a["cagri"], a["il_cagri"]) for a in d["liste"]] == [("a", 12, 15), ("b", 20, 30)]
+    assert (d["liste"][1]["yagis_mm"], d["liste"][1]["onceki7g_mm"]) == (12.3, 41.3)
+    assert d["ilk_gun_alarmli"] == {"dalga": 1, "yagis_mm": 30.0, "onceki7g_mm": 2.0}
+    assert d["ilk_gun_alarmsiz"] == {"dalga": 1, "yagis_mm": 12.3, "onceki7g_mm": 41.3}
+    assert uh.dalgalar(_ilce_gun(), ataklar[:1])["ilk_gun_alarmsiz"] == {"dalga": 0, "yagis_mm": None,
+                                                                         "onceki7g_mm": None}

@@ -56,7 +56,7 @@ def test_uyari_verisi_sozlesmesi():
     """docs/js/sekmeler/uyari.js'in okuduğu alanlar (hesap/uyari_hazirla.py)."""
     u = json_oku(UYARI_JSON)
     assert {"ad", "aciklama", "esik", "egitim_yillari"} <= set(u["model"])
-    assert {"ilce_cagri", "il_cagri"} <= set(u["olay_tanimi"]) and "yillar" in u["veri"]
+    assert {"ilce_cagri", "il_cagri", "dalga_arasi_gun"} <= set(u["olay_tanimi"]) and "yillar" in u["veri"]
     adlar = {i["ad"] for i in u["ilceler"]}
     assert len(adlar) == 30 and all({"olay_gunu", "geometri"} <= set(i) for i in u["ilceler"])
     for k in ("kuru", "islak"):
@@ -72,6 +72,21 @@ def test_uyari_verisi_sozlesmesi():
         assert {"atak", "atak_ilk_gun", "duyarlilik", "kesinlik", "yillar", "aralik_95"} <= set(s)
         assert {"duyarlilik", "kesinlik"} <= set(s["aralik_95"])
     assert all({"yil", "buyuk_gun", "buyuk_gun_alarmli"} <= set(y) for y in u["sinama"]["yillar"])
+    tum = u["sinama"]["tum_yillar"]
+    k = tum["dort_kutu"]                                     # dört kutu: alarm × sel (ilçe-gün)
+    assert k["dogru_alarm"] + k["bosa_alarm"] + k["kacan"] + k["dogru_sessiz"] == k["ilce_gun"]
+    assert k["dogru_alarm"] + k["kacan"] == k["sel"]
+    assert abs(k["dogru_alarm"] / k["sel"] - tum["duyarlilik"]) < 1e-3
+    assert abs(k["dogru_alarm"] / (k["dogru_alarm"] + k["bosa_alarm"]) - tum["kesinlik"]) < 1e-3
+    d = tum["dalgalar"]                                      # büyük sel dalgaları
+    assert len(d["liste"]) == tum["atak"] and d["ilk_gun_alarmli"]["dalga"] == tum["atak_ilk_gun"]
+    assert d["ilk_gun_alarmli"]["dalga"] + d["ilk_gun_alarmsiz"]["dalga"] == tum["atak"]
+    assert sum(a["herhangi_alarm"] for a in d["liste"]) == tum["atak_herhangi"]
+    assert all({"ilk", "son", "gun", "ilk_gun_alarm", "herhangi_alarm", "ilce", "cagri", "il_cagri", "yagis_mm",
+                "onceki7g_mm"} <= set(a) and a["ilce"] in adlar for a in d["liste"])
+    e = u["egitim"]
+    assert u["model"]["ad"] in e["modeller"] and e["secim_yillari"][0] < e["secim_yillari"][1]
+    assert any(y > e["secim_yillari"][1] for y in tum["yillar"])     # seçimde hiç kullanılmamış sınav yılı var
     o = u["ornek"]
     assert {"ilce", "gun", "haber_mm", "haber_saat", "arsiv_mm", "tahmin_mm", "cagri", "cagri_gun_sayisi",
             "kaynaklar"} <= set(o) and o["ilce"] in adlar

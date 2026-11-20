@@ -12,7 +12,11 @@ yükü biner?" Bütün sayılar buradan gelir; sitede elle yazılı sayı yoktur
               ortancası (veriden; "tipik bir olay gününün geçmişi")
     Önceki 7 günün yağışı modelin en önemli değişkenidir; bu yüzden iki koşul.
   • Sınama özeti: guvenilirlik.json (yıl yıl, ataklar, %95 aralık, öğlen
-    uyarısı) — sekmedeki başlık sayıları.
+    uyarısı) — sekmedeki başlık sayıları. Ayrıca dört kutulu sonuç tablosu
+    (doğru alarm, boşa alarm, kaçan sel, doğru sessizlik; ilçe-gün) ve büyük
+    sel dalgalarının (atak) listesi: her dalganın ilk gününde en çok çağrının
+    geldiği ilçe ve oradaki arşiv yağışı — model neyi neden kaçırdı?
+  • Eğitim: karşılaştırılan yöntemler ve yöntemin seçildiği yıllar.
   • İlçe sınırları: sinir/izmir_ilce.geojson, sadeleştirilmiş.
   • Örnek: 23 Ekim 2025 Foça sağanağı. Haberdeki yağış elle (kaynaklı);
     arşiv ve tahmin yağışı ile çağrılar veriden.
@@ -27,6 +31,7 @@ yükü biner?" Bütün sayılar buradan gelir; sitede elle yazılı sayı yoktur
 import datetime as dt
 import logging
 import os
+from statistics import median
 
 import pandas as pd
 import shapely
@@ -77,15 +82,47 @@ def ilce_geometrileri(adlar):
     return out
 
 
-def sinama_ozeti(g, secili):
-    """guvenilirlik.json → sekmenin başlık sayıları."""
+def dort_kutu(t, o):
+    """Sonucun dört kutusu (ilçe-gün): alarm × sel. Doğru sessizlik, sınanan
+    ilçe-gün sayısından çıkar; satırların guvenilirlik'le aynı olduğunu sel
+    sayısı denetler. t: sn.hazirla'dan geçmiş ilce_gun tablosu."""
+    x = t[t.yil.isin(o["yillar"])]
+    if int(x.olay.sum()) != o["olay"]:
+        raise ValueError("ilce_gun ile guvenilirlik.json uyuşmuyor: önce hesap.guvenilirlik")
+    return {"ilce_gun": len(x), "gun": int(x.gun.nunique()), "sel": o["olay"],
+            "dogru_alarm": o["dogru_alarm"], "bosa_alarm": o["yanlis_alarm"], "kacan": o["kacirilan"],
+            "dogru_sessiz": len(x) - o["dogru_alarm"] - o["yanlis_alarm"] - o["kacirilan"]}
+
+
+def dalgalar(t, ataklar):
+    """Büyük sel dalgaları (guvenilirlik atakları) ve her birinin ilk gününde en
+    çok çağrının geldiği ilçe: çağrısı, arşivdeki o günkü ve önceki 7 günlük
+    yağışı. İlk gününde alarm alan / almayan dalgaların ortanca yağışı, modelin
+    neyi göremediğini gösterir."""
+    liste = []
+    for a in ataklar:
+        gun = t[t.gun == a["ilk"]]
+        en = gun.loc[gun.cagri_su.idxmax()]
+        liste.append({**a, "il_cagri": int(gun.cagri_su.sum()), "ilce": en.ilce, "cagri": int(en.cagri_su),
+                      "yagis_mm": round(float(en.yagis_mm), 1), "onceki7g_mm": round(float(en.yagis_onceki7g_mm), 1)})
+    def ortanca(alarmli):
+        x = [a for a in liste if a["ilk_gun_alarm"] == alarmli]
+        orta = lambda k: round(median(a[k] for a in x), 1) if x else None
+        return {"dalga": len(x), "yagis_mm": orta("yagis_mm"), "onceki7g_mm": orta("onceki7g_mm")}
+    return {"liste": liste, "ilk_gun_alarmli": ortanca(True), "ilk_gun_alarmsiz": ortanca(False)}
+
+
+def sinama_ozeti(g, secili, t):
+    """guvenilirlik.json → sekmenin sınama sayıları (t: ilce_gun, dört kutu ve dalgalar için)."""
     s = g["sonuclar"][secili]
     tum, oglen, yok = s["tum_yillar"], s["tahminli_donem"]["ecmwf_oglen"], s["tahminli_donem"]["tahminsiz"]
     al = lambda o: {"atak": o["atak"]["atak"], "atak_ilk_gun": o["atak"]["ilk_gun_alarmli"],
+                    "atak_herhangi": o["atak"]["herhangi_alarmli"],
                     "buyuk_gun": o["il"]["buyuk_olay_gunu"], "buyuk_gun_alarmli": o["il"]["alarmli"],
                     "duyarlilik": o["duyarlilik"], "kesinlik": o["kesinlik"], "ap": o["ap"],
                     "yillar": o["yillar"], "aralik_95": o["aralik_95"]}
-    return {"tum_yillar": al(tum), "oglen_tahmin": al(oglen), "tahminsiz": al(yok),
+    return {"tum_yillar": {**al(tum), "dort_kutu": dort_kutu(t, tum), "dalgalar": dalgalar(t, tum["atak"]["liste"])},
+            "oglen_tahmin": al(oglen), "tahminsiz": al(yok),
             "yillar": [{"yil": k["test_yili"], "ap": k["ap"], "buyuk_gun": k["il"]["buyuk_olay_gunu"],
                         "buyuk_gun_alarmli": k["il"]["alarmli"]} for k in s["katmanlar"]]}
 
@@ -139,13 +176,15 @@ def hazirla():
     return {
         "model": {"ad": secili, "aciklama": sonuc["modeller"][secili]["aciklama"],
                   "esik": sonuc["modeller"][secili]["esik"], "egitim_yillari": [int(t.yil.min()), int(t.yil.max())]},
-        "olay_tanimi": {"ilce_cagri": sn.OLAY_ESIK, "il_cagri": om.OLAY_CAGRI},
+        "olay_tanimi": {"ilce_cagri": sn.OLAY_ESIK, "il_cagri": om.OLAY_CAGRI, "dalga_arasi_gun": gv.ATAK_BOSLUK},
         "veri": sonuc["veri"],
         "yagis_mm": tablolar["kuru"]["yagis_mm"],
         "kosullar": {k: {"onceki": o, "olasilik": tablolar[k]["ilce"]} for k, o in kosullar.items()},
         "ilceler": [{"ad": ad, "olay_gunu": int(olay_gunu[ad]), "geometri": g}
                     for ad, g in ilce_geometrileri(adlar).items()],
-        "sinama": sinama_ozeti(json_oku(gv.SONUC_JSON), secili),
+        "egitim": {"modeller": list(sonuc["modeller"]),
+                   "secim_yillari": [int(t.yil.min()), min(om.TEST_YILLARI) - 1]},
+        "sinama": sinama_ozeti(json_oku(gv.SONUC_JSON), secili, t),
         "onem": sonuc["onem"],
         "ornek": ornek_ozeti(t, ilce_df),
         "gwr": gwr_ozeti(json_oku(gwr.SONUC_JSON), adlar),
