@@ -26,7 +26,6 @@ SINIR_HAM_DIR = _kok("sinir_veri")                 # TKGM / OSM yanıtları
 TKGM_DIR = os.path.join(SINIR_HAM_DIR, "tkgm")
 TKGM_ILCE = os.path.join(TKGM_DIR, "izmir_ilce.json")
 TKGM_MAHALLE_DIR = os.path.join(TKGM_DIR, "mahalle")
-KIYI_CIZGISI = os.path.join(SINIR_HAM_DIR, "kiyi.json")   # OSM kıyı çizgisi (hesap.sinir_hazirla indirir)
 SEL_HAM_DIR = _kok("sel_veri")                     # DEM, arazi örtüsü, OSM çıkarımları
 DEM_TIF = os.path.join(SEL_HAM_DIR, "dem_60m.tif")
 CN_DOSYASI = os.path.join(SEL_HAM_DIR, "cn_60m_v3.npz")

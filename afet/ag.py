@@ -28,7 +28,6 @@ UA = "izmir-afet-radar/1.5"
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 OPEN_METEO_ARSIV_URL = "https://archive-api.open-meteo.com/v1/archive"                    # ERA5 yeniden analizi
 OPEN_METEO_GECMIS_TAHMIN_URL = "https://previous-runs-api.open-meteo.com/v1/forecast"     # eski tahmin koşuları
-OPEN_METEO_DENIZ_URL = "https://marine-api.open-meteo.com/v1/marine"                     # deniz seviyesi (2023–)
 # Ana Overpass sunucusu sık 502 / kapasite dolu veriyor → sırayla yansılar
 OVERPASS_URLS = [
     "https://overpass-api.de/api/interpreter",

@@ -1,7 +1,6 @@
-"""Ek değişkenler: ilçe içinde çok noktalı yağış, lodos, toprak nemi ve deniz
-kabarması. Sınıflandırmaya katkı var mı?
+"""Ek değişkenler: ilçe içinde çok noktalı yağış ve lodos. Sınıflandırmaya katkı var mı?
 
-İlk ikisi iki eksiği hedefler (hesap/guvenilirlik.py, README "Güvenilirlik"):
+İki eksiği hedefler (hesap/guvenilirlik.py, README "Güvenilirlik"):
   • Tek yağış noktası: her ilçe için yalnız yapılaşmış alanın ağırlık
     merkezindeki yağış kullanılıyor. Sağanak ilçenin başka köşesine düşünce
     görünmüyor (28 Ekim 2025, Bergama: ilçe içindeki noktalarda 6–58 mm).
@@ -13,10 +12,9 @@ kabarması. Sınıflandırmaya katkı var mı?
     → lodos_kmh: asıl noktada günün en kuvvetli rüzgârı, baskın yön
       LODOS_YON aralığındaysa (güney–güneybatı), değilse 0.
 Kaynak: Open-Meteo geçmiş arşivi, günlük (ilce_gun ile aynı kaynak).
-Toprak nemi (toprak_nemi) ve deniz kabarması (kabarma_cm): hesap/deniz_toprak.py.
 
 Değerlendirme: guvenilirlik ile aynı yıl yıl geriye dönük sınama (2022–26;
-her yıl yalnız önceki yıllarla). Değişken setleri (SETLER) × iki model (lojistik,
+her yıl yalnız önceki yıllarla). Dört değişken seti × iki model (lojistik,
 gradient boosting). Lojistik her katmanda ızgara aramasıyla ayarlanır;
 gradient boosting maliyet yüzünden guvenilirlik.json'daki katman
 parametreleriyle (temel sette seçilmiş) eğitilir: yeni değişkenler bu yüzden
@@ -25,7 +23,7 @@ aynı hafta bloklarıyla eşleştirilmiş bootstrap (her tekrarda iki setin AP
 farkı); %95 aralık sıfırı içeriyorsa fark kanıtlanmamıştır.
 
 Çıktılar: egitim/ek_degiskenler.csv (ilçe-gün), egitim/ek_degiskenler_sonuc.json
-Çalıştırma: venv/bin/python -m hesap.ek_degiskenler   (~10 dk; ilk seferde arşiv iner, kota yüzünden ~30 dk)
+Çalıştırma: venv/bin/python -m hesap.ek_degiskenler   (~5 dk; ilk seferde arşiv iner, kota yüzünden ~30 dk)
 """
 import functools
 import logging
@@ -40,8 +38,8 @@ from sklearn.metrics import average_precision_score
 from afet import ag
 from afet.dosya import json_oku
 from afet.yollar import (EK_DEGISKENLER_CSV, EK_DEGISKENLER_SONUC, GUVENILIRLIK_SONUC, ILCE_CSV, ILCE_GUN_CSV,
-                         ILCE_SINIRLARI, ITFAIYE_HAM_DIR, KIYI_CIZGISI)
-from hesap import deniz_toprak, gunlugu_kur, sonucu_yaz
+                         ILCE_SINIRLARI, ITFAIYE_HAM_DIR)
+from hesap import gunlugu_kur, sonucu_yaz
 from hesap import guvenilirlik as gv
 from hesap import ols_model as om
 from hesap import siniflandirma as sn
@@ -54,10 +52,8 @@ BOOTSTRAP = 1000
 MODELLER = ["lojistik", "gb"]
 YENI_YAGIS = ["yagis_max_nokta_mm"]
 SETLER = {"temel": [], "cok_nokta": ["yagis_max_nokta_mm"], "lodos": ["lodos_kmh"],
-          "ikisi": ["yagis_max_nokta_mm", "lodos_kmh"], "toprak": ["toprak_nemi"], "kabarma": ["kabarma_cm"],
-          "toprak_kabarma": ["toprak_nemi", "kabarma_cm"]}
-LOG_KARSILIK = {"yagis_max_nokta_mm": "log_max_nokta", "lodos_kmh": "lodos_kmh",     # lojistik için
-                "toprak_nemi": "toprak_nemi", "kabarma_cm": "kabarma_cm"}
+          "ikisi": ["yagis_max_nokta_mm", "lodos_kmh"]}
+LOG_KARSILIK = {"yagis_max_nokta_mm": "log_max_nokta", "lodos_kmh": "lodos_kmh"}   # lojistik için
 
 
 # ── Veri ────────────────────────────────────────────────────────────────────
@@ -120,9 +116,6 @@ def birlestir(t, ek):
     x = sn.hazirla(t.merge(ek, on=["ilce", "gun"], how="left"))
     x["yagis_max_nokta_mm"] = x.yagis_max_nokta_mm.fillna(x.yagis_mm)
     x["lodos_kmh"] = x.lodos_kmh.fillna(0)
-    if "toprak_nemi" in x:
-        x["toprak_nemi"] = x.toprak_nemi.fillna(x.toprak_nemi.median())
-        x["kabarma_cm"] = x.kabarma_cm.fillna(0)
     x["log_max_nokta"] = np.log1p(x.yagis_max_nokta_mm)
     return x
 
@@ -175,8 +168,7 @@ def kisa_ozet(x, n=BOOTSTRAP):
     return o
 
 
-def calistir(t, ek, gb_prm, setler=SETLER, modeller=MODELLER, n=BOOTSTRAP, test_yillari=gv.TEST_YILLARI,
-             kabarma_dogrulama=None):
+def calistir(t, ek, gb_prm, setler=SETLER, modeller=MODELLER, n=BOOTSTRAP, test_yillari=gv.TEST_YILLARI):
     x = birlestir(t, ek)
     out = {}
     for ad in modeller:
@@ -190,16 +182,10 @@ def calistir(t, ek, gb_prm, setler=SETLER, modeller=MODELLER, n=BOOTSTRAP, test_
             log.info("%s / %s (%.0f sn): AP %.3f", ad, set_adi, time.time() - s, o["ap"])
         out[ad] = sonuc
     return {"setler": setler, "lodos_yon": LODOS_YON, "kiyi_ilceler": KIYI, "test_yillari": test_yillari,
-            "gb_parametreleri": "guvenilirlik.json katman parametreleri (temel sette seçilmiş)",
-            "kabarma_dogrulama": kabarma_dogrulama, "sonuclar": out}
+            "gb_parametreleri": "guvenilirlik.json katman parametreleri (temel sette seçilmiş)", "sonuclar": out}
 
 
 def yazdir(r):
-    k = r.get("kabarma_dogrulama")
-    if k:
-        print(f"Kabarma göstergesi: körfezde deniz seviyesinin %{k['r2'] * 100:.0f}'ini açıklıyor "
-              f"({k['gun']} gün, {k['ilk']} – {k['son']}); {k['cm_hpa']} cm/hPa, {k['cm_kmh']} cm/(km/sa); "
-              f"{len(k['kiyi_ilceleri'])} kıyı ilçesi")
     for ad, s in r["sonuclar"].items():
         print(f"\n{ad}:")
         print(f"  {'set':10} {'AP':>6} {'ΔAP [%95]':>22} {'duyarlılık':>10} {'kesinlik':>8} "
@@ -219,13 +205,10 @@ def main():
     bas = pd.Timestamp(f"{om.ILK_YIL}-01-01").date()
     bit = pd.Timestamp(t.gun.max()).date()
     ek = ozellikler(gunluk_arsiv(nok, bas, bit))
-    dt, kabarma_dogrulama = deniz_toprak.degiskenler(ilce_df, json_oku(ILCE_SINIRLARI),
-                                                     json_oku(KIYI_CIZGISI)["elements"], bas, bit, ek)
-    ek = ek.merge(dt, on=["ilce", "gun"], how="left")
     ek.to_csv(EK_DEGISKENLER_CSV, index=False)
     log.info("Yazıldı: %s (%d satır, %d nokta)", EK_DEGISKENLER_CSV, len(ek), len(nok))
     gb_prm = {k["test_yili"]: k["parametreler"] for k in json_oku(GUVENILIRLIK_SONUC)["sonuclar"]["gb"]["katmanlar"]}
-    sonucu_yaz(EK_DEGISKENLER_SONUC, calistir(t, ek, gb_prm, kabarma_dogrulama=kabarma_dogrulama), yazdir)
+    sonucu_yaz(EK_DEGISKENLER_SONUC, calistir(t, ek, gb_prm), yazdir)
 
 
 if __name__ == "__main__":
