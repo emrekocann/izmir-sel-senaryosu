@@ -430,11 +430,13 @@ venv/bin/python -m hesap.guvenilirlik   # ~10 dk; sonuç egitim/guvenilirlik.jso
 
 Altında yıl yıl sınama sonuçları, sel dalgaları ve Foça örneği (`docs/js/sekmeler/uyari_aciklama.js`). Veri: `venv/bin/python -m hesap.uyari_hazirla` → `docs/veri/uyari.json` ve `docs/veri/uyari_model.json` (modelin karar ağaçları ve ilçelerin sabit girdileri). Betik, dışa aktarılan modelin bütün eğitim satırlarında sklearn ile aynı olasılığı ve aynı alarmı verdiğini denetlemeden yazmaz. `tests/test_canli.py`, tarayıcı modülünü Node ile çalıştırıp girdileri ve olasılığı Python hesabıyla karşılaştırır.
 
-### 🌬️ Ek değişkenler: çok noktalı yağış ve lodos (`hesap/ek_degiskenler.py`)
+### 🌬️ Ek değişkenler: çok noktalı yağış, lodos, toprak nemi, deniz kabarması (`hesap/ek_degiskenler.py`, `hesap/deniz_toprak.py`)
 
 Güvenilirlik sınamasının gösterdiği iki eksik için iki yeni değişken denendi (kaynak yine Open-Meteo geçmiş arşivi):
 - **Çok noktalı yağış:** her ilçe için tek nokta yerine, ilçe sınırı içindeki 0.1° (~10 km) ızgara noktalarının en yağışlısı (30 ilçede 156 nokta). Sağanak ilçenin başka köşesine düşünce de görünsün diye.
 - **Lodos:** asıl noktada günün en kuvvetli rüzgârı, baskın yön güney–güneybatıysa (150–260°); değilse 0. Güneyli kuvvetli rüzgâr deniz suyunu kıyıya ve yağmur suyu kanallarına iter. Kıyı ilçelerinin olaylarının çoğu kaçırılıyordu.
+- **Toprak nemi:** günün başında (00:00) toprağın üst 28 cm'sindeki su payı (ERA5-Land). Toprağın önceki yağışlarla ne kadar doyduğunu doğrudan ölçer; model bunu şimdiye kadar "önceki 7 günün yağışı" ile dolaylı ölçüyordu.
+- **Deniz kabarması:** kıyı ilçelerinde (sınırı kıyı çizgisine değen 18 ilçe) denizin hava yüzünden kabarması, cm; öteki ilçelerde 0. Geçmiş deniz seviyesi Open-Meteo'da yalnız 2023'ten beri ve boşluklu var (ör. Şubat 2025 yok), model ise 2020'den eğitiliyor. Bu yüzden gösterge 2020'den beri eksiksiz olan iki veriden kuruldu: günün en düşük basıncı ve lodos. Katsayılar, deniz seviyesinin olduğu 1.391 günde iç körfezde bulundu: basınç 1 hPa düşünce deniz 1,15 cm yükseliyor (fizikteki beklenti ~1 cm). Gösterge deniz seviyesinin değişiminin %42'sini açıklıyor; kalanın çoğu gelgit.
 
 Sınama güvenilirlik ile aynı: 2022–26, yıl yıl. Fark, aynı hafta bloklarıyla eşleştirilmiş bootstrap'la ölçülür; %95 aralık sıfırı içeriyorsa fark kanıtlanmamıştır.
 
@@ -444,17 +446,22 @@ Sınama güvenilirlik ile aynı: 2022–26, yıl yıl. Fark, aynı hafta bloklar
 | + çok noktalı yağış | 0.177 | −0.001 [−0.004, +0.001] | 0.185 | −0.003 [−0.008, +0.002] |
 | + lodos | 0.181 | +0.004 [−0.003, +0.012] | 0.192 | +0.004 [−0.003, +0.012] |
 | + ikisi | 0.182 | +0.004 [−0.003, +0.012] | 0.190 | +0.002 [−0.006, +0.011] |
+| + toprak nemi | 0.179 | +0.001 [−0.009, +0.011] | 0.170 | −0.018 [−0.039, +0.003] |
+| + deniz kabarması | 0.192 | +0.014 [−0.002, +0.030] | 0.189 | +0.001 [−0.008, +0.011] |
+| + toprak nemi ve deniz kabarması | 0.194 | +0.017 [−0.004, +0.037] | 0.170 | −0.018 [−0.039, +0.004] |
 
 **Bulgular:**
-- **İki değişken de başarıyı kanıtlanmış biçimde artırmıyor.** Bütün farkların %95 aralığı sıfırı içeriyor. Uyarı sekmesinin modeli değiştirilmedi.
+- **Dört değişkenin hiçbiri başarıyı kanıtlanmış biçimde artırmıyor.** Bütün farkların %95 aralığı sıfırı içeriyor. Uyarı sekmesinin modeli değiştirilmedi.
+- **Toprak nemi yeni bir şey söylemiyor.** Önceki günlerin yağışı aynı bilgiyi zaten taşıyor; gradient boosting'de sonuç biraz kötüleşiyor (kanıtlanmamış).
+- **Deniz kabarması en umut veren değişken, ama kanıtlanmadı.** Lojistikte kazanç +0,014, aralığın alt ucu sıfırın hemen altında (−0,002). Gradient boosting'de daha çok sel yakalanıyor (kıyıda 109 → 133, sel dalgasının ilk günü 17 → 19 / 23), ama boşa alarm da 933'ten 1.354'e çıkıyor: model iyileşmiyor, yalnız daha sık alarm veriyor. Gerçek deniz seviyesi (mareograf) ya da daha uzun bir deniz arşivi bu sınamayı güçlendirir.
 - **Kıyı ilçelerinde de tutarlı bir kazanç yok.** Lodosla yakalanan kıyı olayı gradient boosting'de 109'dan 115'e çıkıyor, lojistikte 95'ten 93'e iniyor (264 olayda).
 - **Çok noktalı yağış kör noktayı açmıyor.** Foça, 23 Ekim 2025: asıl noktada 7 mm, ilçenin en yağışlı noktasında 16 mm; haberlere göre ~144 mm. Arşivin kendisi (ERA5) yerel sağanağı görmüyor. Aynı arşivden daha çok nokta almak bunu düzeltmiyor.
 - **Lodos çoğunlukla yağışla birlikte geliyor.** Kuvvetli lodos (≥ 30 km/sa) kuru günlerin %1'inde, ≥ 10 mm yağışlı günlerin %10'unda var. Yağışlı kıyı günlerinde lodos olunca olay oranı değişmiyor (%13 / %14). Kuru günlerde lodosla olay oranı ikiye katlanıyor, ama bu yalnız 4 olay: öğrenecek kadar örnek yok.
 
-**Sınırlar:** Deniz seviyesi ve dalga verisi yok. Rüzgâr ERA5'in günlük en yüksek 10 m rüzgârı; kıyıdaki sert rüzgârı yumuşatır. Gradient boosting yeni değişkenlerle yeniden ayarlanmadı (maliyet yüzünden temel setin parametreleri kullanıldı); yeni değişkenler bu yüzden hafif dezavantajlı.
+**Sınırlar:** Gerçek deniz seviyesi 2020–22 için yok; kabarma, basınç ve lodostan kurulan bir gösterge. Dalga verisi yok. Rüzgâr ERA5'in günlük en yüksek 10 m rüzgârı; kıyıdaki sert rüzgârı yumuşatır. Gradient boosting yeni değişkenlerle yeniden ayarlanmadı (maliyet yüzünden temel setin parametreleri kullanıldı); yeni değişkenler bu yüzden hafif dezavantajlı.
 
 ```bash
-venv/bin/python -m hesap.ek_degiskenler   # ~5 dk (ilk seferde arşiv iner: Open-Meteo kotası yüzünden ~30 dk); sonuç egitim/ek_degiskenler.csv, egitim/ek_degiskenler_sonuc.json
+venv/bin/python -m hesap.ek_degiskenler   # ~10 dk (ilk seferde arşiv iner: Open-Meteo kotası yüzünden ~30 dk); sonuç egitim/ek_degiskenler.csv, egitim/ek_degiskenler_sonuc.json
 ```
 
 ### 🗺️ Coğrafi ağırlıklı lojistik regresyon (GWR): yağışın etkisi ilçeden ilçeye değişiyor mu? (`hesap/gwr.py`)
