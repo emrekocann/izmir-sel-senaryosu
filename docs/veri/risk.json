@@ -1,0 +1,438 @@
+{
+ "tekerrur": {
+  "istasyon": "İzmir Güzelyalı (MGM 17220)",
+  "kaynak": "NOAA GHCN-Daily",
+  "yillar": [
+   1950,
+   1951,
+   1952,
+   1953,
+   1954,
+   1955,
+   1956,
+   1957,
+   1958,
+   1959,
+   2014,
+   2015,
+   2016,
+   2017,
+   2018,
+   2019,
+   2020,
+   2021,
+   2022,
+   2023,
+   2024
+  ],
+  "gumbel": {
+   "u": 59.07,
+   "a": 19.01
+  },
+  "duzeyler": {
+   "2": 66,
+   "5": 88,
+   "10": 102,
+   "25": 120,
+   "50": 133,
+   "100": 147
+  },
+  "olay_2021_mm": 124.0,
+  "olay_2021_yil": 72
+ },
+ "esik_m": 0.3,
+ "nufus_eslesen_pay": 0.54,
+ "senaryolar": {
+  "10_1": {
+   "donus_yil": 1.0,
+   "alt_sinir": true,
+   "nufus": 2800,
+   "nufus_belirsiz": 0,
+   "hastane": 0,
+   "hastane_adlari": [],
+   "okul": 0,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "10_6": {
+   "donus_yil": 1.0,
+   "alt_sinir": true,
+   "nufus": 2800,
+   "nufus_belirsiz": 0,
+   "hastane": 0,
+   "hastane_adlari": [],
+   "okul": 0,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "10_24": {
+   "donus_yil": 1.0,
+   "alt_sinir": false,
+   "nufus": 2800,
+   "nufus_belirsiz": 0,
+   "hastane": 0,
+   "hastane_adlari": [],
+   "okul": 0,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "25_1": {
+   "donus_yil": 1.0,
+   "alt_sinir": true,
+   "nufus": 6800,
+   "nufus_belirsiz": 0,
+   "hastane": 0,
+   "hastane_adlari": [],
+   "okul": 1,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "25_6": {
+   "donus_yil": 1.0,
+   "alt_sinir": true,
+   "nufus": 6800,
+   "nufus_belirsiz": 0,
+   "hastane": 0,
+   "hastane_adlari": [],
+   "okul": 1,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "25_24": {
+   "donus_yil": 1.0,
+   "alt_sinir": false,
+   "nufus": 6800,
+   "nufus_belirsiz": 0,
+   "hastane": 0,
+   "hastane_adlari": [],
+   "okul": 1,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "50_1": {
+   "donus_yil": 1.2,
+   "alt_sinir": true,
+   "nufus": 122800,
+   "nufus_belirsiz": 775900,
+   "hastane": 2,
+   "hastane_adlari": [
+    "Eşrefpaşa Hastanesi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 27,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "50_6": {
+   "donus_yil": 1.2,
+   "alt_sinir": true,
+   "nufus": 32200,
+   "nufus_belirsiz": 3400,
+   "hastane": 1,
+   "hastane_adlari": [
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 5,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "50_24": {
+   "donus_yil": 1.2,
+   "alt_sinir": false,
+   "nufus": 9900,
+   "nufus_belirsiz": 0,
+   "hastane": 0,
+   "hastane_adlari": [],
+   "okul": 1,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "75_1": {
+   "donus_yil": 2.8,
+   "alt_sinir": true,
+   "nufus": 213400,
+   "nufus_belirsiz": 786100,
+   "hastane": 4,
+   "hastane_adlari": [
+    "Buca Tıp Merkezi",
+    "Eşrefpaşa Hastanesi",
+    "Tınaztepe Galen Hastanesi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 43,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "75_6": {
+   "donus_yil": 2.8,
+   "alt_sinir": true,
+   "nufus": 77500,
+   "nufus_belirsiz": 25400,
+   "hastane": 1,
+   "hastane_adlari": [
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 11,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "75_24": {
+   "donus_yil": 2.8,
+   "alt_sinir": false,
+   "nufus": 25200,
+   "nufus_belirsiz": 3100,
+   "hastane": 1,
+   "hastane_adlari": [
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 2,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "100_1": {
+   "donus_yil": 9.1,
+   "alt_sinir": true,
+   "nufus": 263900,
+   "nufus_belirsiz": 786300,
+   "hastane": 5,
+   "hastane_adlari": [
+    "Buca Tıp Merkezi",
+    "Eşrefpaşa Hastanesi",
+    "Tınaztepe Galen Hastanesi",
+    "Özel Metropol Karşıyaka Tıp Merkezi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 53,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "100_6": {
+   "donus_yil": 9.1,
+   "alt_sinir": true,
+   "nufus": 114300,
+   "nufus_belirsiz": 781100,
+   "hastane": 2,
+   "hastane_adlari": [
+    "Eşrefpaşa Hastanesi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 19,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "100_24": {
+   "donus_yil": 9.1,
+   "alt_sinir": false,
+   "nufus": 48800,
+   "nufus_belirsiz": 13800,
+   "hastane": 1,
+   "hastane_adlari": [
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 6,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "150_1": {
+   "donus_yil": 120.0,
+   "alt_sinir": true,
+   "nufus": 311700,
+   "nufus_belirsiz": 786400,
+   "hastane": 7,
+   "hastane_adlari": [
+    "Alfa Tıp Merkezi",
+    "Buca Tıp Merkezi",
+    "Ege Üniversitesi Çocuk Hastanesi",
+    "Eşrefpaşa Hastanesi",
+    "Tınaztepe Galen Hastanesi",
+    "Özel Metropol Karşıyaka Tıp Merkezi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 57,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "150_6": {
+   "donus_yil": 120.0,
+   "alt_sinir": true,
+   "nufus": 170800,
+   "nufus_belirsiz": 786100,
+   "hastane": 3,
+   "hastane_adlari": [
+    "Eşrefpaşa Hastanesi",
+    "Tınaztepe Galen Hastanesi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 29,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "150_24": {
+   "donus_yil": 120.0,
+   "alt_sinir": false,
+   "nufus": 86600,
+   "nufus_belirsiz": 25000,
+   "hastane": 3,
+   "hastane_adlari": [
+    "Eşrefpaşa Hastanesi",
+    "Tınaztepe Galen Hastanesi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 12,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "200_1": {
+   "donus_yil": 1658.7,
+   "alt_sinir": true,
+   "nufus": 352000,
+   "nufus_belirsiz": 786400,
+   "hastane": 9,
+   "hastane_adlari": [
+    "Alfa Tıp Merkezi",
+    "Buca Tıp Merkezi",
+    "Ege Üniversitesi Çocuk Hastanesi",
+    "Eşrefpaşa Hastanesi",
+    "Tınaztepe Galen Hastanesi",
+    "Özel Metropol Karşıyaka Tıp Merkezi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi",
+    "İzmir Bergama Necla - Mithat Öztüre Devlet Hastanesi"
+   ],
+   "okul": 81,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "200_6": {
+   "donus_yil": 1658.7,
+   "alt_sinir": true,
+   "nufus": 228500,
+   "nufus_belirsiz": 786100,
+   "hastane": 4,
+   "hastane_adlari": [
+    "Eşrefpaşa Hastanesi",
+    "Tınaztepe Galen Hastanesi",
+    "Özel Metropol Karşıyaka Tıp Merkezi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 43,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "200_24": {
+   "donus_yil": 1658.7,
+   "alt_sinir": false,
+   "nufus": 112000,
+   "nufus_belirsiz": 774400,
+   "hastane": 3,
+   "hastane_adlari": [
+    "Eşrefpaşa Hastanesi",
+    "Tınaztepe Galen Hastanesi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 19,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "250_1": {
+   "donus_yil": 23010.0,
+   "alt_sinir": true,
+   "nufus": 378800,
+   "nufus_belirsiz": 786400,
+   "hastane": 10,
+   "hastane_adlari": [
+    "Alfa Tıp Merkezi",
+    "Buca Tıp Merkezi",
+    "Ege Üniversitesi Çocuk Hastanesi",
+    "Ento KBB Tıp Merkezi",
+    "Eşrefpaşa Hastanesi",
+    "Tınaztepe Galen Hastanesi",
+    "Özel Metropol Karşıyaka Tıp Merkezi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi",
+    "İzmir Bergama Necla - Mithat Öztüre Devlet Hastanesi"
+   ],
+   "okul": 84,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "250_6": {
+   "donus_yil": 23010.0,
+   "alt_sinir": true,
+   "nufus": 263900,
+   "nufus_belirsiz": 786100,
+   "hastane": 5,
+   "hastane_adlari": [
+    "Buca Tıp Merkezi",
+    "Eşrefpaşa Hastanesi",
+    "Tınaztepe Galen Hastanesi",
+    "Özel Metropol Karşıyaka Tıp Merkezi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 51,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  },
+  "250_24": {
+   "donus_yil": 23010.0,
+   "alt_sinir": false,
+   "nufus": 133400,
+   "nufus_belirsiz": 781100,
+   "hastane": 3,
+   "hastane_adlari": [
+    "Eşrefpaşa Hastanesi",
+    "Tınaztepe Galen Hastanesi",
+    "İzmir Bergama 3 Nolu Ömer Perihan Filiz Aile Sağlığı Merkezi"
+   ],
+   "okul": 23,
+   "toplam": {
+    "hastane": 140,
+    "okul": 1333
+   }
+  }
+ }
+}

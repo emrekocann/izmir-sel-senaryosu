@@ -1,7 +1,7 @@
-// Önceden hesaplanmış veri dosyaları (hesap/vitrin_hazirla.py,
+// Önceden hesaplanmış veri dosyaları (hesap/vitrin_hazirla.py, hesap/risk_hazirla.py,
 // hesap/toplanma_denetimi.py ve hesap/uyari_hazirla.py üretir). Sayfadaki bütün sayılar buradan gelir.
 
-const DOSYALAR = { vitrin: 'veri/vitrin.json', denetim: 'veri/denetim.json', uyari: 'veri/uyari.json' };
+const DOSYALAR = { vitrin: 'veri/vitrin.json', risk: 'veri/risk.json', denetim: 'veri/denetim.json', uyari: 'veri/uyari.json' };
 
 /** JSON dosyası. 'no-cache': tarayıcı dosyayı saklar ama her açılışta
  *  sunucuya sorar; veri yeniden üretildiğinde eski kopya gösterilmez. */
@@ -11,7 +11,7 @@ export async function jsonOku(yol) {
   return yanit.json();
 }
 
-/** { vitrin, denetim, uyari } — hepsi birlikte yüklenir. */
+/** { vitrin, risk, denetim, uyari } — hepsi birlikte yüklenir. */
 export async function veriYukle() {
   const adlar = Object.keys(DOSYALAR);
   const sonuclar = await Promise.all(adlar.map((ad) => jsonOku(DOSYALAR[ad])));

@@ -4,7 +4,7 @@ Tek bir soruyu yanıtlayan, PostGIS + pgRouting tabanlı bir karar destek harita
 
 **🔗 Canlı site: [emrekocann.github.io/izmir-sel-senaryosu](https://emrekocann.github.io/izmir-sel-senaryosu/)** · Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md)
 
-**Yayın sitesi:** [docs/](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Harita merkezli, Türkçe / İngilizce, sunucusuz çalışan site (GitHub Pages: Settings → Pages → dal + `/docs`). Beş sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tarayıcıda hesaplanan tahliye rotası, toplanma alanı denetimi, itfaiye kayıtlarıyla eğitilmiş ve yarının hava tahminiyle her gün canlı çalışan erken uyarı modeli, ilçe ilçe yağışa duyarlılık haritası; yöntem ve doğrulama "Hakkında" penceresinde. Sitedeki bütün sayılar `docs/veri/` dosyalarından gelir; bunları `venv/bin/python -m hesap.vitrin_hazirla`, `-m hesap.rota_agi_hazirla`, `-m hesap.toplanma_denetimi` ve `-m hesap.uyari_hazirla` üretir (sonuncusu `hesap.siniflandirma`, `hesap.guvenilirlik` ve `hesap.gwr` çıktılarını okur). Yerelde: `python -m http.server --directory docs`. Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
+**Yayın sitesi:** [docs/](docs/index.html) — "2 Şubat 2021 İzmir seli yeniden yaşansa ne olur?" Harita merkezli, Türkçe / İngilizce, sunucusuz çalışan site (GitHub Pages: Settings → Pages → dal + `/docs`). Beş sekme: yağış senaryoları, 2021 seliyle karşılaştırma, tarayıcıda hesaplanan tahliye rotası, toplanma alanı denetimi, itfaiye kayıtlarıyla eğitilmiş ve yarının hava tahminiyle her gün canlı çalışan erken uyarı modeli, ilçe ilçe yağışa duyarlılık haritası; yöntem ve doğrulama "Hakkında" penceresinde. Sitedeki bütün sayılar `docs/veri/` dosyalarından gelir; bunları `venv/bin/python -m hesap.vitrin_hazirla`, `-m hesap.risk_hazirla`, `-m hesap.rota_agi_hazirla`, `-m hesap.toplanma_denetimi` ve `-m hesap.uyari_hazirla` üretir (sonuncusu `hesap.siniflandirma`, `hesap.guvenilirlik` ve `hesap.gwr` çıktılarını okur). Yerelde: `python -m http.server --directory docs`. Düz metin özeti: [docs/vaka-calismasi.md](docs/vaka-calismasi.md).
 
 ## 🚀 Neler var
 
@@ -215,6 +215,34 @@ Bu bir **fizik tabanlı, basitleştirilmiş simülasyondur**, eğitilmiş model 
 
 ```bash
 venv/bin/python -m hesap.sel_senaryo_hazirla   # hesap/sel_duyarlilik_hesapla.py'nin DEM önbelleğini kullanır
+```
+
+### 📊 Sel riski: ne sıklıkla, kimi etkiler? (`hesap/risk_hazirla.py`)
+
+Senaryo suyun nereye geldiğini söyler; risk için iki soru daha gerekir. İkisi de bitmiş derinlik ızgaralarından, veritabanı olmadan hesaplanır ve `docs/veri/risk.json`'a yazılır. Kapsam dere taşkınıdır: sokakta biriken yağmur suyu ve denizden gelen su yoktur.
+
+**Ne sıklıkla?** İzmir Güzelyalı (MGM 17220) istasyonunun günlük yağış kaydı (NOAA GHCN-Daily). Kaydı tam 21 yıl (1951–59, 2013–24) var. Her yılın en yağışlı günü kayan 24 saate çevrilir (×1.13, WMO) ve Gumbel dağılımına oturtulur.
+
+| 24 saatte yağış | Ortalama |
+|---|---|
+| 66 mm | 2 yılda bir |
+| 102 mm | 10 yılda bir |
+| 133 mm | 50 yılda bir |
+| 147 mm | 100 yılda bir |
+
+- 2 Şubat 2021 (istasyonda 124 mm) yaklaşık 70 yılda birdir.
+- 1 ve 6 saatlik senaryolarda bu bir alt sınırdır: aynı miktarın daha kısa sürede düşmesi daha seyrektir. Saatlik istasyon kaydı (MGM) açık değil.
+- Saatlik yeniden analiz arşivi (ERA5) kullanılamadı: yerel sağanağı kaçırıyor (29 Eylül 2006'da istasyon 145 mm ölçtü, arşiv 7 mm gösteriyor).
+- 21 yıl seyrek olayları kaba bilir; site 100 yıldan seyrek değerleri sayıyla yazmaz.
+
+**Kimi etkiler?** Suyun 30 cm'den derin olduğu yerde oturan nüfus, hastane ve okul.
+- Nüfus: TÜİK 2023 mahalle nüfusu (İBB Açık Veri), yapılaşmış alana dağıtılır. TKGM mahalle sınırları kent merkezinde eksik olduğu için adı eşleşen mahalleler (nüfusun %54'ü) kendi sınırına, ilçenin kalanı ilçenin geri kalan yapılaşmış alanına dağıtılır.
+- Hastane ve okul: OpenStreetMap (140 hastane, 1333 okul).
+- Örnek: 100 mm / 6 saat'te ~114.000 kişi, 2 hastane ve 19 okul. Kıyı düzlüklerinde (Karşıyaka, Bayraklı, Çiğli, Bornova) ~780.000 kişi daha "su gelir, derinlik belirsiz" alanda oturuyor.
+- Yağış ilin her yerine aynı anda düştüğü için bu sayılar gerçek bir olayda aynı anda etkilenecek kişiden fazladır.
+
+```bash
+venv/bin/python -m hesap.risk_hazirla   # ilk çalıştırmada istasyon kaydı ve nüfus iner, OSM'den tesisler çıkarılır (~1 dk)
 ```
 
 ### ✅ Geçmiş selle doğrulama (`hesap/sel_dogrulama.py`, `dogrulama/`)
@@ -545,7 +573,9 @@ Kod **MIT** lisanslıdır (`LICENSE`). Veriler kendi koşullarına tabidir; depo
 | Yağış tahmini (canlı uyarı ve tahminli sınama) | Open-Meteo (ECMWF IFS açık verisi) | CC BY 4.0 |
 | Geçmiş yağış (eğitim verisi) | Open-Meteo Historical Weather API (Copernicus ERA5 / ERA5-Land) | CC BY 4.0; ERA5 için Copernicus atfı |
 | İtfaiye hizmet kayıtları | İzmir Büyükşehir Belediyesi Açık Veri Portalı | İBB Açık Veri Lisansı — atıf |
-| İlçe nüfusu | İzmir Büyükşehir Belediyesi Açık Veri Portalı (TÜİK ADNKS) | İBB Açık Veri Lisansı — atıf |
+| İlçe ve mahalle nüfusu | İzmir Büyükşehir Belediyesi Açık Veri Portalı (TÜİK ADNKS) | İBB Açık Veri Lisansı — atıf |
+| İstasyon günlük yağışı (tekerrür) | NOAA GHCN-Daily, İzmir Güzelyalı (MGM 17220) | NOAA: kısıtsız; WMO Res. 40 kapsamında ticari olmayan kullanım önerilir |
+| Hastane ve okullar | © OpenStreetMap katkıcıları | ODbL 1.0 |
 | Trafik olayları (isteğe bağlı) | TomTom Traffic API | TomTom kullanım koşulları; veri depoda tutulmaz |
 | Harita altlığı | Esri (Light Gray Canvas vb.), OpenTopoMap | Sağlayıcı koşulları; haritada atıf gösterilir |
 | 2 Şubat 2021 olay yerleri | Anadolu Ajansı, Cumhuriyet, İnşaport, İBB haberleri | Yalnız yer adları ve kısa özet; her kayıtta kaynak bağlantısı |

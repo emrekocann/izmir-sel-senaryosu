@@ -17,6 +17,15 @@ export function senaryoAdi(anahtar) {
   return `${mm} mm / ${sureAdi(saat)}`;
 }
 
+/** Tekerrür (yıl) → "yaklaşık 35 yılda bir". 2 yıldan sık ve 100 yıldan seyrek
+ *  değerler sayıyla yazılmaz: 21 yıllık kayıt bunları ayırt edemez. */
+export function siklik(yil) {
+  if (yil < 2) return T('neredeyse her yıl', 'almost every year');
+  if (yil > 100) return T('100 yılda birden seyrek', 'rarer than once in 100 years');
+  const n = yil < 10 ? Math.round(yil) : Math.round(yil / 5) * 5;
+  return T(`yaklaşık ${n} yılda bir`, `about once in ${n} years`);
+}
+
 /** "ÇETİN EMEÇ" → "Çetin Emeç" (Türkçe büyük/küçük harf kurallarıyla) */
 export const baslik = (metin) => (metin || '').toLocaleLowerCase('tr')
   .replace(/(^|[\s/.(-])(\S)/g, (tumu, once, harf) => once + harf.toLocaleUpperCase('tr'));
