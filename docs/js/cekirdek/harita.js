@@ -10,30 +10,60 @@ const DAR_EKRAN = 720;        // css/app.css'teki mobil kırılımıyla aynı
    konursa her yakınlaştırmada tarayıcı tamamını yeniden ölçekler ve harita
    takılır. Görüntü bir kez çözülür, her harita karosu yalnız kendi parçasını
    tuvale çizer. Görüntü satırları Mercator aralıklıdır: karo pikseli ↔ görüntü
-   pikseli doğrusal eşlenir. */
+   pikseli doğrusal eşlenir.
+   Uzaklaşınca görüntü onlarca kat küçülür; tarayıcı bunu birkaç piksele bakarak
+   yapar ve tek piksellik dereler kaybolur (il üstünde soluk bir sis kalır). Bu
+   yüzden görüntü yüklenince yarıya yarıya küçültülmüş kopyaları hazırlanır,
+   her adımda ince çizgiler kalınlaştırılır; karo, ölçeğine en yakın kopyadan
+   çizilir. */
+const EN_KUCUK_KOPYA = 256;   // kopya zinciri bu boyutun altına inmez (piksel)
+
+/** Görüntünün yarıya yarıya küçülen kopyaları: [görüntü, ½, ¼, …].
+    Her küçültmede çizim bir piksel kaydırılarak bir kez daha yapılır: ince
+    çizgi hem kalınlaşır hem soluklaşmaz. */
+function kucukKopyalar(resim) {
+  const kopyalar = [resim];
+  let onceki = resim, en = resim.naturalWidth, boy = resim.naturalHeight;
+  while (Math.max(en, boy) / 2 >= EN_KUCUK_KOPYA) {
+    en = Math.round(en / 2); boy = Math.round(boy / 2);
+    const tuval = document.createElement('canvas');
+    tuval.width = en; tuval.height = boy;
+    const cizim = tuval.getContext('2d');
+    cizim.imageSmoothingQuality = 'high';
+    cizim.drawImage(onceki, 0, 0, en, boy);
+    cizim.drawImage(onceki, 1, 1, en, boy);
+    kopyalar.push(tuval);
+    onceki = tuval;
+  }
+  return kopyalar;
+}
+
 const SuKatmani = L.GridLayer.extend({
   initialize(sinir, secenek) {
     this._sinir = L.latLngBounds(sinir);
-    this._resim = null;
+    this._kopyalar = null;
     L.setOptions(this, secenek);
   },
   setUrl(url) {
     if (url === this._url) return;
     this._url = url;
     const resim = new Image();
-    resim.onload = () => { if (this._url === url) { this._resim = resim; this.redraw(); } };
+    resim.onload = () => { if (this._url === url) { this._kopyalar = kucukKopyalar(resim); this.redraw(); } };
     resim.src = url;
   },
   createTile(karo) {
     const boy = this.getTileSize();
     const tuval = document.createElement('canvas');
     tuval.width = boy.x; tuval.height = boy.y;
-    const resim = this._resim;
-    if (!resim) return tuval;
+    if (!this._kopyalar) return tuval;
     const kb = this._map.project(this._sinir.getNorthWest(), karo.z);
     const gd = this._map.project(this._sinir.getSouthEast(), karo.z);
-    const ox = resim.naturalWidth / (gd.x - kb.x);      // görüntü pikseli / harita pikseli
-    const oy = resim.naturalHeight / (gd.y - kb.y);
+    const tam = this._kopyalar[0];
+    const kat = Math.min(this._kopyalar.length - 1,
+      Math.max(0, Math.floor(Math.log2(tam.naturalWidth / (gd.x - kb.x)))));
+    const resim = this._kopyalar[kat];                  // harita pikseline en yakın ölçekli kopya
+    const ox = resim.width / (gd.x - kb.x);             // görüntü pikseli / harita pikseli
+    const oy = resim.height / (gd.y - kb.y);
     // Karo, kenarından PAY piksel taşacak biçimde çizilir (tuval taşanı kırpar):
     // kenar pikselleri komşu karoyla aynı görüntü pikselleriyle yumuşatılır,
     // karolar arasında ince çizgi kalmaz.
@@ -78,7 +108,8 @@ export function haritaKur(kapsayici, panel, vitrin) {
   // sayfa arka planda açılınca (yeni sekmede link) bu durur, Leaflet eski
   // yakınlaştırma düzeyinin karolarını silmez ve saydam yer adı katmanında
   // dev, bulanık bir "İzmir" yazısı kalır
-  const harita = L.map(kapsayici, { zoomControl: false, minZoom: 8, maxZoom: 18, fadeAnimation: false });
+  // zoomSnap: il, tam sayı düzeye yuvarlanmadan panelin yanındaki alanı doldursun
+  const harita = L.map(kapsayici, { zoomControl: false, minZoom: 7, maxZoom: 18, zoomSnap: 0.25, fadeAnimation: false });
   L.control.zoom({ position: 'topright' }).addTo(harita);
   L.tileLayer(`${ESRI}/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
     { maxNativeZoom: 16, maxZoom: 18, attribution: ATIF }).addTo(harita);
