@@ -147,3 +147,14 @@ def test_sekmelerde_elle_yazili_esik_yok():
         metin = _metin("js", "sekmeler", ad)
         bulunan = re.findall(r"\b(?:30 cm|60 m\b|100 mm|150 mm|82 bin|873\b|11 ilçe|5 kat)|%25", metin)
         assert not bulunan, (ad, bulunan)
+
+
+def test_dis_dosyalar_butunluk_denetimli():
+    """Başka sunucudan yüklenen her betik ve stil dosyası parmak iziyle (SRI)
+    yüklenir: dosya değiştirilirse tarayıcı onu çalıştırmaz."""
+    sayfa = _metin("index.html")
+    etiketler = re.findall(r"<(?:script|link)\b[^>]*\b(?:src|href)=\"https?://[^>]*>", sayfa)
+    assert etiketler
+    for etiket in etiketler:
+        assert re.search(r'integrity="sha(?:256|384|512)-[A-Za-z0-9+/=]+"', etiket), etiket
+        assert 'crossorigin="anonymous"' in etiket, etiket
