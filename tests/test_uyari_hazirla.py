@@ -30,12 +30,11 @@ def _gwr_sonucu(ilceler):
         def c(a):
             return {"deger": 2.0, "aralik_95": [round(1 + a[0], 2), round(1 + a[1], 2)]}
 
-        return {"ilce": ad, "katsayi": {"log_yagis": k, "log_max_nokta": k * 1.1},
+        return {"ilce": ad, "katsayi": {"log_yagis": k},
                 "aralik_95": {"log_yagis": ay, "log_onceki7g": a7},
                 "carpan_10_40": {"log_yagis": c(ay), "log_onceki7g": c(a7)}}
     satir = [ilce(ad, ay, a7, k) for k, (ad, (ay, a7)) in enumerate(ilceler.items())]
     return {"bant": 3, "ilceler": satir,
-            "cok_nokta": {"degiskenler": ["log_max_nokta"], "ilceler": satir},
             "sonuclar": {"gwr": {"ap": 0.2, "duyarlilik": 0.4, "kesinlik": 0.2, "yillar": [2022, 2023],
                                  "ap_farki_globale_gore": [0.01, -0.01, 0.03]},
                          "global": {"ap": 0.19, "duyarlilik": 0.4, "kesinlik": 0.2, "yillar": [2022, 2023]}}}
@@ -47,7 +46,6 @@ def test_gwr_ozeti_kanit_ve_sira():
     assert set(o["ilceler"]) == {"a", "b", "c"} and o["bant"] == 3
     assert o["ilceler"]["a"]["gunun_yagisi"]["kanitli"] and not o["ilceler"]["a"]["onceki_hafta"]["kanitli"]
     assert o["ilceler"]["c"]["gunun_yagisi"]["kanitli"]          # sıfırın altında da kanıtlı (ters etki)
-    assert o["cok_nokta_sira_korelasyonu"] == 1.0
     with pytest.raises(ValueError):                              # eksik ilçe
         uh.gwr_ozeti(g, ["a", "b"])
 

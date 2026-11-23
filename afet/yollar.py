@@ -56,8 +56,6 @@ OLS_SONUC = os.path.join(EGITIM_DIR, "ols_sonuc.json")               # hesap/ols
 SINIFLANDIRMA_SONUC = os.path.join(EGITIM_DIR, "siniflandirma_sonuc.json")
 TAHMIN_SINAMASI_SONUC = os.path.join(EGITIM_DIR, "tahmin_sinamasi.json")
 GUVENILIRLIK_SONUC = os.path.join(EGITIM_DIR, "guvenilirlik.json")
-EK_DEGISKENLER_CSV = os.path.join(EGITIM_DIR, "ek_degiskenler.csv")
-EK_DEGISKENLER_SONUC = os.path.join(EGITIM_DIR, "ek_degiskenler_sonuc.json")
 GWR_SONUC = os.path.join(EGITIM_DIR, "gwr_sonuc.json")
 
 # Sunucusuz yayın sitesi (GitHub Pages kökü) ve verisi

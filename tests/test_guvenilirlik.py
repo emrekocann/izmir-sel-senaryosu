@@ -120,3 +120,20 @@ def test_sonuc_dosyasi_sozlesmesi():
         assert s["tum_yillar"]["atak"]["ilk_gun_alarmli"] <= s["tum_yillar"]["atak"]["herhangi_alarmli"]
         olaylar = {o["olay"] for o in s["tahminli_donem"].values()}
         assert len(olaylar) == 1                          # tahminli kıyas aynı satırlarda
+
+
+def test_eslesik_fark_ayni_tahminde_sifir_daha_iyide_pozitif():
+    r = np.random.default_rng(0)
+    gun = pd.date_range("2024-01-01", periods=300).strftime("%Y-%m-%d").repeat(3)
+    olay = (r.random(len(gun)) < 0.1).astype(int)
+    a = pd.DataFrame({"ilce": np.tile(["x", "y", "z"], 300), "gun": gun, "olay": olay, "p": r.random(len(gun))})
+    assert gv.eslesik_fark(a, a, n=50) == [0.0, 0.0, 0.0]
+    b = a.assign(p=olay * 0.5 + r.random(len(gun)) * 0.5)
+    fark, alt, ust = gv.eslesik_fark(a, b, n=100)
+    assert fark > 0 and alt > 0 and alt <= fark <= ust
+
+
+def test_kiyi_yakalama_yalniz_kiyi_ilcelerinde():
+    x = pd.DataFrame({"ilce": ["Foça", "Foça", "Bornova"], "olay": [1, 1, 1], "p": [0.9, 0.1, 0.9],
+                      "esik": [0.5] * 3})
+    assert gv.kiyi_yakalama(x) == {"olay": 2, "yakalanan": 1}         # iç ilçe sayılmaz

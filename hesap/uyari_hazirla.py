@@ -211,15 +211,11 @@ def gwr_ozeti(g, adlar):
     tek = {i["ilce"]: i for i in g["ilceler"]}
     if set(tek) != set(adlar):
         raise ValueError(f"GWR ilçeleri uyuşmuyor: {sorted(set(tek) ^ set(adlar))}")
-    c = g["cok_nokta"]
-    tek_y = pd.Series({ad: i["katsayi"]["log_yagis"] for ad, i in tek.items()})
-    cok_y = pd.Series({i["ilce"]: i["katsayi"][c["degiskenler"][0]] for i in c["ilceler"]})
     s = g["sonuclar"]
     sayilar = {m: {k: s[m][k] for k in ("ap", "duyarlilik", "kesinlik", "yillar")} for m in ("gwr", "global")}
     return {
         "bant": g["bant"], "olcek_mm": list(gwr.DUYARLILIK_MM),
         "sinama": {**sayilar, "ap_farki": s["gwr"]["ap_farki_globale_gore"]},
-        "cok_nokta_sira_korelasyonu": round(float(tek_y.corr(cok_y.reindex(tek_y.index), method="spearman")), 2),
         "ilceler": {ad: {gor: {**tek[ad]["carpan_10_40"][v], "kanitli": _sifir_disinda(tek[ad]["aralik_95"][v])}
                          for gor, v in GWR_GORUNUMLER.items()} for ad in adlar},
     }

@@ -244,6 +244,37 @@ def ozet(x, n=BOOTSTRAP):
             "yillar": sorted({int(g[:4]) for g in x.gun})}
 
 
+# kıyı taşkınının sık görüldüğü ilçeler: yakalamaları ayrıca raporlanır
+KIYI = ["Foça", "Dikili", "Seferihisar", "Çeşme", "Urla", "Karaburun", "Konak", "Karşiyaka"]
+
+
+def kiyi_yakalama(x):
+    k = x[x.ilce.isin(KIYI) & (x.olay == 1)]
+    return {"olay": int(len(k)), "yakalanan": int((k.p >= k.esik).sum())}
+
+
+def kisa_ozet(x, n=BOOTSTRAP):
+    """ozet, atak listesi olmadan; kıyı ilçelerindeki olayların yakalanmasıyla."""
+    o = ozet(x, n)
+    o["atak"].pop("liste")
+    o["kiyi"] = kiyi_yakalama(x)
+    return o
+
+
+def eslesik_fark(a, b, n=BOOTSTRAP, tohum=TOHUM):
+    """b − a AP farkı, hafta bloklarıyla eşleştirilmiş bootstrap: [fark, alt, üst]."""
+    a = a.sort_values(["gun", "ilce"]).reset_index(drop=True)
+    b = b.sort_values(["gun", "ilce"]).reset_index(drop=True)
+    _, satirlar = blok_satirlari(hafta(a.gun))
+    y, pa, pb = a.olay.values, a.p.values, b.p.values
+
+    def ap_farki(i):
+        return average_precision_score(y[i], pb[i]) - average_precision_score(y[i], pa[i])
+
+    farklar = [ap_farki(idx) for _, idx in blok_cek(satirlar, n, tohum) if y[idx].sum()]
+    return [round(float(ap_farki(slice(None))), 3), *aralik_95(farklar)]      # slice(None): bütün satırlar
+
+
 def calistir(t, girdiler=None, test_yillari=TEST_YILLARI, modeller=MODELLER, n=BOOTSTRAP):
     """girdiler: {ad: (ilk_yil, dönüştürücü)} — tahminli girdiler yalnız ilk_yil'dan itibaren.
     Döner: her model için katmanlar, bütün test yıllarının birleşimi (gözlem) ve

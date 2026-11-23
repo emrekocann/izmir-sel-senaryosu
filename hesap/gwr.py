@@ -31,18 +31,9 @@ okunur karşılığı — her değişken için 10 → 40 mm'nin olasılık oran�
 ratio, "çarpan"; öteki değişkenler sabit) ve %95 aralığı; kuru geçmişte 10 ve
 40 mm'deki olasılık. Sitenin Uyarı sekmesi çarpanları haritada gösterir.
 
-Sağlamlık (ek_degiskenler.csv varsa): günün yağışı tek noktadan değil, ilçe
-içindeki en yağışlı ızgara noktasından (log_max_nokta) alınarak aynı bantla
-yeniden kurulur. Soru: büyük ilçelerde (Bergama, Dikili) günün yağışının zayıf
-etkisi, sağanağın tek noktayı ıskalamasının yan etkisi mi? Önceki 7 günün
-toplamı bu ıskalamaya daha az duyarlıdır; örüntü yalnız ölçüm kaynaklıysa
-çok noktalı yağışta kaybolmalı.
-
 Çıktı: egitim/gwr_sonuc.json. Çalıştırma: venv/bin/python -m hesap.gwr (~2 dk)
-Önkoşul (sağlamlık için): hesap.ek_degiskenler
 """
 import logging
-import os
 import time
 
 import numpy as np
@@ -50,8 +41,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score
 
-from afet.yollar import EK_DEGISKENLER_CSV, GWR_SONUC, ILCE_CSV, ILCE_GUN_CSV
-from hesap import ek_degiskenler as ed
+from afet.yollar import GWR_SONUC, ILCE_CSV, ILCE_GUN_CSV
 from hesap import gunlugu_kur, sonucu_yaz
 from hesap import guvenilirlik as gv
 from hesap import ols_model as om
@@ -59,7 +49,6 @@ from hesap import siniflandirma as sn
 
 log = logging.getLogger("gwr")
 DEGISKENLER = ["log_yagis", "log_dun", "log_onceki7g"]
-COK_NOKTA = ["log_max_nokta", "log_dun", "log_onceki7g"]     # sağlamlık: günün yağışı en yağışlı noktadan
 GLOBAL_EK = ["log_nufus", "kent_payi"]
 BANTLAR = [1, 2, 3, 4, 5, 6, 9, 12, 16, 20, 25, 30]
 KATSAYI_BOOTSTRAP = 100      # ilçe katsayılarının güven aralığı (hafta blokları)
@@ -203,18 +192,7 @@ def harita_ozeti(t, d, k, n=KATSAYI_BOOTSTRAP, kolonlar=DEGISKENLER):
     return out
 
 
-def cok_nokta_sinamasi(t_ham, ek, d, k, tek_nokta, test_yillari=gv.TEST_YILLARI, n=gv.BOOTSTRAP,
-                       n_katsayi=KATSAYI_BOOTSTRAP):
-    """Sağlamlık: aynı bantla, günün yağışı ilçedeki en yağışlı noktadan.
-    tek_nokta: asıl GWR'nin yıl yıl tahminleri (AP farkı için)."""
-    x = ed.birlestir(t_ham, ek)
-    tahmin = yil_yil(x, d, k, test_yillari, COK_NOKTA)
-    o = ed.kisa_ozet(tahmin, n)
-    o["ap_farki_tek_noktaya_gore"] = ed.eslesik_fark(tek_nokta, tahmin, n)
-    return {"degiskenler": COK_NOKTA, "sonuc": o, "ilceler": harita_ozeti(x, d, k, n_katsayi, COK_NOKTA)}
-
-
-def calistir(t_ham, ilce_df, ek=None, bantlar=BANTLAR, test_yillari=gv.TEST_YILLARI, n=gv.BOOTSTRAP,
+def calistir(t_ham, ilce_df, bantlar=BANTLAR, test_yillari=gv.TEST_YILLARI, n=gv.BOOTSTRAP,
              n_katsayi=KATSAYI_BOOTSTRAP):
     t = sn.hazirla(t_ham)
     d = uzakliklar(ilce_df)
@@ -226,15 +204,12 @@ def calistir(t_ham, ilce_df, ek=None, bantlar=BANTLAR, test_yillari=gv.TEST_YILL
               "lojistik": gv.yil_yil(t, "lojistik", test_yillari=test_yillari)}
     sonuc = {}
     for ad, x in tahmin.items():
-        o = ed.kisa_ozet(x, n)
+        o = gv.kisa_ozet(x, n)
         if ad != "global":
-            o["ap_farki_globale_gore"] = ed.eslesik_fark(tahmin["global"], x, n)
+            o["ap_farki_globale_gore"] = gv.eslesik_fark(tahmin["global"], x, n)
         sonuc[ad] = o
-    r = {"degiskenler": DEGISKENLER, "global_ek": GLOBAL_EK, "bantlar": skor, "bant": k,
-         "c": C, "sonuclar": sonuc, "katsayi_bootstrap": n_katsayi, "ilceler": harita_ozeti(t, d, k, n_katsayi)}
-    if ek is not None:
-        r["cok_nokta"] = cok_nokta_sinamasi(t_ham, ek, d, k, tahmin["gwr"], test_yillari, n, n_katsayi)
-    return r
+    return {"degiskenler": DEGISKENLER, "global_ek": GLOBAL_EK, "bantlar": skor, "bant": k,
+            "c": C, "sonuclar": sonuc, "katsayi_bootstrap": n_katsayi, "ilceler": harita_ozeti(t, d, k, n_katsayi)}
 
 
 def yazdir(r):
@@ -251,30 +226,11 @@ def yazdir(r):
         c = i["carpan_10_40"]
         print(f"  {i['ilce']:12} günün yağışı ×{c['log_yagis']['deger']} {c['log_yagis'].get('aralik_95')}"
               f"  önceki 7 gün ×{c['log_onceki7g']['deger']} {c['log_onceki7g'].get('aralik_95')}  P40 {i['p_40']:.3f}")
-    c = r.get("cok_nokta")
-    if not c:
-        return
-    o, y = c["sonuc"], c["degiskenler"][0]
-    print(f"\nÇok noktalı yağışla (k = {r['bant']}): AP {o['ap']:.3f}, "
-          f"ΔAP tek noktaya göre {o['ap_farki_tek_noktaya_gore']}, "
-          f"duyarlılık {o['duyarlilik']:.2f}, kesinlik {o['kesinlik']:.2f}, "
-          f"atak ilk gün {o['atak']['ilk_gun_alarmli']}/{o['atak']['atak']}, "
-          f"kıyı {o['kiyi']['yakalanan']}/{o['kiyi']['olay']}")
-    tek = {i["ilce"]: i for i in r["ilceler"]}
-    print(f"  {'ilçe':12} {'günün yağışı: tek nokta':>32} {'çok nokta':>22}   {'önceki 7 gün: tek':>18} {'çok':>6}")
-    for i in sorted(c["ilceler"], key=lambda x: -(x["katsayi"] or {}).get(y, 0)):
-        t1 = tek[i["ilce"]]
-        print(f"  {i['ilce']:12} {t1['katsayi']['log_yagis']:>8} {str(t1['aralik_95'].get('log_yagis')):>23} "
-              f"{i['katsayi'][y]:>7} {str(i['aralik_95'].get(y)):>14}   "
-              f"{t1['katsayi']['log_onceki7g']:>18} {i['katsayi']['log_onceki7g']:>6}")
 
 
 def main():
     gunlugu_kur()
-    ek = pd.read_csv(EK_DEGISKENLER_CSV) if os.path.exists(EK_DEGISKENLER_CSV) else None
-    if ek is None:
-        log.warning("%s yok: çok noktalı sağlamlık sınaması atlanıyor (önce hesap.ek_degiskenler)", EK_DEGISKENLER_CSV)
-    sonucu_yaz(GWR_SONUC, calistir(pd.read_csv(ILCE_GUN_CSV), pd.read_csv(ILCE_CSV), ek), yazdir)
+    sonucu_yaz(GWR_SONUC, calistir(pd.read_csv(ILCE_GUN_CSV), pd.read_csv(ILCE_CSV)), yazdir)
 
 
 if __name__ == "__main__":

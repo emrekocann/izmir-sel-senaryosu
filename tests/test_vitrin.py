@@ -97,7 +97,7 @@ def test_uyari_verisi_sozlesmesi():
     assert {"ilce", "gun", "haber_mm", "haber_saat", "arsiv_mm", "tahmin_mm", "cagri", "cagri_gun_sayisi",
             "kaynaklar"} <= set(o) and o["ilce"] in adlar
     g = u["gwr"]
-    assert {"bant", "olcek_mm", "sinama", "cok_nokta_sira_korelasyonu", "ilceler"} <= set(g)
+    assert {"bant", "olcek_mm", "sinama", "ilceler"} <= set(g)
     assert len(g["sinama"]["ap_farki"]) == 3
     assert all({"ap", "duyarlilik", "kesinlik", "yillar"} <= set(g["sinama"][m]) for m in ("gwr", "global"))
     assert set(g["ilceler"]) == adlar

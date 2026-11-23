@@ -59,12 +59,13 @@ def test_yerel_model_yil_disarida_globali_gecer():
 
 
 def test_harita_ozeti_baska_yagis_kolonuyla():
-    """Sağlamlık sınaması günün yağışını başka bir kolondan alır (ilk kolon)."""
+    """Değişken listesi değiştirilebilir: günün yağışı ilk kolondan okunur."""
+    kolonlar = ["log_baska", "log_dun", "log_onceki7g"]
     d = gwr.uzakliklar(_ilceler())
-    t = _veri().rename(columns={"log_yagis": "log_max_nokta"})
-    h = {i["ilce"]: i for i in gwr.harita_ozeti(t, d, 4, 0, gwr.COK_NOKTA)}
-    assert set(h["i0"]["katsayi"]) == {"sabit", *gwr.COK_NOKTA}
-    carpan = {i: h[i]["carpan_10_40"]["log_max_nokta"]["deger"] for i in ("i0", "i7")}
+    t = _veri().rename(columns={"log_yagis": "log_baska"})
+    h = {i["ilce"]: i for i in gwr.harita_ozeti(t, d, 4, 0, kolonlar)}
+    assert set(h["i0"]["katsayi"]) == {"sabit", *kolonlar}
+    carpan = {i: h[i]["carpan_10_40"]["log_baska"]["deger"] for i in ("i0", "i7")}
     assert carpan["i0"] > carpan["i7"] > 0
     assert h["i0"]["p_40"] > h["i0"]["p_10"]
 
@@ -79,7 +80,4 @@ def test_sonuc_dosyasi_sozlesmesi():
         assert {"ilce", "katsayi", "aralik_95", "carpan_10_40", "p_10", "p_40"} <= set(i)
         for c in i["carpan_10_40"].values():                  # çarpan aralığı katsayı aralığının dönüşümü
             assert c["aralik_95"][0] <= c["deger"] <= c["aralik_95"][1]
-    c = r["cok_nokta"]
-    assert c["degiskenler"] == gwr.COK_NOKTA and len(c["ilceler"]) == 30
-    assert len(c["sonuc"]["ap_farki_tek_noktaya_gore"]) == 3
-    assert all(set(gwr.COK_NOKTA) <= set(i["aralik_95"]) for i in c["ilceler"])
+    assert "cok_nokta" not in r
