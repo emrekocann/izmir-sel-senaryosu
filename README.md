@@ -237,8 +237,8 @@ Senaryo suyun nereye geldiğini söyler; risk için iki soru daha gerekir. İkis
 
 **Kimi etkiler?** Suyun 30 cm'den derin olduğu yerde oturan nüfus, hastane ve okul.
 - Nüfus: TÜİK 2023 mahalle nüfusu (İBB Açık Veri), yapılaşmış alana dağıtılır. TKGM mahalle sınırları kent merkezinde eksik olduğu için adı eşleşen mahalleler (nüfusun %54'ü) kendi sınırına, ilçenin kalanı ilçenin geri kalan yapılaşmış alanına dağıtılır.
-- Hastane ve okul: OpenStreetMap (140 hastane, 1333 okul).
-- Örnek: 100 mm / 6 saat'te ~114.000 kişi, 2 hastane ve 19 okul. Kıyı düzlüklerinde (Karşıyaka, Bayraklı, Çiğli, Bornova) ~780.000 kişi daha "su gelir, derinlik belirsiz" alanda oturuyor.
+- Hastane ve okul: OpenStreetMap, il sınırı içinde 54 hastane ve 841 okul. OSM'de "hastane" etiketli kayıtların üçte biri aile / ağız ve diş sağlığı merkezi, poliklinik ya da laboratuvar olduğundan yalnız adında "hastane" geçenler sayılır. Kurslar, halk eğitim ve rehberlik merkezleri okul sayılmaz; nokta ve alan olarak iki kez çizilen tesis bir kez sayılır.
+- Örnek: 100 mm / 6 saat'te ~114.000 kişi, 1 hastane ve 18 okul. Kıyı düzlüklerinde (Karşıyaka, Bayraklı, Çiğli, Bornova) ~780.000 kişi daha "su gelir, derinlik belirsiz" alanda oturuyor.
 - Yağış ilin her yerine aynı anda düştüğü için bu sayılar gerçek bir olayda aynı anda etkilenecek kişiden fazladır.
 
 ```bash

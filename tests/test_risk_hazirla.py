@@ -4,6 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
+import shapely
 
 from afet.dosya import json_oku
 from afet.yollar import RISK_JSON, VITRIN
@@ -44,6 +45,32 @@ def test_nufus_dagit_agirlikla_ve_agirliksiz_birimde_esit():
     assert n[0, 0] == 75 and n[0, 1] == 25                # yapılaşmayla orantılı
     assert n[0, 2] == n[1, 0] == 25                       # yapılaşma yok: hücreye eşit
     assert n[1, 1:].sum() == 0 and n.sum() == 150         # birimsiz hücreye nüfus düşmez
+
+
+def _tesis(tur, ad, lon, lat=38.5):
+    return {"tur": tur, "ad": ad, "lon": lon, "lat": lat}
+
+
+def test_tesisleri_ayikla_il_disini_hastane_olmayani_ve_tekrari_atar():
+    il = shapely.box(27.0, 38.0, 28.0, 39.0)
+    ayiklanan = rh.tesisleri_ayikla([
+        _tesis("hospital", "Tire Devlet Hastanesi", 27.5),
+        _tesis("hospital", "Tire Devlet Hastanesi", 27.5005),                 # ~40 m: aynı hastane (nokta + alan)
+        _tesis("hospital", "Akhisar Devlet Hastanesi", 28.5),                 # il dışında
+        _tesis("hospital", "Bergama 3 Nolu Aile Sağlığı Merkezi", 27.2),
+        _tesis("hospital", "Bergama Devlet Hastanesi Toplum Ruh Sağlığı Merkezi", 27.3),
+        _tesis("hospital", "", 27.4),                                           # adsız
+        _tesis("school", "Kürşat İlkokulu", 27.1),                              # "kurs" değil
+        _tesis("school", "", 27.1003),                                          # ~25 m: aynı okulun alanı
+        _tesis("school", "Atatürk Ortaokulu", 27.6),
+        _tesis("school", "Atatürk Ortaokulu", 27.7),                            # ~9 km: başka okul
+        _tesis("school", "Uğur Kurs", 27.8),
+        _tesis("school", "Bornova Halk Eğitimi Merkezi", 27.8),
+        _tesis("school", "İzmir Menemen Rehberlik ve Araştırma Merkezi", 27.9),
+    ], il)
+    assert sorted((t["tur"], t["ad"]) for t in ayiklanan) == [
+        ("hospital", "Tire Devlet Hastanesi"),
+        ("school", "Atatürk Ortaokulu"), ("school", "Atatürk Ortaokulu"), ("school", "Kürşat İlkokulu")]
 
 
 @pytest.mark.skipif(not os.path.exists(RISK_JSON), reason="risk_hazirla çalıştırılmadı")

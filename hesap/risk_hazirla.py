@@ -27,7 +27,11 @@ veritabanı olmadan hesaplanır ve docs/veri/risk.json'a yazılır.
      mahalle); adı eşleşen mahallenin nüfusu kendi sınırına, ilçenin kalanı
      ilçenin eşleşmeyen yapılaşmış alanına dağıtılır.
    • Hastane ve okul: OpenStreetMap (amenity=hospital / school), nokta ya da
-     alanın ortası.
+     alanın ortası; yalnız il sınırı içindekiler. amenity=hospital etiketlilerin
+     üçte biri aile / ağız ve diş sağlığı merkezi, poliklinik, laboratuvardır:
+     yalnız adında "hastane" geçenler sayılır. amenity=school etiketli kurslar,
+     halk eğitim ve rehberlik merkezleri okul sayılmaz. OSM'de nokta ve alan
+     olarak iki kez çizilen tesis bir kez sayılır.
    Düz ovada (su gelir, derinlik belirsiz) yaşayanlar ayrıca sayılır: kıyı
    düzlüklerinde (Karşıyaka, Bayraklı, Çiğli, Bornova) yüz binlerce kişidir.
 
@@ -40,13 +44,14 @@ import re
 
 import numpy as np
 import pandas as pd
+import shapely
 from affine import Affine
 from rasterio.features import rasterize
 
 from afet import ag
 from afet.dosya import json_oku, json_yaz
 from afet.sel.senaryo import BELIRSIZ, senaryolar
-from afet.sinir import tkgm_ilceler
+from afet.sinir import il_poligonu, tkgm_ilceler
 from afet.yollar import CN_DOSYASI, ISTASYON_YAGIS, MAHALLE_NUFUS, OSM_PBF, OSM_TESISLER, RISK_JSON
 from hesap import gunlugu_kur, sonucu_yaz
 from hesap.dem_hidroloji import raster_ornekle
@@ -65,6 +70,12 @@ DONUS_YILLARI = [2, 5, 10, 25, 50, 100]
 OLAY_2021 = "2021-02-02"
 ESIK_DM = 3                 # 30 cm: araçla geçilemez, yürümek tehlikeli (sel_senaryo_hazirla.YOL_KAPALI_M)
 TESISLER = {"hospital": "hastane", "school": "okul"}
+# Ad kalıpları anahtar() biçiminde (küçük harf, Türkçe karaktersiz) aranır
+HASTANE_ADI = re.compile(r"\bhasta[nh]e|\bhospital")
+HASTANE_DEGIL = re.compile(r"sagligi merkezi|poliklinigi")      # ruh / ağız ve diş sağlığı merkezi
+OKUL_DEGIL = re.compile(r"\bkursu?\b|\bhalk egitim|\brehberlik ve arastirma")
+AYNI_TESIS_M = 300          # aynı adlı (ya da adsız) iki kayıt bu kadar yakınsa aynı tesis
+M_DERECE = 111_320
 
 
 # ── 1. Ne sıklıkla? ─────────────────────────────────────────────────────────
@@ -149,7 +160,7 @@ class Maruziyet:
         self.tr = Affine(o["dx"], 0, o["bati"], 0, o["dy"], o["kuzey"])
         self.shape = senaryolar.dizi(o["yagis_mm"][0], o["sure_sa"][0]).shape
         self.nufus, self.eslesen_pay = self._nufus_izgarasi()
-        self.tesisler = osm_tesisleri()
+        self.tesisler = tesisleri_ayikla(osm_tesisleri(), il_poligonu())
 
     def _nufus_izgarasi(self):
         kent = np.load(CN_DOSYASI)["kent"]
@@ -196,8 +207,38 @@ class Maruziyet:
         return out
 
 
+def tesis_mi(t):
+    """OSM kaydı gerçekten hastane / okul mu (ada göre)."""
+    ad = anahtar(t["ad"])
+    if t["tur"] == "hospital":
+        return bool(HASTANE_ADI.search(ad)) and not HASTANE_DEGIL.search(ad)
+    return not OKUL_DEGIL.search(ad)
+
+
+def uzaklik_m(a, b):
+    return float(np.hypot((a["lon"] - b["lon"]) * np.cos(np.radians(a["lat"])), a["lat"] - b["lat"]) * M_DERECE)
+
+
+def tekillestir(tesisler, yakin_m=AYNI_TESIS_M):
+    """OSM'de aynı tesis nokta ve alan olarak iki kez çizilebilir: aynı türde,
+    adı aynı (ya da biri adsız) ve yakın kayıtlardan yalnız biri kalır, adlısı yeğlenir."""
+    kalan = []
+    for t in sorted(tesisler, key=lambda t: not t["ad"]):
+        if not any(k["tur"] == t["tur"] and (not t["ad"] or anahtar(k["ad"]) == anahtar(t["ad"]))
+                   and uzaklik_m(k, t) < yakin_m for k in kalan):
+            kalan.append(t)
+    return kalan
+
+
+def tesisleri_ayikla(tesisler, sinir):
+    """İl sınırı içindeki gerçek hastane ve okullar, her tesis bir kez."""
+    ic = shapely.contains_xy(sinir, np.array([t["lon"] for t in tesisler]), np.array([t["lat"] for t in tesisler]))
+    return tekillestir([t for t, i in zip(tesisler, ic) if i and tesis_mi(t)])
+
+
 def osm_tesisleri(yol=OSM_TESISLER):
-    """İl çerçevesindeki hastane ve okullar: [{tur, ad, lon, lat}] (önbellekli)."""
+    """İl çerçevesindeki ham OSM kayıtları (amenity=hospital / school):
+    [{tur, ad, lon, lat}] (önbellekli; ayıklama tesisleri_ayikla'da)."""
     try:
         return json_oku(yol)
     except FileNotFoundError:
