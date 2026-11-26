@@ -77,6 +77,17 @@ const SuKatmani = L.GridLayer.extend({
       x0 - kx, y0 - ky, x1 - x0, y1 - y0);
     return tuval;
   },
+  /* Leaflet uzaklaşma canlandırmasının başında yalnız eski görünüm kadar karo
+     hazırlar: canlandırma boyunca dereler ekran kenarına yakın düz bir çizgide
+     biter. Su karosu yerel çizim, ucuz: varılacak görünümün tamamı baştan
+     çizilsin (yakınlaşmada iki hesap aynı). */
+  _getTiledPixelBounds(merkez) {
+    const h = this._map;
+    const zoom = h._animatingZoom ? h._animateToZoom : h.getZoom();
+    const yari = h.getSize().divideBy(2 * h.getZoomScale(zoom, this._tileZoom));
+    const orta = h.project(merkez, this._tileZoom).floor();
+    return L.bounds(orta.subtract(yari), orta.add(yari));
+  },
 });
 
 /* İl sınırı poligon değil, kenar ÇİZGİSİ olarak çizilir. Leaflet poligonu
@@ -111,8 +122,12 @@ export function haritaKur(kapsayici, panel, vitrin) {
   // zoomSnap: il, tam sayı düzeye yuvarlanmadan panelin yanındaki alanı doldursun
   const harita = L.map(kapsayici, { zoomControl: false, minZoom: 7, maxZoom: 18, zoomSnap: 0.25, fadeAnimation: false });
   L.control.zoom({ position: 'topright' }).addTo(harita);
-  L.tileLayer(`${ESRI}/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
-    { maxNativeZoom: 16, maxZoom: 18, attribution: ATIF }).addTo(harita);
+  const altlik = `${ESRI}/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`;
+  // Altlığın kaba kopyası (en çok 8. düzey: az karo, çoğu önbellekte), keskin
+  // altlığın altında. Uzaklaşınca ya da sekme değişince yeni karolar inene
+  // kadar boşluk değil, bulanık harita görünür.
+  L.tileLayer(altlik, { maxNativeZoom: 8, maxZoom: 13, zIndex: 0 }).addTo(harita);
+  L.tileLayer(altlik, { maxNativeZoom: 16, maxZoom: 18, attribution: ATIF }).addTo(harita);
   // yer adları su katmanının üstünde kalsın
   harita.createPane('etiket').style.zIndex = 450;
   harita.getPane('etiket').style.pointerEvents = 'none';
@@ -148,7 +163,12 @@ export function haritaKur(kapsayici, panel, vitrin) {
     },
     suAcik: () => suAnahtari !== null,
     sigdir(sinir, enCokYakin = 16) {
-      harita.fitBounds(L.latLngBounds(sinir), { maxZoom: enCokYakin, ...dolgu() });
+      const kutu = L.latLngBounds(sinir), pay = dolgu();
+      const hedef = Math.min(enCokYakin,
+        harita.getBoundsZoom(kutu, false, L.point(pay.paddingTopLeft).add(pay.paddingBottomRight)));
+      // Bir düzeyden büyük geçiş canlandırılmaz: Leaflet canlandırma boyunca
+      // eski görüntüyü büyütür, yer adları dev ve bulanık, şekiller kalın görünür
+      harita.fitBounds(kutu, { maxZoom: enCokYakin, ...pay, animate: Math.abs(hedef - harita.getZoom()) <= 1 });
     },
     ilGorunumu() { api.sigdir(ilSiniri, 11); },
   };
