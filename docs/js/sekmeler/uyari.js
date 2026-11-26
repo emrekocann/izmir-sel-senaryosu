@@ -33,6 +33,8 @@ const KANITSIZ_STIL = { color: '#6b7280', weight: 1.2, dashArray: '4 3', fillCol
 // Canlı tahmin henüz yok (alınıyor ya da o ilçe için eksik): açık gri, kesik çizgi.
 const VERISIZ_RENK = '#f3f4f6';
 const VERISIZ_STIL = { color: '#9ca3af', weight: 1, dashArray: '3 3', fillColor: VERISIZ_RENK, fillOpacity: 0.6 };
+// Tıklanan ilçe: kendi sınırı kalın ve mavi (alarmın siyah çerçevesiyle karışmasın)
+const SECILI_CIZGI = { color: '#1d4ed8', weight: 3.5, dashArray: null };
 
 // 1'e yakın değerler iki ondalıkla: [1,04–2,2] "1'i içeriyor" diye okunmasın.
 const carpanSayi = (x) => sayi(x, Math.abs(x - 1) < 0.1 ? 2 : 1);
@@ -51,6 +53,7 @@ export function uyariSekmesi({ uyari, harita, lejantiYenile }) {
   // Yarının tahmini. hal: bekliyor | yukleniyor | hazir | hata; ilceler: ad → { p, alarm, yagis } | null
   const canli = { hal: 'bekliyor', hedef: null, alindi: null, ilceler: {}, hata: null };
   let icerik = null, katman = null, acik = false, model = null;
+  let seciliIlce = null;               // açılır penceresi açık ilçe
   const sekiller = new Map();          // ilçe adı → Leaflet katmanı
   const esik = uyari.model.esik;
   const gwr = uyari.gwr;
@@ -72,7 +75,7 @@ export function uyariSekmesi({ uyari, harita, lejantiYenile }) {
     ? T(`o gün ${mmA} yerine ${mmB} mm yağınca`, `${mmB} mm instead of ${mmA} mm on the day`)
     : T(`önceki 7 günde ${mmA} yerine ${mmB} mm yağınca`, `${mmB} mm instead of ${mmA} mm over the previous 7 days`));
 
-  const stil = (ad) => {
+  const veriStili = (ad) => {
     if (duyarlilikta()) {
       const c = etki(ad);
       return c.kanitli ? { color: '#ffffff', weight: 1, dashArray: null, fillColor: MOR[carpanSinifi(c.deger)], fillOpacity: 0.85 }
@@ -83,6 +86,15 @@ export function uyariSekmesi({ uyari, harita, lejantiYenile }) {
     return alarm(p) ? { color: '#1f2937', weight: 2.5, dashArray: null, fillColor: RENK[sinif(p)], fillOpacity: 0.85 }
       : { color: '#ffffff', weight: 1, dashArray: null, fillColor: RENK[sinif(p)], fillOpacity: 0.8 };
   };
+  const stil = (ad) => (ad === seciliIlce ? { ...veriStili(ad), ...SECILI_CIZGI } : veriStili(ad));
+
+  /** İlçeyi seçili gösterir (null: seçim kalkar); kalın sınırı komşuların altında kalmasın. */
+  function sec(ad) {
+    const onceki = seciliIlce;
+    seciliIlce = ad;
+    [onceki, ad].forEach((a) => a && sekiller.get(a).setStyle(stil(a)));
+    if (ad) sekiller.get(ad).bringToFront();
+  }
 
   const olayGunuSatiri = (ilce) => `<span class="soluk">${T(`Sel olan gün sayısı (${yilAraligi(uyari.veri.yillar)})`, `Flood days (${yilAraligi(uyari.veri.yillar)})`)}:</span> ${sayi(ilce.olay_gunu)}`;
 
@@ -118,7 +130,9 @@ export function uyariSekmesi({ uyari, harita, lejantiYenile }) {
     uyari.ilceler.forEach((ilce) => {
       const sekil = L.geoJSON(ilce.geometri, { style: () => stil(ilce.ad) })
         .bindTooltip(() => `${kacis(yerAdi(ilce.ad))}: ${duyarlilikta() ? etkiMetni(etki(ilce.ad)) : olasilikMetni(olasilik(ilce.ad))}`, { sticky: true })
-        .bindPopup(() => acilir(ilce), { maxWidth: 260 });
+        .bindPopup(() => acilir(ilce), { maxWidth: 260 })
+        .on('popupopen', () => sec(ilce.ad))
+        .on('popupclose', () => { if (seciliIlce === ilce.ad) sec(null); });
       sekiller.set(ilce.ad, sekil);
       katman.addLayer(sekil);
     });

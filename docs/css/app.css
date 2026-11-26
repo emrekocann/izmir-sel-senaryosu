@@ -158,6 +158,10 @@ ul.liste.dalgalar .rozet { margin-right: 2px; }
    karışım + yarım piksel bindirme: boşluk da parlak çizgi de kalmaz. */
 .leaflet-container img.leaflet-tile { mix-blend-mode: normal; width: 256.5px !important; height: 256.5px !important; }
 .bosluk-ust { margin-top: 10px; }
+/* Tıklanan harita şekli odak alır ve tarayıcı odak çerçevesini şeklin kutusuna
+   çizer (ilçenin etrafında kare). Şekillere klavyeyle gelinmez (panel listeleri
+   var); seçim, şeklin kendi sınırıyla gösterilir. */
+path.leaflet-interactive:focus { outline: none; }
 .leaflet-popup-content { font: 13.5px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 11px 14px; color: #16202e; }
 .leaflet-popup-content .soluk { color: #5b6777; }
 
